@@ -10,7 +10,7 @@ function parseRecord(data:Buffer){requireAccount(data,"VersionRecord",133);retur
 function parseRegistry(data:Buffer){requireAccount(data,"PassportRegistry",77);return {reference:data.subarray(8,40),latestVersion:data.readUInt32LE(40),latestRecord:new PublicKey(data.subarray(44,76)),bump:data[76]}}
 function parseConfig(data:Buffer){requireAccount(data,"IssuerConfig",78);return {admin:new PublicKey(data.subarray(8,40)),issuer:new PublicKey(data.subarray(40,72)),epoch:data.readUInt32LE(72),paused:data[76]!==0,bump:data[77]}}
 function parseEpoch(data:Buffer){requireAccount(data,"IssuerEpoch",45);return {number:data.readUInt32LE(8),issuer:new PublicKey(data.subarray(12,44)),bump:data[44]}}
-async function owned(connection:Connection,address:PublicKey,program:PublicKey){const info=await connection.getAccountInfo(address,"finalized");if(!info)return null;if(!info.owner.equals(program)||!info.executable===false)throw Error("Unexpected program owner or executable account");return info.data}
+async function owned(connection:Connection,address:PublicKey,program:PublicKey){const info=await connection.getAccountInfo(address,"finalized");if(!info)return null;if(!info.owner.equals(program)||info.executable)throw Error("Unexpected program owner or executable account");return info.data}
 export async function verifyDevnet(code:string,bytes?:Uint8Array):Promise<Proof>{
  const raw=Buffer.from(decodeCode(code));const id=process.env.SOLANA_PROGRAM_ID;const genesis=process.env.SOLANA_EXPECTED_GENESIS_HASH;
  if(!id||!genesis)return unknown("Verification unavailable: pinned Devnet program and genesis hash are not configured.");

@@ -1,0 +1,5 @@
+[workspace]
+members = ["programs/passport-registry"]
+resolver = "2"
+[profile.release]
+overflow-checks = true

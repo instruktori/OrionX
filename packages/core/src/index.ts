@@ -15,3 +15,6 @@ export function snapshot(student:Student,awards:Award[],version:number,code=newC
 
 export {verifyDevnet} from "./solana";
 export {renderDemoPdf} from "./pdf";
+export {prepareIssuance} from "./issuance";
+export {artifactStore,persistVerified} from "./storage";
+export {authenticate,requireAdmin,requireStudent} from "./auth";

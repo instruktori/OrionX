@@ -1,0 +1,21 @@
+import {createHash,randomBytes} from "node:crypto";
+import {z} from "zod";
+export const studentSchema=z.object({studentId:z.string().min(1),firstName:z.string().min(1),lastName:z.string().min(1),email:z.string().email(),program:z.string(),educationLevel:z.string(),passportId:z.string().min(1),initialIssueDate:z.string(),status:z.enum(["Active","Graduate"])});
+export const awardSchema=z.object({recordId:z.string().min(1),studentId:z.string().min(1),skillId:z.string().min(1),name:z.string().min(1),category:z.enum(["AI Skill","AI Applied Skill","AI Advanced Skill"]),badgeCode:z.string().min(1),description:z.string(),dateEarned:z.string()});
+export type Student=z.infer<typeof studentSchema>;
+export type Award=z.infer<typeof awardSchema>;
+export type Snapshot={student:Student;version:number;awards:Award[];code:string;templateRevision:string;issuerMode:"DEMO"|"BTU_CONFIRMED"};
+export const sha256=(data:Uint8Array)=>createHash("sha256").update(data).digest("hex");
+const alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+export function encodeCode(bytes:Uint8Array){if(bytes.length!==20)throw Error("Invalid code length");let bits=0,value=0,s="";for(const b of bytes){value=(value<<8)|b;bits+=8;while(bits>=5){s+=alphabet[(value>>>(bits-5))&31];bits-=5}}return "D1-"+s}
+export function decodeCode(input:string){const clean=input.toUpperCase().replace(/[-\s]/g,"");if(!/^D1[A-Z2-7]{32}$/.test(clean))throw Error("Malformed code");let bits=0,value=0;const out:number[]=[];for(const ch of clean.slice(2)){value=(value<<5)|alphabet.indexOf(ch);bits+=5;if(bits>=8){out.push((value>>>(bits-8))&255);bits-=8}}const bytes=Uint8Array.from(out);if(bytes.length!==20||encodeCode(bytes).replace(/-/g,"")!==clean)throw Error("Noncanonical code");return bytes}
+export const newCode=()=>encodeCode(randomBytes(20));
+export function reconcile(previous:Award[],incoming:Award[]){const seen=new Map<string,string>();const all:Award[]=[];for(const a of incoming){awardSchema.parse(a);const fingerprint=sha256(Buffer.from(JSON.stringify(a)));const old=seen.get(a.recordId);if(old&&old!==fingerprint)throw Error("Conflicting record ID "+a.recordId);if(!old){seen.set(a.recordId,fingerprint);all.push({...a})}}const original=new Map(previous.map(a=>[a.recordId,sha256(Buffer.from(JSON.stringify(a)))]));for(const a of previous){if(!seen.has(a.recordId))throw Error("Historical award removed: "+a.recordId)}for(const a of all){const prior=original.get(a.recordId);if(prior&&prior!==seen.get(a.recordId))throw Error("Historical award changed: "+a.recordId)}return {changed:all.length!==previous.length,awards:all.sort((a,b)=>a.dateEarned.localeCompare(b.dateEarned)||a.recordId.localeCompare(b.recordId))}}
+export function snapshot(student:Student,awards:Award[],version:number,code=newCode()):Snapshot{studentSchema.parse(student);decodeCode(code);if(!Number.isInteger(version)||version<1)throw Error("Invalid version");const selected=awards.filter(a=>a.studentId===student.studentId);const result=reconcile([],selected);if(!result.awards.length)throw Error("Empty passport");return {student:{...student},version,awards:result.awards,code,templateRevision:"demo-v1",issuerMode:"DEMO"}}
+
+export {verifyDevnet} from "./solana";
+export {renderDemoPdf} from "./pdf";
+export {prepareIssuance} from "./issuance";
+export {artifactStore,persistVerified} from "./storage";
+export {authenticate,requireAdmin,requireStudent} from "./auth";
+export {renderDemoPdf} from "./pdf";

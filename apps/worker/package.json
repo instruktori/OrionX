@@ -1,0 +1,1 @@
+{"name":"@orionx/worker","version":"0.1.0","private":true,"scripts":{"dev":"tsx watch src/worker.ts","start":"tsx src/worker.ts","typecheck":"tsc --noEmit -p tsconfig.json"},"dependencies":{"@orionx/core":"*","@orionx/db":"*","@prisma/client":"^6.1.0"},"devDependencies":{"tsx":"^4.19.2","typescript":"^5.7.3","@types/node":"^22.10.0"}}

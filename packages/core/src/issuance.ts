@@ -1,0 +1,5 @@
+import type {Award,Snapshot,Student} from "./index";import {newCode,reconcile,snapshot,sha256} from "./index";import {renderDemoPdf} from "./pdf";
+export type PreparedIssuance={snapshot:Snapshot;pdf:Uint8Array;pdfSha256:string;storageKey:string;state:"RENDERED";chainStatus:"NOT_SUBMITTED"};
+// Preparation does not broadcast or claim issuance. The caller must atomically reserve the
+// version in PostgreSQL, persist bytes immutably, then use a durable transaction outbox.
+export async function prepareIssuance(student:Student,previousAwards:Award[],incomingAwards:Award[],version:number,reservedCode?:string):Promise<PreparedIssuance>{const {changed,awards}=reconcile(previousAwards,incomingAwards);if(version>1&&!changed)throw Error("No new awards; refusing unnecessary version");const frozen=snapshot(student,awards,version,reservedCode||newCode());const pdf=await renderDemoPdf(frozen);const hash=sha256(pdf);return {snapshot:frozen,pdf,pdfSha256:hash,storageKey:"demo/"+student.passportId+"/v"+version+"/"+hash+".pdf",state:"RENDERED",chainStatus:"NOT_SUBMITTED"}}

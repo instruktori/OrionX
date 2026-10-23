@@ -1,0 +1,11 @@
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+enum JobState { DISCOVERED VALIDATED QUEUED RENDERED STORED CHAIN_PENDING FINALIZED SYNC_WRITEBACK_PENDING COMPLETED RETRY_WAIT BLOCKED_CONFLICT FAILED_PERMANENT }
+enum TrustMode { DEMO BTU_CONFIRMED }
+model Student { id String @id @default(cuid()) externalId String @unique email String @unique firstName String lastName String program String educationLevel String status String passport Passport? awards Award[] createdAt DateTime @default(now()) }
+model Passport { id String @id @default(cuid()) publicId String @unique studentId String @unique student Student @relation(fields:[studentId],references:[id]) versions Version[] nextVersion Int @default(1) createdAt DateTime @default(now()) }
+model Award { id String @id @default(cuid()) sourceRecordId String @unique studentId String student Student @relation(fields:[studentId],references:[id]) skillId String name String category String badgeCode String description earnedAt DateTime sourceFingerprint String createdAt DateTime @default(now()) }
+model Version { id String @id @default(cuid()) passportId String passport Passport @relation(fields:[passportId],references:[id]) number Int codeHash String @unique snapshot Json pdfSha256 String? storageKey String? trustMode TrustMode @default(DEMO) state JobState @default(DISCOVERED) txSignature String? versionPda String? finalizedSlot BigInt? createdAt DateTime @default(now()) jobs Job[] @@unique([passportId,number]) }
+model Job { id String @id @default(cuid()) versionId String? version Version? @relation(fields:[versionId],references:[id]) type String state JobState @default(QUEUED) idempotencyKey String @unique attempts Int @default(0) availableAt DateTime @default(now()) lastError String? leaseOwner String? leaseUntil DateTime? createdAt DateTime @default(now()) updatedAt DateTime @updatedAt @@index([state,availableAt]) }
+model AuditEvent { id String @id @default(cuid()) actorId String? action String targetId String? detail Json createdAt DateTime @default(now()) @@index([createdAt]) }
+model SourceSync { id String @id @default(cuid()) sourceRecordId String @unique fingerprint String status String lastError String? syncedVersion Int? syncedAt DateTime? updatedAt DateTime @updatedAt }

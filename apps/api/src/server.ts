@@ -48,15 +48,30 @@ async function admin(req: Request) {
   return id;
 }
 
+function requestProtoAndHost(req: Request): {protocol: string; host: string; directHost: string} {
+  const rawProto = String(req.headers["x-forwarded-proto"] || req.protocol || (process.env.VERCEL === "1" ? "https" : "http"));
+  const protocol = rawProto.split(",")[0].trim() || "http";
+  const forwardedHost = String(req.headers["x-forwarded-host"] || "").split(",")[0].trim();
+  const directHost = String(req.headers.host || "").split(",")[0].trim();
+  return {protocol, host: forwardedHost || directHost, directHost};
+}
+
 function isOriginAllowed(req: Request, origin: string): boolean {
-  const hostOrigin = `${req.protocol}://${req.headers.host}`;
-  const configured = [process.env.WEB_ORIGIN, process.env.VERIFICATION_PUBLIC_ORIGIN].filter(Boolean) as string[];
-  if (configured.length > 0) {
-    if (configured.includes(origin)) return true;
-    if (!process.env.WEB_ORIGIN && origin === hostOrigin) return true;
-  } else if (origin === hostOrigin) {
-    return true;
+  if (process.env.WEB_ORIGIN) {
+    return origin === process.env.WEB_ORIGIN;
   }
+  const {protocol, host, directHost} = requestProtoAndHost(req);
+  const trusted = new Set<string>(
+    [
+      host ? `${protocol}://${host}` : undefined,
+      directHost ? `${protocol}://${directHost}` : undefined,
+      directHost ? `${req.protocol}://${directHost}` : undefined,
+      process.env.VERIFICATION_PUBLIC_ORIGIN,
+      process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : undefined,
+      process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined,
+    ].filter(Boolean) as string[],
+  );
+  if (trusted.has(origin)) return true;
   if (process.env.NODE_ENV !== "production" && process.env.VERCEL !== "1") {
     try {
       const parsed = new URL(origin);
@@ -142,10 +157,11 @@ class ApiController {
 
   private startGoogleOAuth(req: Request, res: Response, rawNext?: unknown) {
     const next = sanitizeRedirectPath(rawNext, "/passport");
+    const {protocol, host} = requestProtoAndHost(req);
     const webOrigin = resolveAllowedWebOrigin({
       origin: req.headers.origin,
-      protocol: String(req.headers["x-forwarded-proto"] || req.protocol || "http"),
-      host: String(req.headers["x-forwarded-host"] || req.headers.host || ""),
+      protocol,
+      host,
     });
     const config = supabaseAuthServiceConfig();
     const {codeVerifier, codeChallenge, state} = createPkceChallenge();
@@ -240,10 +256,11 @@ class ApiController {
 
   @Get("auth/callback")
   async callbackGet(@Query() query: Record<string, unknown>, @Req() req: Request, @Res() res: Response) {
+    const {protocol, host} = requestProtoAndHost(req);
     const webOrigin = resolveAllowedWebOrigin({
       origin: req.headers.origin,
-      protocol: String(req.headers["x-forwarded-proto"] || req.protocol || "http"),
-      host: String(req.headers["x-forwarded-host"] || req.headers.host || ""),
+      protocol,
+      host,
     });
     try {
       const result = await this.completeGoogleCallback(req, res, {

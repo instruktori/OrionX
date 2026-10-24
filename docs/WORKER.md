@@ -1,11 +1,26 @@
-# PostgreSQL job leasing and immutable PDF rendering
+# Durable issuance worker
 
-The PDF worker claims jobs using a single PostgreSQL `FOR UPDATE SKIP LOCKED` statement, with a 120-second lease and crash recovery. It renders from the **reserved immutable version snapshot**, never from current mutable student awards. It stores create-only artifacts, reads back the exact bytes, validates SHA-256 and commits version/job status and audit evidence together. On a storage conflict, it accepts only identical bytes.
+A PostgreSQL job row commits with each reserved version and serves as the
+transactional dispatch outbox (see ADR-QUEUE.md). Workers use schema-qualified
+FOR UPDATE SKIP LOCKED claims, expiring leases, fenced commits and bounded retry.
 
-Run a single worker for demo workloads; longer renders need lease heartbeat/renewal. The worker intentionally **stops at STORED**. Chain signing, transaction outbox, finalized registration, sheet writeback, authorization, and real issuer approval remain required. No on-chain success is claimed.
+Stages:
 
-Apply the updated Prisma schema before starting the worker. No production data should be imported until migrations and recovery tests pass.
+- PDF: adopt the predetermined staging object before rendering; create immutable
+  final storage; read back and compare SHA-256 and page count.
+- CHAIN: save signed bytes before broadcast; reconcile finalized accounts before
+  retrying; wait for observed transactions without counting them as failures.
+- WRITEBACK: resolve source Record IDs through row metadata, validate original
+  inputs and final Devnet evidence, write Q–T, and read back the result.
 
-## Vercel and runtime settings
+Offline mode stops at STORED. Fixture completion records FIXTURE_ONLY and never
+writes a Google Sheet. Network/cluster/program proof context is persisted with
+finalized versions. Public/private artifacts and signing authority remain separate.
 
-The root `Dockerfile.worker` builds this worker as `daemons.worker`, paused by default with zero instances. See [Vercel setup](VERCEL.md) to configure the database, durable storage, region and instance count. Poll interval, lease duration and retry limit are environment driven. Shutdown drains work and disconnects Prisma; database polling errors retry after the configured interval. Local worker execution remains available with `npm run dev:worker`.
+`SYNC_ENABLED=true` enables source polling; admin sync requests create durable
+SYNC jobs. SIGTERM stops new claims, drains current work and disconnects Prisma.
+Longer stages need a sufficiently measured lease or a future renewal mechanism.
+
+The cloud daemon remains at zero instances. A worker must receive its own signer
+secret/file; do not publish operator/admin/upgrade keys or put them in frontend
+configuration. See SETUP_REMAINING.md before real Devnet activation.

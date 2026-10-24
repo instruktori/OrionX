@@ -3,9 +3,9 @@ anchor_version = "0.30.1"
 [features]
 resolution = true
 [programs.devnet]
-passport_registry = "11111111111111111111111111111111"
+passport_registry = "9q3EFytGCsR2hk5FnerXxMWomC2yCajpx78durY91JPa"
 [provider]
 cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 [scripts]
-test = "echo 'Anchor integration tests are not yet implemented'"
+test = "npm run test:chain"

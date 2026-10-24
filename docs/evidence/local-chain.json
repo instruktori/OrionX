@@ -1,0 +1,25 @@
+{
+  "environment": "LOCAL_VALIDATOR_ONLY",
+  "programId": "9q3EFytGCsR2hk5FnerXxMWomC2yCajpx78durY91JPa",
+  "builtArtifact": "target/deploy/passport_registry.so",
+  "checks": [
+    "unauthorized initialization rejected",
+    "issuer authorization",
+    "sequence and previous pointer",
+    "duplicate code rejected",
+    "historical bytes unchanged",
+    "PDF hash match and one-bit tamper rejection",
+    "admin-only pause",
+    "pause prevents issuance",
+    "two-signer rotation",
+    "old issuer rejected",
+    "historical epoch retained"
+  ],
+  "localTransactions": [
+    "2CkZuegma4L6AgVxDLVuZWY8QiyUzQ7GHguUdUvffDXCQApKzixVj6LakZg75uJ8Dvw3dvD7pYyJ6vUWF77pN7tp",
+    "3xN7WmF2rVq1Ydn2Z2YsVKScrd28gVbZSydrsCgiyKuqDppHqCi9Mc7soMq9VgTBdtK7MShfy86TmNkZTRMavRyU"
+  ],
+  "officialBtu": false,
+  "devnetEvidence": false,
+  "checkedAt": "2026-10-24T19:06:41.951Z"
+}

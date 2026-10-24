@@ -1,6 +1,6 @@
 # Trust and privacy boundaries
 
-**Do not use this build for real student issuance yet.** The verifier fails closed until a deployed Solana Devnet program has a pinned schema, issuer configuration and authenticated institutional trust root.
+This build is configured for synthetic students and a simulated issuer. Real-student release requires the remaining deployed integration checks and approved identity/trust policies. Registration and file integrity are reported separately from institutional issuer trust; demo mode always returns `officialBtu=false`.
 
 - A demo key is never BTU confirmation.
 - A verification code is a public locator, never authorization to download student PDFs.

@@ -20,13 +20,30 @@
     "env:pull": "vercel env pull .env.local --environment=development --yes",
     "env:check": "node scripts/with-env.mjs tsx scripts/check-env.ts",
     "test:config": "node --test scripts/env.test.mjs",
-    "env:sync": "node scripts/sync-vercel-env.mjs"
+    "env:sync": "node scripts/sync-vercel-env.mjs",
+    "sync": "node scripts/with-env.mjs tsx scripts/sync.ts",
+    "seed:demo-auth": "node scripts/with-env.mjs tsx scripts/seed-demo-auth.ts",
+    "test:chain": "tsx scripts/test-chain.ts",
+    "test:ledger": "node scripts/with-env.mjs tsx scripts/check-ledger.ts",
+    "test:api": "node scripts/with-env.mjs tsx scripts/check-api.ts",
+    "test:capacity": "node scripts/with-env.mjs tsx scripts/test-capacity.ts",
+    "test:pipeline": "node scripts/with-env.mjs tsx scripts/test-pipeline.ts",
+    "deploy:devnet": "node scripts/with-env.mjs tsx scripts/deploy-devnet.ts",
+    "issuer:admin": "node scripts/with-env.mjs tsx scripts/issuer-admin.ts",
+    "preview:pdf": "tsx scripts/preview-pdf.ts"
   },
   "devDependencies": {
     "typescript": "^5.7.3",
-    "vercel": "65.2.0"
+    "vercel": "65.2.0",
+    "@types/node": "22.20.5"
   },
   "engines": {
     "node": "22.x"
+  },
+  "overrides": {
+    "multer": "2.5.0",
+    "postcss": "8.5.31",
+    "deepmerge-ts": "8.0.0",
+    "path-to-regexp@>=8.0.0 <9.0.0": "8.4.2"
   }
 }

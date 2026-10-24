@@ -1,0 +1,9 @@
+.secrets
+.env*
+!.env.example
+.artifacts
+target
+.anchor
+test-ledger
+
+output

@@ -1,0 +1,19 @@
+student_id,first_name,last_name,email_test,program,education_level,passport_id_existing,first_issued_existing,student_status
+BTU-T-0001,Giorgi,Kapanadze,btu-t-0001@example.org,Business Administration (Management),Bachelor's,BTU-AI-000125,2026-09-15,Active
+BTU-T-0002,Mariam,Beridze,btu-t-0002@example.org,Business Administration (Finance),Bachelor's,BTU-AI-000126,2026-09-15,Active
+BTU-T-0003,Nino,Maisuradze,btu-t-0003@example.org,Information Technologies,Bachelor's,BTU-AI-000133,2026-09-20,Active
+BTU-T-0004,Saba,Japaridze,btu-t-0004@example.org,Digital Marketing,Bachelor's,BTU-AI-000127,2026-08-12,Active
+BTU-T-0005,Ana,Kiknadze,btu-t-0005@example.org,Computer Science and Artificial Intelligence,Bachelor's,BTU-AI-000134,2026-09-26,Active
+BTU-T-0006,Davit,Metreveli,btu-t-0006@example.org,Psychology in the Digital World,Bachelor's,BTU-AI-000128,2026-07-10,Active
+BTU-T-0007,Salome,Chkheidze,btu-t-0007@example.org,Business Administration and Modern Technologies,Master's,BTU-AI-000135,2026-09-19,Active
+BTU-T-0008,Luka,Kipiani,btu-t-0008@example.org,Information Systems Management - DevOps,Master's,BTU-AI-000129,2026-06-22,Active
+BTU-T-0009,Tamar,Gogoladze,btu-t-0009@example.org,Data-Driven Digital Marketing,Master's,BTU-AI-000130,2025-11-10,Graduate
+BTU-T-0010,Irakli,Samkharadze,btu-t-0010@example.org,International Security and Technologies,Master's,BTU-AI-000136,2026-09-28,Active
+BTU-T-0011,Elene,Lomidze,btu-t-0011@example.org,Business Administration (Management),Bachelor's,BTU-AI-000131,2026-03-20,Active
+BTU-T-0012,Nikoloz,Gelashvili,btu-t-0012@example.org,Business Administration (Finance),Bachelor's,BTU-AI-000137,2026-09-18,Active
+BTU-T-0013,Ketevan,Abashidze,btu-t-0013@example.org,Information Technologies,Bachelor's,BTU-AI-000132,2025-12-20,Graduate
+BTU-T-0014,Aleksandre,Mchedlishvili,btu-t-0014@example.org,Digital Marketing,Bachelor's,BTU-AI-000138,2026-09-24,Active
+BTU-T-0021,Luka,Japaridze,btu-t-0021@example.org,Business Administration and Modern Technologies,Master's,BTU-AI-000139,2026-10-17,Active
+BTU-T-0022,Salome,Abashidze,btu-t-0022@example.org,Information Systems Management - DevOps,Master's,BTU-AI-000140,2026-10-17,Active
+BTU-T-0023,Dato,Kiknadze,btu-t-0023@example.org,Data-Driven Digital Marketing,Master's,BTU-AI-000141,2026-10-17,Active
+BTU-T-0024,Elene,Tsiklauri,btu-t-0024@example.org,International Security and Technologies,Master's,BTU-AI-000142,2026-10-17,Active

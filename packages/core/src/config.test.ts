@@ -43,3 +43,10 @@ describe('Supabase configuration', () => {
     expect(() => artifactStore()).toThrow('durable artifacts');
   });
 });
+
+it('recognizes Supabase missing objects returned as HTTP 400 with a 404 body', async () => {
+  vi.stubEnv('SUPABASE_URL',url);vi.stubEnv('SUPABASE_SECRET_KEY','sb_secret_test');
+  vi.stubGlobal('fetch',vi.fn().mockResolvedValue(new Response(JSON.stringify({statusCode:'404',error:'not_found'}),{status:400})));
+  const {optionalArtifact}=await import('./storage');
+  expect(await optionalArtifact(new SupabaseArtifactStore(),'absent.pdf')).toBeNull();
+});

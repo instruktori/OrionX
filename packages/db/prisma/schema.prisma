@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -29,97 +29,222 @@ enum TrustMode {
 }
 
 model Student {
-  id String @id @default(cuid())
-  externalId String @unique
-  email String @unique
-  firstName String
-  lastName String
-  program String
+  id             String            @id @default(cuid())
+  externalId     String            @unique
+  email          String            @unique
+  firstName      String
+  lastName       String
+  program        String
   educationLevel String
-  status String
-  passport Passport?
-  awards Award[]
-  createdAt DateTime @default(now())
+  status         String
+  passport       Passport?
+  awards         Award[]
+  identities     StudentIdentity[]
+  createdAt      DateTime          @default(now())
 }
 
 model Passport {
-  id String @id @default(cuid())
-  publicId String @unique
-  studentId String @unique
-  student Student @relation(fields:[studentId],references:[id])
-  versions Version[]
-  nextVersion Int @default(1)
-  createdAt DateTime @default(now())
+  id                     String    @id @default(cuid())
+  publicId               String    @unique
+  studentId              String    @unique
+  student                Student   @relation(fields: [studentId], references: [id])
+  versions               Version[]
+  nextVersion            Int       @default(1)
+  initialIssueDate       DateTime  @db.Date
+  opaqueChainRef         String    @unique
+  latestFinalizedVersion Int       @default(0)
+  activeVersionId        String?
+  createdAt              DateTime  @default(now())
 }
 
 model Award {
-  id String @id @default(cuid())
-  sourceRecordId String @unique
-  studentId String
-  student Student @relation(fields:[studentId],references:[id])
-  skillId String
-  name String
-  category String
-  badgeCode String
-  description String
-  earnedAt DateTime
-  sourceFingerprint String
-  createdAt DateTime @default(now())
+  id                   String         @id @default(cuid())
+  sourceRecordId       String         @unique
+  studentId            String
+  student              Student        @relation(fields: [studentId], references: [id])
+  skillId              String
+  name                 String
+  category             String
+  badgeCode            String
+  description          String
+  earnedAt             DateTime
+  sourceFingerprint    String
+  firstIncludedVersion Int?
+  versions             VersionAward[]
+  createdAt            DateTime       @default(now())
 }
 
 model Version {
-  id String @id @default(cuid())
-  passportId String
-  passport Passport @relation(fields:[passportId],references:[id])
-  number Int
-  codeHash String @unique
-  snapshot Json
-  pdfSha256 String?
-  storageKey String?
-  trustMode TrustMode @default(DEMO)
-  state JobState @default(DISCOVERED)
-  txSignature String?
-  versionPda String?
+  id            String           @id @default(cuid())
+  passportId    String
+  passport      Passport         @relation(fields: [passportId], references: [id])
+  number        Int
+  codeHash      String           @unique
+  code          String           @unique
+  intentDigest  String
+  snapshot      Json
+  pdfSha256     String?
+  storageKey    String?
+  stagingKey    String           @unique
+  pageCount     Int?
+  byteLength    Int?
+  trustMode     TrustMode        @default(DEMO)
+  state         JobState         @default(DISCOVERED)
+  txSignature   String?
+  versionPda    String?
   finalizedSlot BigInt?
-  createdAt DateTime @default(now())
-  jobs Job[]
-  @@unique([passportId,number])
+  chainCluster String?
+  chainProgramId String?
+  chainGenesisHash String?
+  finalizedAt   DateTime?
+  awards        VersionAward[]
+  attempts      ChainAttempt[]
+  writebacks    SheetWriteback[]
+  createdAt     DateTime         @default(now())
+  jobs          Job[]
+
+  @@unique([passportId, number])
+  @@unique([passportId, intentDigest])
 }
 
 model Job {
-  id String @id @default(cuid())
-  versionId String?
-  version Version? @relation(fields:[versionId],references:[id])
-  type String
-  state JobState @default(QUEUED)
-  idempotencyKey String @unique
-  attempts Int @default(0)
-  availableAt DateTime @default(now())
-  lastError String?
-  leaseOwner String?
-  leaseUntil DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  @@index([state,availableAt])
+  id             String    @id @default(cuid())
+  versionId      String?
+  version        Version?  @relation(fields: [versionId], references: [id])
+  type           String
+  stage          String    @default("PDF")
+  state          JobState  @default(QUEUED)
+  idempotencyKey String    @unique
+  attempts       Int       @default(0)
+  availableAt    DateTime  @default(now())
+  lastError      String?
+  leaseOwner     String?
+  leaseUntil     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([state, availableAt])
 }
 
 model AuditEvent {
-  id String @id @default(cuid())
-  actorId String?
-  action String
-  targetId String?
-  detail Json
+  id        String   @id @default(cuid())
+  actorId   String?
+  action    String
+  targetId  String?
+  detail    Json
   createdAt DateTime @default(now())
+
   @@index([createdAt])
 }
 
 model SourceSync {
-  id String @id @default(cuid())
-  sourceRecordId String @unique
+  id              String    @id @default(cuid())
+  sourceRecordId  String    @unique
+  fingerprint     String
+  status          String
+  lastError       String?
+  syncedVersion   Int?
+  syncedAt        DateTime?
+  sourceId        String    @default("fixture")
+  sourceStudentId String?
+  originalState   Json?
+  metadataId      Int?
+  updatedAt       DateTime  @updatedAt
+}
+
+model StudentIdentity {
+  id         String   @id @default(cuid())
+  provider   String
+  subject    String
+  role       String   @default("student")
+  studentId  String?
+  student    Student? @relation(fields: [studentId], references: [id])
+  verifiedBy String
+  verifiedAt DateTime @default(now())
+
+  @@unique([provider, subject])
+  @@index([studentId])
+}
+
+model VersionAward {
+  versionId    String
+  version      Version @relation(fields: [versionId], references: [id])
+  awardId      String
+  award        Award   @relation(fields: [awardId], references: [id])
+  displayOrder Int
+
+  @@id([versionId, awardId])
+  @@index([awardId])
+}
+
+model ChainAttempt {
+  id                   String   @id @default(cuid())
+  versionId            String
+  version              Version  @relation(fields: [versionId], references: [id])
+  signature            String   @unique
+  transactionBytes     String
+  blockhash            String
+  lastValidBlockHeight BigInt
+  state                String   @default("SIGNED")
+  error                String?
+  createdAt            DateTime @default(now())
+
+  @@index([versionId, createdAt])
+}
+
+model ImportRun {
+  id             String              @id @default(cuid())
+  sourceId       String
+  idempotencyKey String              @unique
+  state          String              @default("RUNNING")
+  totals         Json
+  error          String?
+  observations   SourceObservation[]
+  conflicts      ImportConflict[]
+  createdAt      DateTime            @default(now())
+  completedAt    DateTime?
+
+  @@index([createdAt])
+}
+
+model SourceObservation {
+  id          String    @id @default(cuid())
+  runId       String
+  run         ImportRun @relation(fields: [runId], references: [id])
+  recordId    String
   fingerprint String
-  status String
-  lastError String?
-  syncedVersion Int?
-  syncedAt DateTime?
-  updatedAt DateTime @updatedAt
+  payload     Json
+
+  @@index([recordId])
+  @@index([runId])
+}
+
+model ImportConflict {
+  id         String    @id @default(cuid())
+  runId      String
+  run        ImportRun @relation(fields: [runId], references: [id])
+  studentId  String?
+  recordId   String?
+  reason     String
+  payload    Json
+  resolvedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([runId])
+  @@index([studentId, resolvedAt])
+}
+
+model SheetWriteback {
+  id                  String    @id @default(cuid())
+  recordId            String
+  versionId           String
+  version             Version   @relation(fields: [versionId], references: [id])
+  expectedFingerprint String
+  state               String    @default("PENDING")
+  attempts            Int       @default(0)
+  error               String?
+  completedAt         DateTime?
+
+  @@unique([recordId, versionId])
+  @@index([state])
 }

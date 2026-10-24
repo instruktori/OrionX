@@ -1,0 +1,23 @@
+{
+  "environment": "ISOLATED_LOCAL_VALIDATOR_WITH_REAL_POSTGRES_AND_SUPABASE_AUTH",
+  "devnetEvidence": false,
+  "officialBtu": false,
+  "versions": 2,
+  "awards": 5,
+  "checks": [
+    "durable reservation",
+    "private exact-byte storage",
+    "signed attempt before broadcast",
+    "real SBF registration",
+    "finalized verification",
+    "cumulative V2 and backdated discovery",
+    "V1 authentic and superseded",
+    "tamper rejection",
+    "real authenticated download",
+    "anonymous and unrelated student denied",
+    "idempotent replay"
+  ],
+  "elapsedSeconds": 86.14,
+  "setupTransaction": null,
+  "checkedAt": "2026-10-24T19:51:03.297Z"
+}

@@ -1,13 +1,13 @@
-# Backend integration status
+# Backend status
 
-Implemented in this change:
-- Type-safe domain contracts and exact-byte hashing
-- Cryptographically random 160-bit verification codes
-- Immutable award reconciliation
-- Multi-page synthetic-only PDF renderer
-- Initial relational Prisma model for students, awards, passport versions, job ledger and audit events
-- NestJS liveness/readiness and fail-closed verification endpoints
-- Strictly pinned Devnet connection preflight and account-owner checks (does **not** yet validate account layout or declare proofs verified)
-- Local PostgreSQL/Redis compose file and GitHub Actions build/test configuration
+See [architecture checkpoint](ARCHITECTURE_PROGRESS.md) for the current evidence
+and [remaining setup](SETUP_REMAINING.md) for the two external dependencies.
 
-**Not implemented:** the actual Anchor program and independently verified account schema, production issuer trust, job processing, Google Sheets adapter, verified student auth, durable PDF storage, live deployment, full integration/E2E tests and official BTU template. Until these exist, live issuance and positive verification must remain disabled.
+Authentication, database-bound student/admin roles, protected APIs, private PDF
+delivery, durable import/version reservation, PDF/chain/writeback worker stages,
+and the compiled Anchor protocol are implemented. The complete flow has passed
+with real PostgreSQL/Supabase Auth and a local Solana validator.
+
+Real Devnet deployment, unattended live Google Sheets integration, and hosted
+end-to-end acceptance are still pending. A simulated BTU issuer is authorized for
+development; no official university issuance is claimed.

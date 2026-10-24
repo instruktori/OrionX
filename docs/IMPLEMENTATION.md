@@ -1,24 +1,22 @@
-# OrionX implementation status and acceptance gates
+# Implementation and acceptance
 
-## Implemented in this PR
-- Premium responsive English-language UI with synthetic sample data
-- Typed domain model, immutable-award reconciliation, 160-bit version codes
-- Demo multi-page PDF renderer and exact-byte SHA-256
-- Google Sheets 20-column reader and header/identity conflict validation
-- NestJS liveness, readiness, public verification endpoints and PDF upload handling
-- Prisma models for student, award, passport, version, job and audit records
-- Anchor Devnet-only registry contract source with issuer rotation and pause
-- Devnet proof account parsing and PDF hash comparison (not deployed or independently tested)
-- Local PostgreSQL/Redis compose configuration and CI scaffold
+The current implementation/evidence is tracked in
+[ARCHITECTURE_PROGRESS.md](ARCHITECTURE_PROGRESS.md). External setup steps are in
+[SETUP_REMAINING.md](SETUP_REMAINING.md).
 
-## Outstanding before any real issuance
-1. Run a clean build, unit tests, Anchor compilation, and security tests; fix any failures.
-2. Implement transactional database-backed version reservation, idempotent worker and retry-safe on-chain broadcast/reconciliation.
-3. Complete Google Sheets sync/writeback Q–T and race-condition handling.
-4. Implement authenticated student/admin sessions, RBAC and private PDF delivery.
-5. Obtain official BTU template and institutional issuer authorization; implement independent issuer trust manifest.
-6. Deploy and test the Anchor contract on **Solana Devnet**, configure immutable verification roots and record deployment metadata.
-7. Deploy Azure services with secret management, backups, monitoring, and end-to-end/load testing.
-8. Import and reconcile the actual 18-student/60-award challenge workbook rather than synthetic examples.
+Run `npm ci`, `npm run db:generate`, `npm run typecheck`, `npm test`, and
+`npm run build` for local source checks. `npm run test:ledger`, `test:api`,
+`test:capacity`, and `test:pipeline` require explicitly configured services and
+synthetic demo identities. The pipeline/capacity scripts create and remove their
+own isolated database schemas; they do not issue canonical passports on Devnet.
 
-**No live credentials or official issuer proof are present. No production deployment or successful test run has been established.**
+`cargo test --lib` checks Rust layouts; `cargo build-sbf --manifest-path
+programs/passport-registry/Cargo.toml` builds the deployable program. Program
+integration tests require a local validator loaded with that binary and the
+matching ignored demo keys. `npm run deploy:devnet` requires free test-network
+funding and refuses other clusters.
+
+No successful local test substitutes for actual Devnet, live-Sheets or hosted
+acceptance evidence. Keep the deployment worker paused until its intended
+source, private storage, signing credentials and public verification origin are
+configured. Never migrate or reset databases during application builds.

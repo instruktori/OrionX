@@ -1,0 +1,17 @@
+skill_id,skill_name,skill_category,badge_stamp_code,skill_description
+SKL-001,AI Literacy,AI Skill,BDG-AI-001,"Fundamentals of AI capabilities, limitations, and responsible use."
+SKL-002,Prompt Engineering Fundamentals,AI Skill,BDG-AI-001,Writing effective prompts for generative AI and evaluating responses.
+SKL-003,AI Ethics & Responsible Use,AI Skill,BDG-AI-001,"Identifying bias, privacy issues, and ethical risks in AI use."
+SKL-004,AI Productivity Tools,AI Skill,BDG-AI-001,Using AI tools to improve efficiency in routine tasks.
+SKL-005,AI-Assisted Research,AI Skill,BDG-AI-001,Researching information with AI assistance and critically verifying sources.
+SKL-006,AI Data Analysis,AI Applied Skill,BDG-AI-002,"Cleaning, analyzing, and interpreting data using AI tools."
+SKL-007,Marketing Content with Generative AI,AI Applied Skill,BDG-AI-002,"Generating, editing, and assessing marketing content with generative AI."
+SKL-008,AI Workflow Automation,AI Applied Skill,BDG-AI-002,Automating workflows using AI tools and system integrations.
+SKL-009,AI Financial Analysis,AI Applied Skill,BDG-AI-002,Analyzing financial data and supporting evidence-based conclusions with AI.
+SKL-010,AI Business Decision Support,AI Applied Skill,BDG-AI-002,Using AI-driven analytics to support business decisions.
+SKL-011,AI-Powered Customer Insights,AI Applied Skill,BDG-AI-002,Analyzing customer data and deriving marketing insights with AI.
+SKL-012,Machine Learning Model Development,AI Advanced Skill,BDG-AI-003,"Building, training, and evaluating machine-learning models."
+SKL-013,Natural Language Processing,AI Advanced Skill,BDG-AI-003,Applying natural language processing methods to textual data.
+SKL-014,AI Systems Deployment,AI Advanced Skill,BDG-AI-003,Deploying and monitoring AI solutions in operational environments.
+SKL-015,Predictive Analytics with AI,AI Advanced Skill,BDG-AI-003,Developing predictive models and evaluating their performance.
+SKL-016,MLOps Fundamentals,AI Advanced Skill,BDG-AI-003,"Versioning, automating, and maintaining machine-learning workflows."

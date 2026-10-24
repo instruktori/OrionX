@@ -1,16 +1,29 @@
-# Solana Devnet registry — predeployment blockers
+# Solana Devnet registry deployment
 
-The Anchor source is a first implementation of immutable passport/version accounts, issuer rotation and pause control. **It is not deployed, audited or verified.**
+The program is compiled and tested on a local validator. It is not yet deployed
+to Devnet and has not received an independent security audit.
 
-1. Generate a new program keypair using the Solana/Anchor CLI; replace both placeholder program IDs and recompile.
-2. Replace BOOTSTRAP_ADMIN with an explicitly approved public key, not a zero/default key.
-3. Obtain explicit institutional approval for the issuer wallet before any BTU_CONFIRMED claim.
-4. Add Anchor tests for unauthorized initialize, issuer rotation, pause, duplicate code, non-issuer registration, version chain and old-record persistence.
-5. Implement a strict independent account parser (Anchor discriminators, expected data lengths, PDA seeds, owner, issuer epoch, registry latest and official trust manifest).
-6. Pin the Devnet genesis hash in the verifier configuration; do not infer it from an arbitrary RPC.
-7. Deploy only to Solana Devnet and document program ID, deployment signature and upgrade authority custody.
-8. Use a test-funded wallet and never commit any private key.
+- Program: `9q3EFytGCsR2hk5FnerXxMWomC2yCajpx78durY91JPa`
+- Bootstrap admin: `BNcEvP3benzCX7tc1W2U6upZ5HVT4hzneZahVKMpCPiv`
+- Simulated issuer: `DoBPRwB5HkE6Hu3J6khzwdZhH6nSrrHmiuwx68wrdJWt`
 
-**Do not execute** `anchor deploy` with these placeholder keys. The zero bootstrap key is deliberately unusable so that the contract cannot accidentally establish an unapproved issuer.
+The generated private keypairs remain in ignored `.secrets/`. The user authorized
+this simulated issuer for development. Demo mode always reports
+`officialBtu=false`; future official issuer trust requires authenticated university
+authorization and the configured trust material.
 
-On-chain references are opaque random bytes; never put names, emails or award details on-chain.
+Follow [remaining setup](SETUP_REMAINING.md) to fund the deployment wallet, then
+run `npm run deploy:devnet`. The helper verifies the expected Devnet genesis hash,
+matching program/bootstrap keys and balance, deploys with a separate upgrade
+authority, initializes the issuer and records actual public evidence after success.
+Never commit keypairs or upload operator keys to the web/API runtime.
+
+Local evidence and its limits are in [the checkpoint](ARCHITECTURE_PROGRESS.md)
+and `evidence/local-chain.json`. Tests cover unauthorized initialization/issuance,
+ordering, duplicate codes, pause, two-signer rotation and historical preservation.
+These results do not replace real Devnet smoke tests.
+
+`npm run issuer:admin` supports deliberate pause/resume and issuer rotation.
+Historical issuer epochs remain immutable and independently verifiable. A later
+approved university key can replace the demo issuer through rotation/configuration.
+Mainnet is disabled. On-chain references contain no names, emails or award details.

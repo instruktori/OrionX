@@ -48,7 +48,7 @@ test('worker retries a database outage and exits cleanly on SIGTERM', {timeout: 
     run.child.kill('SIGTERM');
     const [code] = await run.done;
     assert.equal(code, 0);
-    assert.match(run.output(), /Draining OrionX PDF worker/);
+    assert.match(run.output(), /Draining OrionX worker/);
   } finally {
     if (run.child.exitCode === null) run.child.kill('SIGKILL');
   }

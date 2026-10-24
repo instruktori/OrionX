@@ -1,0 +1,9 @@
+"use client";
+import {useState} from 'react';
+import {useRouter} from 'next/navigation';
+import {Shell} from '@/components/shell';
+import {api} from '@/lib/session';
+export default function Login(){
+ const router=useRouter();const [email,setEmail]=useState(''),[password,setPassword]=useState(''),[error,setError]=useState(''),[loading,setLoading]=useState(false);
+ return <Shell><div className="eyebrow">SECURE WORKSPACE / SIGN IN</div><h1>Access your passport</h1><p className="lead">Sign in with an account assigned to your student record. Public verification remains available without an account.</p><section className="card" style={{maxWidth:520}}><form onSubmit={async e=>{e.preventDefault();setLoading(true);setError('');try{const s=await api('/auth/login',{method:'POST',body:JSON.stringify({email,password})});setPassword('');router.push(s.role==='admin'?'/admin':'/passport');router.refresh()}catch(e){setError(e instanceof Error?e.message:'Unable to sign in')}finally{setLoading(false)}}}><label htmlFor="email" className="mini-kicker">EMAIL</label><input id="email" type="email" required autoComplete="username" className="input" style={{margin:'10px 0 24px'}} value={email} onChange={e=>setEmail(e.target.value)}/><label htmlFor="password" className="mini-kicker">PASSWORD</label><input id="password" type="password" required autoComplete="current-password" className="input" style={{margin:'10px 0 24px'}} value={password} onChange={e=>setPassword(e.target.value)}/>{error&&<p role="alert" className="notice">{error}</p>}<button className="button" disabled={loading}>{loading?'Signing in…':'Sign in'}</button></form><p className="muted" style={{marginTop:22,lineHeight:1.7}}>This tenant uses fictional test identities. Access is assigned by the operator; entering an institutional email does not grant a role.</p></section></Shell>
+}

@@ -1,0 +1,21 @@
+{
+  "revision": "btu-reference-v1",
+  "sourceFolder": "https://drive.google.com/drive/folders/1xPsvBq6mhfFrF3h36tR7WkL8gn8TDWRO",
+  "referenceFileId": "1z-O8_I48x4_e96zshynuf6MyBjHbybV3",
+  "skillStampsArchiveId": "1ezPoxBcAVpC5huoKQZnS8Z0qAVp3XIkj",
+  "coverStampsArchiveId": "1rXb3IiJ-7DjQSiPemu7v1ozBqyOb13b6",
+  "officialIssuerAuthorization": false,
+  "files": {
+    "skills.zip": "c0e20b7580b73613f9e94079c7908f66b4f0a49e9f9d3825ae287c22afcf13f3",
+    "cover.zip": "f5f440dd23a1ec17f913bb22cff313aec6fadc268f85ee28b33de3bf7ac957ca",
+    "reference.png": "547a28d541fef27666536b2505cea14b183a3086265e0ec5c960679f3fc5e8f7",
+    "skills/Artboard 3 (2).png": "e8a8def341f208e8e7a4068faddd2960413c7d905b0dff986676935d52d0174a",
+    "skills/Artboard 4 (1).png": "7a7f0ef0267bc4edd65a02f39b4c2d620f5481e6e037ea56b48da18f0db7869d",
+    "skills/Artboard 5 (1).png": "63da2a7995a8012bd80ecc5f81b74af354cebdb30346b4bf284c388baa2f5f25",
+    "cover/1_1@3x.png": "72e1940176f45a6fa00a8669877d27df739fdf03f4f19da3b8fa7c7a31354221",
+    "cover/5_1@3x.png": "6abeead569662ffd5c2fc6e5d8a138d1e12618cf64df341cfff94ff4dd073e4f",
+    "cover/4_1@3x.png": "1e62546606ad1932088ed2b04bc2d6b053d1f6479b2a3adceb1d3f3adf5c366b",
+    "cover/2_1@3x.png": "7976c4eaef637f9600c4eddebe276f68fd79c7e302350e8fabd1d61a87d5bd88",
+    "cover/3_1@3x.png": "d3edb9f55c67df1b321828624fbae2daeaf5c0df51348905c4a04726a1d983e5"
+  }
+}

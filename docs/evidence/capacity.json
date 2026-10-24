@@ -1,0 +1,19 @@
+{
+  "environment": "ISOLATED_POSTGRES_SCHEMA",
+  "syntheticPassports": 5000,
+  "syntheticAwards": 5000,
+  "syntheticVersions": 5000,
+  "durableJobs": 5000,
+  "persistSeconds": 18.01358425,
+  "claimedJobs": 50,
+  "concurrentClaimers": 2,
+  "duplicateClaims": 0,
+  "claimSeconds": 3.4090796670000016,
+  "samplePdfs": 10,
+  "samplePdfBytes": 677983,
+  "renderSeconds": 0.9271537919999974,
+  "fullChainLoadTest": false,
+  "devnetTransactions": 0,
+  "interpretation": "Measured persistence, actual queue claim function and PDF samples. These measurements do not establish full issuance throughput or a burst SLA.",
+  "checkedAt": "2026-10-24T19:42:31.569Z"
+}

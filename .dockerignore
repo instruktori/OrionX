@@ -10,3 +10,9 @@ node_modules
 .artifacts
 coverage
 target
+
+.secrets
+.anchor
+test-ledger
+
+output

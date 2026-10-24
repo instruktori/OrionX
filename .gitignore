@@ -30,6 +30,10 @@ yarn-error.log*
 .env*
 !.env.example
 .artifacts/
+.secrets/
+/target/
+.anchor/
+test-ledger/
 
 # vercel
 .vercel
@@ -37,3 +41,4 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+output/

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "api": {
+      "root": "apps/api",
+      "framework": "nestjs",
+      "entrypoint": "src/server.ts",
+      "installCommand": "cd ../.. && npm ci",
+      "buildCommand": "npm run typecheck"
+    },
+    "web": {
+      "root": "apps/web",
+      "framework": "nextjs",
+      "installCommand": "cd ../.. && npm ci",
+      "buildCommand": "npm run build",
+      "devCommand": "npm run dev -- --hostname 127.0.0.1"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api",
+      "destination": {
+        "service": "api"
+      }
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": {
+        "service": "api"
+      }
+    },
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "web"
+      }
+    }
+  ],
+  "daemons": {
+    "worker": {
+      "root": ".",
+      "entrypoint": "Dockerfile.worker",
+      "instances": {
+        "iad1": 0
+      },
+      "terminationGracePeriodSeconds": 150
+    }
+  }
+}

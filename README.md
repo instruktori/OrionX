@@ -7,13 +7,12 @@ English-language premium interface and **Solana Devnet-only** credential archite
 Node.js 22 recommended. Install Docker for local PostgreSQL/Redis.
 
 ```sh
-npm install
-npm run dev
-# in a separate terminal
-npm run dev -w @orionx/api
+npm ci
+npm run db:generate
+npm run dev:services
 ```
 
-Open http://localhost:3000 for the UI, http://localhost:4000/api/v1/health/live for API liveness. The UI is a **synthetic preview**, not a BTU-issued passport system. Verification fails closed until a real Anchor program and independent institutional trust have been configured.
+Open the URL printed by `vercel dev` for the UI, and `/api/v1/health/live` on that same origin for API liveness. This runs both HTTP services with the same routing as deployment. `npm run dev` still runs the UI alone; verification also needs the API and shared Vercel router. The UI is a **synthetic preview**, not a BTU-issued passport system. Verification fails closed until a real Anchor program and independent institutional trust have been configured.
 
 To start development databases: `docker compose up -d`.
 
@@ -24,6 +23,8 @@ To start development databases: `docker compose up -d`.
 - CI configuration and security/implementation documentation
 
 ## Outstanding
-See `docs/IMPLEMENTATION.md` and `docs/BACKEND_STATUS.md`. No successful live deployment or test execution is claimed.
+See `docs/IMPLEMENTATION.md` and `docs/BACKEND_STATUS.md`. No successful live deployment is claimed.
 
-Never commit API keys, Solana keypairs, student data or Supabase service keys. Use Azure Key Vault for production secrets.
+Deployment setup and worker scope: see [Vercel deployment](docs/VERCEL.md).
+
+Never commit API keys, Solana keypairs, student data or Supabase service keys. Configure production secrets in the Vercel project's environment variables.

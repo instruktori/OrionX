@@ -11,7 +11,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npm install
-      - run: npm run typecheck -w @orionx/web
+      - run: npm ci
+      - run: npm run db:validate
+        env:
+          DATABASE_URL: postgresql://orionx:local@localhost:5432/orionx
+      - run: npm run db:generate
+      - run: npm run typecheck
       - run: npm run build -w @orionx/web
-      - run: npm run test -w @orionx/core
+      - run: npm test
+      - run: docker build -f Dockerfile.worker -t orionx-worker .

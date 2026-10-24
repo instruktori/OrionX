@@ -4,11 +4,16 @@ import {renderDemoPdf} from "@orionx/core/src/pdf";
 import type {Snapshot} from "@orionx/core";
 import {randomUUID} from "node:crypto";
 import {Prisma} from "@prisma/client";
+import {setTimeout as delay} from "node:timers/promises";
 
 const workerId=randomUUID();
-const POLL_MS=3000;
-const LEASE_MS=120000;
-const sleep=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
+function positiveInteger(name:string,fallback:number){const value=Number(process.env[name]??fallback);if(!Number.isSafeInteger(value)||value<1)throw Error(name+" must be a positive integer");return value}
+const POLL_MS=positiveInteger("WORKER_POLL_MS",3000);
+const LEASE_MS=positiveInteger("WORKER_LEASE_MS",120000);
+const MAX_ATTEMPTS=positiveInteger("WORKER_MAX_ATTEMPTS",5);
+const shutdown=new AbortController();
+for(const signal of ["SIGTERM","SIGINT"] as const)process.once(signal,()=>{console.log("Draining OrionX PDF worker",workerId);shutdown.abort()});
+async function sleep(){try{await delay(POLL_MS,undefined,{signal:shutdown.signal})}catch(error){if(!shutdown.signal.aborted)throw error}}
 
 /** PostgreSQL row locks avoid two workers claiming the same job. Expired leases are reclaimed. */
 async function claim():Promise<string|undefined>{
@@ -22,7 +27,7 @@ async function claim():Promise<string|undefined>{
  )
  UPDATE "Job" AS job
  SET state='RENDERED', "leaseOwner"=${workerId},
-     "leaseUntil"=NOW()+INTERVAL '120 seconds', "updatedAt"=NOW()
+     "leaseUntil"=NOW()+${LEASE_MS}*INTERVAL '1 millisecond', "updatedAt"=NOW()
  FROM candidate WHERE job.id=candidate.id
  RETURNING job.id
  `);
@@ -60,10 +65,17 @@ async function fail(id:string,error:unknown){
  const job=await prisma.job.findUnique({where:{id}});
  if(!job||job.leaseOwner!==workerId)return;
  const attempts=job.attempts+1;
- await prisma.job.updateMany({where:{id,leaseOwner:workerId},data:{attempts,lastError:String(error).slice(0,2000),state:attempts>=5?"FAILED_PERMANENT":"RETRY_WAIT",availableAt:new Date(Date.now()+Math.min(3600000,1000*2**attempts)),leaseOwner:null,leaseUntil:null}});
+ await prisma.job.updateMany({where:{id,leaseOwner:workerId},data:{attempts,lastError:String(error).slice(0,2000),state:attempts>=MAX_ATTEMPTS?"FAILED_PERMANENT":"RETRY_WAIT",availableAt:new Date(Date.now()+Math.min(3600000,1000*2**attempts)),leaseOwner:null,leaseUntil:null}});
 }
 async function run(){
+ if(!process.env.DATABASE_URL)throw Error("DATABASE_URL is required to run the PDF worker");
+ if(process.env.VERCEL_REGION&&process.env.STORAGE_MODE!=="supabase")throw Error("Vercel workers require durable storage: set STORAGE_MODE=supabase");
  console.log("OrionX PDF worker started",workerId);
- while(true){const id=await claim();if(!id){await sleep(POLL_MS);continue}try{await processClaim(id)}catch(e){console.error("Job failed",id,e);await fail(id,e)}}
+ try{
+  while(!shutdown.signal.aborted){
+   try{const id=await claim();if(!id){await sleep();continue}try{await processClaim(id)}catch(e){console.error("Job failed",id,e);await fail(id,e)}}
+   catch(e){console.error("Worker polling failed; retrying",e);await sleep()}
+  }
+ }finally{await prisma.$disconnect()}
 }
-run().catch(e=>{console.error(e);process.exit(1)});
+run().catch(e=>{console.error(e);process.exitCode=1});

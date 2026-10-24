@@ -74,7 +74,23 @@ p.lead{color:var(--muted);font-size:14px;line-height:1.75;margin:0 0 27px}
 .search-field{position:relative}.search-field svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#a3a4b5}.search-field input{padding-left:40px}
 .empty-state{padding:35px;text-align:center;color:#9696a9;font-size:13px}
 .result-panel{border:1px solid #e7e5f3;border-radius:14px;padding:19px;background:#faf9ff;margin-top:20px}.result-panel strong{display:block;font-size:13px}.result-panel p{font-size:12px;line-height:1.7;color:#696d84}
+.auth-layout{max-width:540px}
+.auth-card{padding:30px;border-radius:20px;box-shadow:0 12px 34px #1c20400a}
+.auth-card h2{font-size:24px;margin:14px 0 8px}
+.auth-badge{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;background:#f2f0ff;color:#5c4ec9;font-size:10px;font-weight:800;letter-spacing:.08em}
+.google-button{width:100%;display:inline-flex;align-items:center;justify-content:center;gap:12px;padding:15px 20px;border-radius:13px;border:1px solid #dcdde8;background:#fff;color:var(--ink);font-family:Manrope,sans-serif;font-weight:800;font-size:14px;letter-spacing:-.01em;box-shadow:0 3px 10px #1417360a;transition:border-color .15s,box-shadow .15s,transform .15s,background .15s}
+.google-button:hover:not(:disabled){background:#fafaff;border-color:#b8b3f2;box-shadow:0 8px 20px #5245bc17;transform:translateY(-1px)}
+.google-button:active:not(:disabled){transform:translateY(0)}
+.google-button:disabled{opacity:.65;cursor:not-allowed}
+.google-icon{flex-shrink:0}
+.auth-divider{height:1px;background:var(--line);margin:24px 0}
+.identity-box{margin-top:12px;padding:12px 14px;border-radius:11px;background:#fff;border:1px solid #e4e2f5;display:grid;gap:5px;overflow-x:auto}
+.identity-box code{font-size:12px;color:#3d358b;font-weight:700;word-break:break-all}
+.top-auth-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 13px;border-radius:10px;border:1px solid var(--line);background:#fff;color:#474b67;font-size:12px;font-weight:800;transition:background .15s,border-color .15s}
+.top-auth-btn:hover{background:#f5f4ff;border-color:#d4d0f8;color:#5346c4}
+.icon-signout{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:#fff;color:#6c7089;flex-shrink:0}
+.icon-signout:hover{background:#f5f4ff;color:#5346c4}
 @media(max-width:1100px){.sidebar{width:220px}.content{padding:35px 25px}.topbar{padding:0 25px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:760px){.sidebar{position:fixed;top:0;bottom:0;left:0;width:265px;transform:translateX(-105%);transition:transform .2s;box-shadow:12px 0 50px #171a3c14}.sidebar.sidebar-open{transform:translateX(0)}.mobile-backdrop{display:block;position:fixed;inset:0;background:#11172d70;border:0;z-index:15}.mobile-menu{display:grid;place-items:center;background:none;border:0;padding:7px;color:#353456}.topbar{height:66px;padding:0 17px}.top-actions{gap:9px}.top-docs,.top-avatar{display:none}.content{padding:27px 16px 70px}.columns,.hero{grid-template-columns:1fr}.hero{padding:29px}.orb{display:none}.card{padding:19px}.section-head{margin-top:27px}}
-@media(max-width:440px){.stats{gap:10px}.stat-value{font-size:25px}.stat-label{font-size:11px}.card{padding:15px}.passport-grid{gap:8px}.passport-metric strong{font-size:16px}.breadcrumb{font-size:11px}}
+@media(max-width:760px){.sidebar{position:fixed;top:0;bottom:0;left:0;width:265px;transform:translateX(-105%);transition:transform .2s;box-shadow:12px 0 50px #171a3c14}.sidebar.sidebar-open{transform:translateX(0)}.mobile-backdrop{display:block;position:fixed;inset:0;background:#11172d70;border:0;z-index:15}.mobile-menu{display:grid;place-items:center;background:none;border:0;padding:7px;color:#353456}.topbar{height:66px;padding:0 17px}.top-actions{gap:9px}.top-docs,.top-avatar{display:none}.content{padding:27px 16px 70px}.columns,.hero{grid-template-columns:1fr}.hero{padding:29px}.orb{display:none}.card,.auth-card{padding:19px}.section-head{margin-top:27px}}
+@media(max-width:440px){.stats{gap:10px}.stat-value{font-size:25px}.stat-label{font-size:11px}.card,.auth-card{padding:15px}.passport-grid{gap:8px}.passport-metric strong{font-size:16px}.breadcrumb{font-size:11px}.top-auth-btn span{display:none}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}

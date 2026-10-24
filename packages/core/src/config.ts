@@ -38,3 +38,10 @@ export function supabaseAuthConfig(env: Environment = process.env) {
   if (!issuer || !jwksUrl || !audience) throw Error('Authentication not configured');
   return {issuer, jwksUrl, audience};
 }
+
+export function supabaseAuthServiceConfig(env: Environment = process.env) {
+  const {url, headers} = supabaseStorageConfig(env);
+  const auth = supabaseAuthConfig(env);
+  const cookieSecret = env.AUTH_COOKIE_SECRET || headers.apikey;
+  return {url, apikey: headers.apikey, headers, cookieSecret, ...auth};
+}

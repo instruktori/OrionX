@@ -17,4 +17,20 @@ export {verifyDevnet} from "./solana";
 export {renderDemoPdf} from "./pdf";
 export {prepareIssuance} from "./issuance";
 export {artifactStore,persistVerified} from "./storage";
-export {authenticate,requireAdmin,requireStudent} from "./auth";
+export {
+  authenticate,
+  verifyJwt,
+  resolveSession,
+  requireAdmin,
+  requireStudent,
+  sanitizeRedirectPath,
+  resolveAllowedWebOrigin,
+  createPkceChallenge,
+  sealOAuthState,
+  openOAuthState,
+  buildGoogleAuthorizeUrl,
+  bindIdentity,
+  type AuthenticatedSubject,
+  type Identity,
+  type SessionStatus,
+} from "./auth";

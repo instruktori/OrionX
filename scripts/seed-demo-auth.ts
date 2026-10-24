@@ -2,8 +2,28 @@ import {randomBytes} from 'node:crypto';
 import {mkdir,readFile,writeFile} from 'node:fs/promises';
 import {prisma} from '../packages/db/src';
 import {supabaseStorageConfig,supabaseAuthConfig} from '../packages/core/src/config';
+import {bindIdentity} from '../packages/core/src/auth';
+
+function argValue(flag: string): string | undefined {
+ const index = process.argv.indexOf(flag);
+ return index >= 0 ? process.argv[index + 1] : undefined;
+}
+
 async function main(){
  if(process.env.APP_ENV!=='demo')throw Error('Demo identities may only be seeded in APP_ENV=demo');
+ const explicitSubject = argValue('--bind-subject');
+ if(explicitSubject){
+  const role = (argValue('--role') || 'student') as 'student' | 'admin';
+  const studentExternalId = argValue('--student') || (role === 'student' ? 'BTU-T-0001' : undefined);
+  const binding = await bindIdentity({
+   subject: explicitSubject,
+   role,
+   studentExternalId,
+   verifiedBy: 'explicit-operator-cli-binding',
+  });
+  console.log(`Explicit demo binding saved for subject ${binding.subject} -> role=${binding.role}${binding.studentId ? ` studentId=${binding.studentId}` : ''}`);
+  return;
+ }
  const config=supabaseStorageConfig(),provider=supabaseAuthConfig().issuer;
  const path='.secrets/demo-logins.json';await mkdir('.secrets',{recursive:true});
  let saved:Record<string,{email:string;password:string;subject:string}>={};try{saved=JSON.parse(await readFile(path,'utf8'))}catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error}

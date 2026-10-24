@@ -4,10 +4,10 @@
   "private": true,
   "main": "src/index.ts",
   "scripts": {
-    "generate": "prisma generate --schema prisma/schema.prisma",
-    "migrate": "prisma migrate dev --schema prisma/schema.prisma",
-    "validate": "prisma validate --schema prisma/schema.prisma",
-    "push": "prisma db push --schema prisma/schema.prisma"
+    "generate": "node ../../scripts/with-env.mjs prisma generate --schema prisma/schema.prisma",
+    "migrate": "node ../../scripts/with-env.mjs prisma migrate dev --schema prisma/schema.prisma",
+    "validate": "node ../../scripts/with-env.mjs prisma validate --schema prisma/schema.prisma",
+    "push": "node ../../scripts/with-env.mjs prisma db push --schema prisma/schema.prisma"
   },
   "dependencies": {
     "@prisma/client": "^6.1.0"

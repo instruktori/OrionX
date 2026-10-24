@@ -29,6 +29,14 @@ test('cloud worker rejects ephemeral artifact storage', {timeout: 10000}, async 
   assert.match(run.output(), /require durable storage/);
 });
 
+test('worker checks cloud storage credentials before polling jobs', {timeout: 10000}, async () => {
+  const run = start({DATABASE_URL: 'postgresql://demo:demo@127.0.0.1:1/demo', STORAGE_MODE: 'supabase', SUPABASE_URL: 'https://example.supabase.co', SUPABASE_SECRET_KEY: '', SUPABASE_SERVICE_ROLE_KEY: ''});
+  const [code] = await run.done;
+  assert.equal(code, 1);
+  assert.match(run.output(), /SUPABASE_SECRET_KEY/);
+  assert.doesNotMatch(run.output(), /OrionX PDF worker started|Worker polling failed/);
+});
+
 test('worker retries a database outage and exits cleanly on SIGTERM', {timeout: 15000}, async () => {
   const run = start({DATABASE_URL: 'postgresql://demo:demo@127.0.0.1:1/demo?connect_timeout=1', WORKER_POLL_MS: '50', STORAGE_MODE: 'local'});
   try {

@@ -8,13 +8,15 @@ Node.js 22 recommended. Install Docker for local PostgreSQL/Redis.
 
 ```sh
 npm ci
+npm run env:pull
+npm run env:check
 npm run db:generate
 npm run dev:services
 ```
 
 Open the URL printed by `vercel dev` for the UI, and `/api/v1/health/live` on that same origin for API liveness. This runs both HTTP services with the same routing as deployment. `npm run dev` still runs the UI alone; verification also needs the API and shared Vercel router. The UI is a **synthetic preview**, not a BTU-issued passport system. Verification fails closed until a real Anchor program and independent institutional trust have been configured.
 
-To start development databases: `docker compose up -d`.
+The repository is linked locally to the existing Vercel project. On a new machine, link it before pulling settings. See [environment configuration](docs/ENVIRONMENT.md) for Supabase credentials, local overrides, and safe Vercel updates. To use local development databases instead, copy `.env.example` to `.env.development.local` and run `docker compose up -d`.
 
 ## Implemented
 - Responsive overview, student passport, administration and verification pages
@@ -23,7 +25,7 @@ To start development databases: `docker compose up -d`.
 - CI configuration and security/implementation documentation
 
 ## Outstanding
-See `docs/IMPLEMENTATION.md` and `docs/BACKEND_STATUS.md`. No successful live deployment is claimed.
+See `docs/IMPLEMENTATION.md` and `docs/BACKEND_STATUS.md`. Configuring the platform environment does not deploy the local code or enable live credential issuance.
 
 Deployment setup and worker scope: see [Vercel deployment](docs/VERCEL.md).
 

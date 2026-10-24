@@ -15,6 +15,7 @@ jobs:
       - run: npm run db:validate
         env:
           DATABASE_URL: postgresql://orionx:local@localhost:5432/orionx
+          DIRECT_URL: postgresql://orionx:local@localhost:5432/orionx
       - run: npm run db:generate
       - run: npm run typecheck
       - run: npm run build -w @orionx/web

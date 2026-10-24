@@ -19,6 +19,8 @@ If server-side web functions later call api, add a caller-side binding on web wi
 
 ## Environment and storage
 
+See [environment configuration](ENVIRONMENT.md) for the connected Supabase project, `DATABASE_URL`/`DIRECT_URL`, secret types, local env loading, and the `env:pull`, `env:check`, and `env:sync` commands.
+
 Keep existing chain configuration in the project's runtime environment as required by `packages/core/src/solana.ts`: `SOLANA_RPC_URL`, `SOLANA_PROGRAM_ID`, and `SOLANA_EXPECTED_GENESIS_HASH`. The health endpoint can run without these; actual verification fails closed when configuration is missing. `WEB_ORIGIN` is optional for a separate frontend; same-origin deployment does not need CORS. No fixed service hostnames or ports are required in production.
 
 PostgreSQL, Redis, Supabase and Solana RPC are external dependencies, not Vercel HTTP services. Docker Compose remains for local databases only. Do not use localhost database URLs in a deployed environment. Do not use local filesystem artifact storage for durable cloud files.

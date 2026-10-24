@@ -9,14 +9,18 @@
     "dev": "npm run dev -w @orionx/web",
     "build": "npm run build -w @orionx/web",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "dev:services": "vercel dev --local",
+    "dev:services": "node scripts/with-env.mjs --mode development vercel dev --local",
     "dev:web": "npm run dev -w @orionx/web",
     "dev:api": "npm run dev -w @orionx/api",
     "dev:worker": "npm run dev -w @orionx/worker",
     "db:generate": "npm run generate -w @orionx/db",
     "db:validate": "npm run validate -w @orionx/db",
     "db:push": "npm run push -w @orionx/db",
-    "test": "npm run test --workspaces --if-present"
+    "test": "npm run test:config && npm run test --workspaces --if-present",
+    "env:pull": "vercel env pull .env.local --environment=development --yes",
+    "env:check": "node scripts/with-env.mjs tsx scripts/check-env.ts",
+    "test:config": "node --test scripts/env.test.mjs",
+    "env:sync": "node scripts/sync-vercel-env.mjs"
   },
   "devDependencies": {
     "typescript": "^5.7.3",

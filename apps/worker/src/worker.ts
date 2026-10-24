@@ -70,6 +70,7 @@ async function fail(id:string,error:unknown){
 async function run(){
  if(!process.env.DATABASE_URL)throw Error("DATABASE_URL is required to run the PDF worker");
  if(process.env.VERCEL_REGION&&process.env.STORAGE_MODE!=="supabase")throw Error("Vercel workers require durable storage: set STORAGE_MODE=supabase");
+ artifactStore(); // Validate storage credentials before claiming any database job.
  console.log("OrionX PDF worker started",workerId);
  try{
   while(!shutdown.signal.aborted){

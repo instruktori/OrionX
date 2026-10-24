@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "tsx watch src/worker.ts",
-    "start": "tsx src/worker.ts",
+    "dev": "node ../../scripts/with-env.mjs --mode development tsx watch src/worker.ts",
+    "start": "node ../../scripts/with-env.mjs --mode production tsx src/worker.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "node --test tests/worker.test.cjs"
   },

@@ -4,6 +4,8 @@ Import `instruktori/OrionX` as one Vercel project with the repository root as it
 
 Both HTTP service build commands regenerate Prisma Client after their install step. Each service's root `npm ci` replaces shared `node_modules`; the later web install removes the client generated during the API build. Regenerating it in the web build preserves the API's traced Prisma files through final deployment packaging. The worker image generates its own client independently. These commands generate code only and do not apply database migrations.
 
+The Solana client's `rpc-websockets` dependency uses CommonJS `require('uuid')`. Its UUID dependency is scoped to version 11.1.0 through a root override because newer UUID releases are ESM-only and fail in Vercel's CommonJS runtime. `npm run test:runtime` exercises the Solana import with Node's experimental require(ESM) support disabled, matching the observed hosted failure.
+
 | Service | Directory | Framework | Public paths |
 | --- | --- | --- | --- |
 | api | apps/api | NestJS | /api and /api/* |

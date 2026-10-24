@@ -16,7 +16,8 @@
     "db:generate": "npm run generate -w @orionx/db",
     "db:validate": "npm run validate -w @orionx/db",
     "db:push": "npm run push -w @orionx/db",
-    "test": "npm run test:config && npm run test --workspaces --if-present",
+    "test": "npm run test:config && npm run test:runtime && npm run test --workspaces --if-present",
+    "test:runtime": "node --test scripts/runtime.test.cjs",
     "env:pull": "vercel env pull .env.local --environment=development --yes",
     "env:check": "node scripts/with-env.mjs tsx scripts/check-env.ts",
     "test:config": "node --test scripts/env.test.mjs",
@@ -44,6 +45,9 @@
     "multer": "2.5.0",
     "postcss": "8.5.31",
     "deepmerge-ts": "8.0.0",
-    "path-to-regexp@>=8.0.0 <9.0.0": "8.4.2"
+    "path-to-regexp@>=8.0.0 <9.0.0": "8.4.2",
+    "rpc-websockets": {
+      "uuid": "11.1.0"
+    }
   }
 }

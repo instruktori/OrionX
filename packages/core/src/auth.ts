@@ -135,15 +135,24 @@ export function resolveAllowedWebOrigin(
   const allowed = new Set<string>();
   if (env.WEB_ORIGIN) allowed.add(parseHttpOrigin(env.WEB_ORIGIN));
   if (env.VERIFICATION_PUBLIC_ORIGIN) allowed.add(parseHttpOrigin(env.VERIFICATION_PUBLIC_ORIGIN));
+  if (env.VERCEL_PROJECT_PRODUCTION_URL) allowed.add(parseHttpOrigin(`https://${env.VERCEL_PROJECT_PRODUCTION_URL}`));
+  if (env.VERCEL_URL) allowed.add(parseHttpOrigin(`https://${env.VERCEL_URL}`));
 
   const isLocalHost = (hostname: string) => ["localhost", "127.0.0.1", "[::1]"].includes(hostname);
   const allowLocalDynamic = env.NODE_ENV !== "production" && env.VERCEL !== "1";
+  const hostOrigin = request.host ? parseHttpOrigin(`${request.protocol || "https"}://${request.host}`) : undefined;
 
-  const candidateRaw = request.origin || (request.host ? `${request.protocol || "http"}://${request.host}` : undefined);
+  const candidateRaw = request.origin || hostOrigin;
   if (candidateRaw) {
     const candidate = parseHttpOrigin(candidateRaw);
     const candidateHost = new URL(candidate).hostname;
-    if (allowed.has(candidate) || (allowLocalDynamic && isLocalHost(candidateHost)) || (allowed.size === 0 && isLocalHost(candidateHost))) {
+    const sameHostOrigin = Boolean(hostOrigin && candidate === hostOrigin && !env.WEB_ORIGIN);
+    if (
+      allowed.has(candidate) ||
+      sameHostOrigin ||
+      (allowLocalDynamic && isLocalHost(candidateHost)) ||
+      (allowed.size === 0 && isLocalHost(candidateHost))
+    ) {
       return candidate;
     }
     if (request.origin) {
@@ -153,6 +162,7 @@ export function resolveAllowedWebOrigin(
 
   const firstAllowed = allowed.values().next().value;
   if (firstAllowed) return firstAllowed;
+  if (hostOrigin) return hostOrigin;
   if (allowLocalDynamic) return "http://localhost:3000";
   throw new DomainError("INVALID_ORIGIN", "Public web origin is not configured", 500);
 }

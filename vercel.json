@@ -12,7 +12,7 @@
       "root": "apps/web",
       "framework": "nextjs",
       "installCommand": "cd ../.. && npm ci",
-      "buildCommand": "npm run build",
+      "buildCommand": "npm run db:generate --prefix ../.. && npm run build",
       "devCommand": "npm run dev -- --hostname 127.0.0.1"
     }
   },

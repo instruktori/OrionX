@@ -2,6 +2,8 @@
 
 Import `instruktori/OrionX` as one Vercel project with the repository root as its Root Directory. Keep dashboard build/install/framework overrides unset: root `vercel.json` owns per-service settings. Use Node.js 22. Both services use the committed lockfile and install the root npm workspace so `@orionx/core` and other workspace dependencies resolve.
 
+Both HTTP service build commands regenerate Prisma Client after their install step. Each service's root `npm ci` replaces shared `node_modules`; the later web install removes the client generated during the API build. Regenerating it in the web build preserves the API's traced Prisma files through final deployment packaging. The worker image generates its own client independently. These commands generate code only and do not apply database migrations.
+
 | Service | Directory | Framework | Public paths |
 | --- | --- | --- | --- |
 | api | apps/api | NestJS | /api and /api/* |

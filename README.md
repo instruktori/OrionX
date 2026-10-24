@@ -7,8 +7,9 @@ English-language premium interface and **Solana Devnet-only** credential archite
 Node.js 22 recommended. Install Docker for local PostgreSQL/Redis.
 
 ```sh
-npm install
-npx vercel@latest dev --local
+npm ci
+npm run db:generate
+npm run dev:services
 ```
 
 Open the URL printed by `vercel dev` for the UI, and `/api/v1/health/live` on that same origin for API liveness. This runs both HTTP services with the same routing as deployment. `npm run dev` still runs the UI alone; verification also needs the API and shared Vercel router. The UI is a **synthetic preview**, not a BTU-issued passport system. Verification fails closed until a real Anchor program and independent institutional trust have been configured.

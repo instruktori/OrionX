@@ -108,6 +108,8 @@ class ApiController {
 @Module({controllers: [ApiController]}) class AppModule {}
 export async function createApp() {
  const app = await NestFactory.create(AppModule, {bodyParser: true});
+ // Vercel terminates TLS and supplies the immediate proxy's forwarded headers.
+ if (process.env.VERCEL === "1") app.getHttpAdapter().getInstance().set("trust proxy", 1);
  app.useGlobalFilters(new Errors());
  const buckets = new Map<string, {count: number; expires: number}>();
  app.use((req: Request, res: Response, next: () => void) => {

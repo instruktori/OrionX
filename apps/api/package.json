@@ -2,6 +2,7 @@
   "name": "@orionx/api",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "node ../../scripts/with-env.mjs --mode development tsx watch src/server.ts",
     "start": "node ../../scripts/with-env.mjs --mode production tsx src/server.ts",

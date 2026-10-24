@@ -6,6 +6,10 @@ Both HTTP service build commands regenerate Prisma Client after their install st
 
 The Solana client's `rpc-websockets` dependency uses CommonJS `require('uuid')`. Its UUID dependency is scoped to version 11.1.0 through a root override because newer UUID releases are ESM-only and fail in Vercel's CommonJS runtime. `npm run test:runtime` exercises the Solana import with Node's experimental require(ESM) support disabled, matching the observed hosted failure.
 
+The API package declares `type: module` and preserves ES module imports during compilation because NestJS 12 is ESM-only. The runtime regression suite bundles and starts the API with require(ESM) disabled, then checks its HTTP liveness endpoint; it does not require database credentials or connect to a database.
+
+Only in Vercel (`VERCEL=1`), Express trusts the immediate proxy hop so forwarded HTTPS and client IPs are interpreted correctly. The bundled runtime test checks same-origin HTTPS login validation and cross-origin denial behind that proxy. Standalone hosting retains Express's default proxy policy unless configured separately.
+
 | Service | Directory | Framework | Public paths |
 | --- | --- | --- | --- |
 | api | apps/api | NestJS | /api and /api/* |

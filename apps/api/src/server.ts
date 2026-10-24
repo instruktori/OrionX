@@ -24,5 +24,5 @@ class ApiController {
  }
 }
 @Module({controllers:[ApiController]})class AppModule{}
-async function main(){const app=await NestFactory.create(AppModule);app.enableCors({origin:process.env.WEB_ORIGIN||"http://localhost:3000",methods:["GET","POST"]});await app.listen(Number(process.env.PORT||4000),"0.0.0.0")}
+async function main(){const app=await NestFactory.create(AppModule);if(process.env.WEB_ORIGIN)app.enableCors({origin:process.env.WEB_ORIGIN,methods:["GET","POST"]});await app.listen(Number(process.env.PORT||4000),"0.0.0.0")}
 main().catch(e=>{console.error(e);process.exit(1)});

@@ -3,7 +3,8 @@ import {useState} from "react";
 import {Shell} from "@/components/shell";
 import {ShieldCheck,UploadCloud,Search,AlertCircle,FileCheck2,LockKeyhole} from "lucide-react";
 type Result={message:string;registration?:string;integrity?:string;issuerTrust?:string;currency?:string;officialBtu?:boolean};
-const API=process.env.NEXT_PUBLIC_API_ORIGIN||"http://localhost:4000";
+// Browser requests use the deployment's public API route, never an internal binding URL.
+const API="";
 export default function Verify(){const [code,setCode]=useState("");const [file,setFile]=useState<File|null>(null);const [result,setResult]=useState<Result|null>(null);const [loading,setLoading]=useState(false);const normalized=code.trim().toUpperCase();const valid=/^D1-[A-Z2-7]{32}$/.test(normalized);
  async function check(withFile:boolean){if(!valid||withFile&&!file)return;setLoading(true);setResult(null);try{let response:Response;if(withFile){const form=new FormData();form.append("code",normalized);form.append("file",file!);response=await fetch(API+"/api/v1/verify/file",{method:"POST",body:form})}else{response=await fetch(API+"/api/v1/verify/"+encodeURIComponent(normalized))}const data=await response.json();setResult({message:data.message||"No verified proof returned.",registration:data.registration,integrity:data.integrity,issuerTrust:data.issuerTrust,currency:data.currency,officialBtu:data.officialBtu})}catch{setResult({message:"The verification service is unavailable. No proof has been established."})}finally{setLoading(false)}}
  return <Shell><div className="eyebrow">PUBLIC VERIFIER / SOLANA DEVNET</div><h1>Verify a digital passport</h1><p className="lead">Independently check a credential's blockchain record and compare the exact bytes of an issued PDF.</p>

@@ -13,5 +13,6 @@ jobs:
           node-version: '22'
       - run: npm install
       - run: npm run typecheck -w @orionx/web
+      - run: npm run typecheck -w @orionx/api
       - run: npm run build -w @orionx/web
       - run: npm run test -w @orionx/core

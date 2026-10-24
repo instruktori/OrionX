@@ -18,4 +18,3 @@ export {renderDemoPdf} from "./pdf";
 export {prepareIssuance} from "./issuance";
 export {artifactStore,persistVerified} from "./storage";
 export {authenticate,requireAdmin,requireStudent} from "./auth";
-export {renderDemoPdf} from "./pdf";

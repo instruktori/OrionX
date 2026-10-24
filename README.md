@@ -4,7 +4,7 @@ BTU AI Skills Digital Passport implementation with authenticated student/admin p
 
 ## Run locally
 
-Node.js 22 recommended. Install Docker for local PostgreSQL/Redis.
+Use Node.js 22 and its bundled npm 10 to match CI/Vercel (`nvm use` reads `.nvmrc`). Install Docker for local PostgreSQL/Redis. Regenerate the lockfile with this toolchain in a clean workspace when changing dependencies.
 
 ```sh
 npm ci

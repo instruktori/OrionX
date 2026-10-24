@@ -445,6 +445,20 @@ export async function createApp() {
  if (process.env.WEB_ORIGIN) app.enableCors({origin: process.env.WEB_ORIGIN, credentials: true, methods: ["GET", "POST"]});
  return app;
 }
-if (process.env.ORIONX_SKIP_LISTEN !== "1") {
+
+let handlerPromise: Promise<(req: Request, res: Response) => void> | undefined;
+
+export default async function handler(req: Request, res: Response) {
+ if (!handlerPromise) {
+  handlerPromise = createApp().then(async app => {
+   await app.init();
+   return app.getHttpAdapter().getInstance();
+  });
+ }
+ const instance = await handlerPromise;
+ return instance(req, res);
+}
+
+if (process.env.ORIONX_SKIP_LISTEN !== "1" && !process.env.AWS_LAMBDA_FUNCTION_NAME && !process.env.VERCEL_REGION) {
  createApp().then(app => app.listen(Number(process.env.PORT || 4000), "0.0.0.0")).catch(() => { console.error("Unable to start API"); process.exitCode = 1; });
 }

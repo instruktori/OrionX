@@ -41,6 +41,16 @@ test('bundled API starts without require(ESM) and serves HTTP liveness', {timeou
     await new Promise((resolve, reject) => { socket.once('error', reject); socket.listen(0, '127.0.0.1', resolve); });
     const port = socket.address().port;
     await new Promise(resolve => socket.close(resolve));
+    const exportCheck = spawnSync(process.execPath, ['--no-experimental-require-module', '-e', `
+      const assert = require('node:assert/strict');
+      const {pathToFileURL} = require('node:url');
+      process.env.ORIONX_SKIP_LISTEN = '1';
+      import(pathToFileURL(${JSON.stringify(output)}).href).then(mod => {
+        assert.equal(typeof mod.default, 'function', 'Vercel ESM runtime requires a default function export');
+      });
+    `], {cwd: root, encoding: 'utf8', timeout: 15000});
+    assert.ifError(exportCheck.error);
+    assert.equal(exportCheck.status, 0, exportCheck.stderr || exportCheck.stdout);
     const env = {
       ...process.env,
       PORT: String(port),

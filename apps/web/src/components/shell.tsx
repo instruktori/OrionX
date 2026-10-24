@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import {usePathname, useRouter} from "next/navigation";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {LayoutDashboard, ShieldCheck, Settings2, FileBadge2, LockKeyhole, Menu, X, ArrowUpRight, Sparkles, LogOut} from "lucide-react";
 import {useSession} from "@/lib/session";
 
@@ -17,6 +17,14 @@ export function Shell({children}: {children: React.ReactNode}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const {session, signOut} = useSession();
+
+  useEffect(() => {
+    if (typeof window === "undefined" || path === "/auth/callback") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("code")) {
+      router.replace(`/auth/callback${window.location.search}`);
+    }
+  }, [path, router]);
 
   const handleSignOut = async () => {
     await signOut();

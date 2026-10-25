@@ -28,14 +28,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const navItems = useMemo(() => {
     const items = [{ href: "/", label: "Overview", icon: LayoutDashboard }];
     if (session?.role === "admin") {
-      items.push({ href: "/admin", label: "Admin Console", icon: Settings2 });
+      items.push({ href: "/admin", label: "Admin", icon: Settings2 });
       if (session.studentId) {
-        items.push({ href: "/passport", label: "My Passport", icon: FileBadge2 });
+        items.push({ href: "/passport", label: "Passport", icon: FileBadge2 });
       }
     } else if (session?.role === "student") {
-      items.push({ href: "/passport", label: "My Passport", icon: FileBadge2 });
+      items.push({ href: "/passport", label: "Passport", icon: FileBadge2 });
     }
-    items.push({ href: "/verify", label: "Verification", icon: ShieldCheck });
+    items.push({ href: "/verify", label: "Verify", icon: ShieldCheck });
     return items;
   }, [session?.role, session?.studentId]);
 
@@ -91,14 +91,19 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const roleBadge = session
     ? session.role === "admin"
       ? session.studentId
-        ? "ADMIN · DUAL"
+        ? "ADMIN+STUDENT"
         : "ADMIN"
       : session.verification === "UNIVERSITY_VERIFIED"
-        ? "STUDENT · VERIFIED"
+        ? "VERIFIED"
         : "STUDENT"
     : null;
 
   const isDualRole = session?.role === "admin" && Boolean(session?.studentId);
+  const shortIdentity = session?.email
+    ? session.email.split("@")[0]
+    : session
+      ? "Account"
+      : "";
 
   return (
     <div className="shell">
@@ -114,7 +119,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
               aria-controls="workspace-navigation"
               onClick={() => setOpen(!open)}
             >
-              {open ? <X size={20} /> : <Menu size={20} />}
+              {open ? <X size={18} /> : <Menu size={18} />}
             </button>
             <Link
               className="brand"
@@ -123,63 +128,56 @@ export function Shell({ children }: { children: React.ReactNode }) {
               aria-label="OrionX home"
             >
               <span className="brand-mark">
-                <Sparkles size={18} />
+                <Sparkles size={15} />
               </span>
               <span className="brand-name">
                 orion<span>x</span>
-                <small>AI SKILLS PASSPORT</small>
               </span>
             </Link>
-          </div>
-
-          <nav className="top-nav" aria-label="Main navigation">
-            {navItems.map((item) => {
-              const active = path === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={active ? "page" : undefined}
-                  className={active ? "top-nav-link active" : "top-nav-link"}
-                >
-                  <item.icon size={16} />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
-
-          <div className="top-actions">
-            {isDualRole && (
-              <div className="role-switcher" role="group" aria-label="Switch workspace view">
-                <Link
-                  href="/admin"
-                  className={path === "/admin" ? "role-switch-item active" : "role-switch-item"}
-                >
-                  Admin
-                </Link>
-                <Link
-                  href="/passport"
-                  className={path === "/passport" ? "role-switch-item active-pink" : "role-switch-item"}
-                >
-                  Passport
-                </Link>
-              </div>
-            )}
-
             <span className="demo-chip" title="Solana Devnet simulated issuer environment">
-              <span className="status-dot" /> DEVNET · DEMO
+              <span className="status-dot" /> DEVNET
             </span>
 
+            <nav className="top-nav" aria-label="Main navigation">
+              {navItems.map((item) => {
+                const active = path === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    aria-current={active ? "page" : undefined}
+                    className={active ? "top-nav-link active" : "top-nav-link"}
+                  >
+                    <item.icon size={14} />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+
+          <div className="top-actions">
             {session ? (
               <div className="session-cluster">
                 <Link
-                  href={session.role === "admin" && path !== "/passport" ? "/admin" : "/passport"}
+                  href={
+                    isDualRole
+                      ? path === "/admin"
+                        ? "/passport"
+                        : "/admin"
+                      : session.role === "admin"
+                        ? "/admin"
+                        : "/passport"
+                  }
                   className="session-pill"
-                  title={session.email || session.subject}
+                  title={
+                    isDualRole
+                      ? `${session.email || session.subject} — Click to switch between Admin and Passport`
+                      : session.email || session.subject
+                  }
                 >
                   <span className={`role-dot ${session.role === "admin" ? "dot-blue" : "dot-pink"}`} />
-                  <span className="session-email">{session.email || "Authenticated"}</span>
+                  <span className="session-email">{shortIdentity}</span>
                   <span className={`role-tag ${session.role === "admin" ? "tag-blue" : "tag-pink"}`}>
                     {roleBadge}
                   </span>
@@ -189,9 +187,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
                   className="top-auth-btn"
                   onClick={handleSignOut}
                   aria-label="Sign out"
+                  title="Sign out"
                 >
                   <LogOut size={14} />
-                  <span className="hide-sm">Sign out</span>
                 </button>
               </div>
             ) : (

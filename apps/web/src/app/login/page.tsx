@@ -1,14 +1,26 @@
 "use client";
 import Link from "next/link";
-import {Suspense, useEffect, useState} from "react";
-import {useRouter, useSearchParams} from "next/navigation";
-import {ShieldCheck, LockKeyhole, LogOut, ArrowRight, RefreshCw} from "lucide-react";
-import {Shell} from "@/components/shell";
-import {startGoogleSignIn, useSession} from "@/lib/session";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  ShieldCheck,
+  LockKeyhole,
+  LogOut,
+  ArrowRight,
+  RefreshCw,
+} from "lucide-react";
+import { Shell } from "@/components/shell";
+import { startGoogleSignIn, useSession } from "@/lib/session";
 
 function GoogleMark() {
   return (
-    <svg className="google-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+    <svg
+      className="google-icon"
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      aria-hidden="true"
+    >
       <path
         fill="#4285F4"
         d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82Z"
@@ -32,7 +44,7 @@ function GoogleMark() {
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const {session, loading: sessionLoading, refresh, signOut} = useSession();
+  const { session, loading: sessionLoading, refresh, signOut } = useSession();
   const [error, setError] = useState("");
   const [connecting, setConnecting] = useState(false);
 
@@ -55,7 +67,11 @@ function LoginContent() {
     try {
       await startGoogleSignIn(nextPath);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to connect to Google sign-in");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Unable to connect to Google sign-in",
+      );
       setConnecting(false);
     }
   };
@@ -65,33 +81,43 @@ function LoginContent() {
       <section className="card auth-card">
         <div className="auth-badge">
           <ShieldCheck size={16} />
-          <span>SUPABASE GOOGLE OAUTH · PKCE</span>
+          <span>SECURE STUDENT ACCESS</span>
         </div>
         <h2>Sign in to OrionX</h2>
-        <p className="muted" style={{lineHeight: 1.7, marginBottom: 22}}>
-          Authenticate with your personal Gmail or Google Workspace account. Academic records remain protected by explicit{" "}
-          <code>StudentIdentity</code> subject bindings.
+        <p className="muted" style={{ lineHeight: 1.7, marginBottom: 22 }}>
+          Use your Google account to access your passport. Your university must
+          link your account to your student record first.
         </p>
 
         {activeError && (
-          <p role="alert" className="notice" style={{marginTop: 0, marginBottom: 20}}>
+          <p
+            role="alert"
+            className="notice"
+            style={{ marginTop: 0, marginBottom: 20 }}
+          >
             {activeError}
           </p>
         )}
 
         {sessionLoading ? (
-          <p role="status" className="muted" style={{padding: "14px 0"}}>
+          <p role="status" className="muted" style={{ padding: "14px 0" }}>
             Checking active session…
           </p>
         ) : session?.authorized && session.role ? (
-          <div className="result-panel" style={{marginTop: 0}}>
+          <div className="result-panel" style={{ marginTop: 0 }}>
             <strong>Signed in as {session.email || session.subject}</strong>
             <p>
-              Active role: <span className="pill">{session.role.toUpperCase()}</span>
+              Active role:{" "}
+              <span className="pill">{session.role.toUpperCase()}</span>
             </p>
-            <div className="page-actions" style={{marginTop: 14}}>
-              <Link className="button" href={session.role === "admin" ? "/admin" : "/passport"}>
-                Continue to {session.role === "admin" ? "Administration" : "My Passport"} <ArrowRight size={15} />
+            <div className="page-actions" style={{ marginTop: 14 }}>
+              <Link
+                className="button"
+                href={session.role === "admin" ? "/admin" : "/passport"}
+              >
+                Continue to{" "}
+                {session.role === "admin" ? "Administration" : "My Passport"}{" "}
+                <ArrowRight size={15} />
               </Link>
               <button
                 type="button"
@@ -105,22 +131,32 @@ function LoginContent() {
             </div>
           </div>
         ) : session?.authenticated && !session.authorized ? (
-          <div className="result-panel" role="status" style={{marginTop: 0}}>
-            <strong>Google identity verified — awaiting record binding</strong>
+          <div className="result-panel" role="status" style={{ marginTop: 0 }}>
+            <strong>Signed in. Your student record is not linked yet.</strong>
             <p>
-              You are signed in as <b>{session.email || "Google user"}</b>, but this Google account has no authorized{" "}
-              <code>StudentIdentity</code> binding yet. Email addresses or domains never automatically grant student or
-              administrator access.
+              You are signed in as <b>{session.email || "Google user"}</b>. Ask
+              your university administrator to link this account to your record,
+              then check again.
             </p>
             <div className="identity-box">
-              <span className="mini-kicker">AUTHENTICATED SUPABASE SUBJECT</span>
+              <span className="mini-kicker">
+                ACCOUNT REFERENCE FOR YOUR ADMINISTRATOR
+              </span>
               <code>{session.subject}</code>
             </div>
-            <div className="page-actions" style={{marginTop: 16}}>
-              <button type="button" className="button" onClick={() => refresh()}>
+            <div className="page-actions" style={{ marginTop: 16 }}>
+              <button
+                type="button"
+                className="button"
+                onClick={() => refresh()}
+              >
                 <RefreshCw size={15} /> Check authorization status
               </button>
-              <button type="button" className="button secondary" onClick={() => signOut()}>
+              <button
+                type="button"
+                className="button secondary"
+                onClick={() => signOut()}
+              >
                 <LogOut size={15} /> Sign out
               </button>
             </div>
@@ -133,21 +169,26 @@ function LoginContent() {
             onClick={handleGoogleContinue}
           >
             <GoogleMark />
-            <span>{connecting ? "Connecting to Google…" : "Continue with Google"}</span>
+            <span>
+              {connecting ? "Connecting to Google…" : "Continue with Google"}
+            </span>
           </button>
         )}
 
         <div className="auth-divider" />
 
-        <div className="steps" style={{gap: 10}}>
-          <div className="step" style={{padding: 14}}>
-            <LockKeyhole size={18} color="#6357dc" style={{flexShrink: 0, marginTop: 2}} />
+        <div className="steps" style={{ gap: 10 }}>
+          <div className="step" style={{ padding: 14 }}>
+            <LockKeyhole
+              size={18}
+              color="var(--accent-ink)"
+              style={{ flexShrink: 0, marginTop: 2 }}
+            />
             <div>
-              <strong>Strict authentication &amp; authorization separation</strong>
+              <strong>Your academic record stays private</strong>
               <p>
-                Signing in with Google proves control of your Google account and creates your Supabase session. Access
-                to student passports or operator tools is granted exclusively via server-verified{" "}
-                <code>StudentIdentity</code> bindings.
+                Signing in confirms your identity. Only accounts linked by the
+                university can access student passports or administration tools.
               </p>
             </div>
           </div>
@@ -160,15 +201,15 @@ function LoginContent() {
 export default function Login() {
   return (
     <Shell>
-      <div className="eyebrow">SECURE WORKSPACE / SIGN IN</div>
+      <div className="eyebrow">YOUR PERSONAL WORKSPACE</div>
       <h1>Access your passport</h1>
       <p className="lead">
-        Continue with Google to access your bound student record or operator workspace. Public verification remains
-        available without an account.
+        Sign in to access your student record or administration tools. Public
+        verification is available without an account.
       </p>
       <Suspense
         fallback={
-          <section className="card" style={{maxWidth: 540}}>
+          <section className="card" style={{ maxWidth: 540 }}>
             <p role="status">Loading sign-in…</p>
           </section>
         }

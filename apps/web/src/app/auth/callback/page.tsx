@@ -1,10 +1,10 @@
 "use client";
 import Link from "next/link";
-import {Suspense, useEffect, useRef, useState} from "react";
-import {useRouter, useSearchParams} from "next/navigation";
-import {ShieldCheck, AlertTriangle, ArrowLeft} from "lucide-react";
-import {Shell} from "@/components/shell";
-import {api} from "@/lib/session";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ShieldCheck, AlertTriangle, ArrowLeft } from "lucide-react";
+import { Shell } from "@/components/shell";
+import { api } from "@/lib/session";
 
 function CallbackHandler() {
   const router = useRouter();
@@ -17,10 +17,14 @@ function CallbackHandler() {
     handled.current = true;
 
     const hashParams = new URLSearchParams(
-      typeof window !== "undefined" && window.location.hash.startsWith("#") ? window.location.hash.slice(1) : "",
+      typeof window !== "undefined" && window.location.hash.startsWith("#")
+        ? window.location.hash.slice(1)
+        : "",
     );
     if (hashParams.get("access_token")) {
-      setError("Implicit OAuth flow is disabled for security. Please sign in using the PKCE flow.");
+      setError(
+        "Implicit OAuth flow is disabled for security. Please sign in using the PKCE flow.",
+      );
       return;
     }
 
@@ -44,11 +48,12 @@ function CallbackHandler() {
 
     api("/auth/callback", {
       method: "POST",
-      body: JSON.stringify({code, state}),
+      body: JSON.stringify({ code, state }),
     })
-      .then(result => {
+      .then((result) => {
         const destination =
-          typeof result?.redirectTo === "string" && result.redirectTo.startsWith("/")
+          typeof result?.redirectTo === "string" &&
+          result.redirectTo.startsWith("/")
             ? result.redirectTo
             : result?.role === "admin"
               ? "/admin"
@@ -56,8 +61,12 @@ function CallbackHandler() {
         router.replace(destination);
         router.refresh();
       })
-      .catch(err => {
-        setError(err instanceof Error ? err.message : "Unable to complete Google sign-in");
+      .catch((err) => {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Unable to complete Google sign-in",
+        );
       });
   }, [router, searchParams]);
 
@@ -65,15 +74,18 @@ function CallbackHandler() {
     <section className="card auth-card">
       {error ? (
         <>
-          <div className="auth-badge" style={{background: "#fff4e5", color: "#9a6700"}}>
+          <div
+            className="auth-badge"
+            style={{ background: "var(--notice)", color: "var(--notice-ink)" }}
+          >
             <AlertTriangle size={16} />
-            <span>AUTHENTICATION CALLBACK ERROR</span>
+            <span>SIGN-IN NEEDS YOUR ATTENTION</span>
           </div>
           <h2>Unable to complete sign-in</h2>
-          <p role="alert" className="notice" style={{marginTop: 12}}>
+          <p role="alert" className="notice" style={{ marginTop: 12 }}>
             {error}
           </p>
-          <div className="page-actions" style={{marginTop: 18}}>
+          <div className="page-actions" style={{ marginTop: 18 }}>
             <Link className="button" href="/login">
               <ArrowLeft size={15} /> Return to sign in
             </Link>
@@ -86,11 +98,12 @@ function CallbackHandler() {
         <>
           <div className="auth-badge">
             <ShieldCheck size={16} />
-            <span>VERIFYING GOOGLE OAUTH SESSION</span>
+            <span>CHECKING YOUR ACCOUNT</span>
           </div>
           <h2>Completing sign-in…</h2>
-          <p role="status" className="muted" style={{lineHeight: 1.7}}>
-            Exchanging PKCE authorization code with Supabase and verifying your cryptographic identity binding.
+          <p role="status" className="muted" style={{ lineHeight: 1.7 }}>
+            Confirming your Google account and checking access to your
+            university record.
           </p>
         </>
       )}
@@ -101,9 +114,11 @@ function CallbackHandler() {
 export default function AuthCallbackPage() {
   return (
     <Shell>
-      <div className="eyebrow">SECURE WORKSPACE / OAUTH CALLBACK</div>
-      <h1>Google Authentication</h1>
-      <p className="lead">Validating your Google session and checking authorized student or administrator bindings.</p>
+      <div className="eyebrow">SECURE SIGN IN</div>
+      <h1>Connecting your account</h1>
+      <p className="lead">
+        We’re checking your account’s access to the workspace.
+      </p>
       <Suspense
         fallback={
           <section className="card auth-card">

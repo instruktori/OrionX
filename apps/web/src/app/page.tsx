@@ -1,15 +1,205 @@
+import Image from "next/image";
 import Link from "next/link";
-import {ArrowUpRight,ArrowRight,BookOpen,ShieldCheck,FileBadge2,Layers3,Sparkles,TrendingUp,CheckCircle2,LockKeyhole} from "lucide-react";
-import {Shell} from "@/components/shell";
-import {students,skills} from "@/lib/demo";
-export default function Home(){return <Shell>
- <div className="eyebrow">THE FUTURE OF SKILL RECOGNITION</div>
- <h1>Good to see you <span style={{color:"#7667e4"}}>✳</span></h1>
- <p className="lead">One place for every achievement, every milestone, and every version of your AI learning journey.</p>
- <section className="hero"><div><span style={{fontSize:10,fontWeight:800,letterSpacing:2,color:"#d7d0ff"}}>INTRODUCING YOUR AI SKILLS PASSPORT</span><h2>Skills that speak<br/>for themselves.</h2><p>Turn what you learn into a cumulative digital portfolio. Explore how your achievements will be issued, updated and independently verified.</p><Link className="button" href="/passport">Explore your passport <ArrowRight size={16}/></Link></div><div className="orb"><FileBadge2 size={78} strokeWidth={1.3}/></div></section>
- <div className="notice" role="note"><LockKeyhole size={14} style={{verticalAlign:"middle",marginRight:7}}/>Preview mode: fictional student records only. No official BTU credentials or Solana transactions are represented.</div>
- <section className="stats" aria-label="Demo workspace statistics">{[{label:"Sample achievements",value:"12",hint:"Across demo students",icon:BookOpen},{label:"Sample passports",value:"03",hint:"Not officially issued",icon:FileBadge2},{label:"Skill categories",value:"03",hint:"AI · Applied · Advanced",icon:Layers3},{label:"Verification mode",value:"Demo",hint:"Awaiting Devnet deployment",icon:ShieldCheck}].map(s=><div className="card" key={s.label}><div style={{display:"flex",justifyContent:"space-between",gap:8}}><span className="stat-label">{s.label}</span><s.icon size={18} color="#7569df"/></div><div className="stat-value">{s.value}</div><div className="stat-bottom">{s.hint}</div></div>)}</section>
- <div className="columns"><section className="card"><div className="section-head" style={{marginTop:0}}><h2>Recent passports</h2><Link className="action-link" href="/admin">Explore records <ArrowUpRight size={14}/></Link></div><div className="table-wrap"><table className="table"><thead><tr><th>STUDENT</th><th>PASSPORT</th><th>VERSION</th><th>STATUS</th></tr></thead><tbody>{students.map(s=><tr key={s.id}><td><b>{s.name}</b><div className="muted">{s.program}</div></td><td>{s.id}</td><td>V{s.version}</td><td><span className="pill">{s.status}</span></td></tr>)}</tbody></table></div></section>
- <section className="card"><div className="section-head" style={{marginTop:0}}><h2>Featured skills</h2><Sparkles size={18} color="#7469e5"/></div>{skills.slice(0,4).map(s=><div className="skill" key={s.name}><div className="skill-icon"><CheckCircle2 size={17}/></div><div><b>{s.name}</b><small>{s.category} · {s.date}</small></div></div>)}<Link href="/passport" className="action-link" style={{marginTop:17}}>See all achievements <ArrowRight size={14}/></Link></section></div>
- <div className="section-head"><h2>How OrionX works</h2></div><div className="stats" style={{marginTop:0,gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))"}}>{[{icon:BookOpen,title:"Learn",description:"Complete activities and earn AI skills."},{icon:Layers3,title:"Grow",description:"Keep your achievements together across versions."},{icon:ShieldCheck,title:"Verify",description:"Check cryptographic proof once Devnet is configured."}].map(x=><div className="card" key={x.title}><x.icon color="#695bdd" size={22}/><h3 style={{fontSize:16,marginBottom:8}}>{x.title}</h3><p className="muted" style={{lineHeight:1.7,margin:0}}>{x.description}</p></div>)}</div>
- </Shell>}
+import {
+  ArrowUpRight,
+  ArrowRight,
+  BookOpen,
+  ShieldCheck,
+  FileBadge2,
+  Layers3,
+  LockKeyhole,
+  MoveUpRight,
+} from "lucide-react";
+import { Shell } from "@/components/shell";
+import { SkillCollection } from "@/components/skill-collection";
+import { students } from "@/lib/demo";
+import { imagePath } from "@/lib/design";
+
+export default function Home() {
+  return (
+    <Shell>
+      <div className="page-heading">
+        <div>
+          <div className="eyebrow">YOUR LEARNING, RECOGNIZED</div>
+          <h1>A little learning. A lasting record.</h1>
+          <p className="lead">
+            A home for your AI skills and the experiences behind them.
+          </p>
+        </div>
+      </div>
+      <section className="hero">
+        <div className="hero-copy">
+          <span className="hero-kicker">ONE PASSPORT. ROOM TO GROW.</span>
+          <h2>
+            Build skills.
+            <br />
+            <span>Keep the story.</span>
+          </h2>
+          <p>
+            Every new skill belongs in your story. Explore a passport that grows
+            with you.
+          </p>
+          <Link className="button" href="/passport">
+            Explore your passport <ArrowRight size={17} />
+          </Link>
+          <a className="hero-text-link" href="#skill-collection">
+            Browse sample skills <ArrowUpRight size={15} />
+          </a>
+        </div>
+        <Link
+          className="hero-art"
+          href="/passport"
+          aria-label="Explore the BTU passport design"
+        >
+          <Image
+            src={imagePath("passport-cover")}
+            width={906}
+            height={593}
+            alt="Original BTU AI Skills Digital Passport cover design with colorful stamps"
+            priority
+            fetchPriority="high"
+            sizes="(max-width: 760px) 90vw, 48vw"
+          />
+          <span className="hero-art-caption">
+            The BTU passport design <MoveUpRight size={15} />
+          </span>
+        </Link>
+      </section>
+      <div className="preview-notice" role="note">
+        <LockKeyhole size={16} />
+        <p>
+          <strong>You’re exploring a preview.</strong> All student records are
+          fictional. No official credentials or blockchain proof are
+          represented.
+        </p>
+      </div>
+      <section
+        className="stats overview-stats"
+        aria-label="Sample workspace statistics"
+      >
+        {[
+          {
+            label: "Sample achievements",
+            value: "12",
+            hint: "Across the demo workspace",
+            icon: BookOpen,
+          },
+          {
+            label: "Sample passports",
+            value: "03",
+            hint: "One record per student",
+            icon: FileBadge2,
+          },
+          {
+            label: "Learning formats",
+            value: "03",
+            hint: "Focused, applied & academic",
+            icon: Layers3,
+          },
+          {
+            label: "Credential status",
+            value: "Preview",
+            hint: "No official issuance",
+            icon: ShieldCheck,
+          },
+        ].map((s) => (
+          <div className="stat-item" key={s.label}>
+            <div className="stat-top">
+              <span className="stat-label">{s.label}</span>
+              <s.icon size={18} />
+            </div>
+            <div className="stat-value">{s.value}</div>
+            <div className="stat-bottom">{s.hint}</div>
+          </div>
+        ))}
+      </section>
+      <SkillCollection />
+      <div className="overview-bottom">
+        <section className="card recent-passports">
+          <div className="section-head">
+            <h2>Recent sample passports</h2>
+            <Link className="action-link" href="/admin">
+              Administration <ArrowUpRight size={16} />
+            </Link>
+          </div>
+          <div
+            className="table-wrap"
+            tabIndex={0}
+            role="region"
+            aria-label="Sample passport records"
+          >
+            <table className="table">
+              <caption className="sr-only">
+                Fictional students and sample passport versions
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Student</th>
+                  <th scope="col">Passport ID</th>
+                  <th scope="col">Version</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {students.map((s) => (
+                  <tr key={s.id}>
+                    <td>
+                      <div className="student-cell">
+                        <span className="student-avatar" aria-hidden="true">
+                          {s.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
+                        </span>
+                        <div>
+                          <b>{s.name}</b>
+                          <div className="muted">{s.program}</div>
+                          <div className="mobile-passport-id mono">{s.id}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="mono">{s.id}</td>
+                    <td>V{s.version}</td>
+                    <td>
+                      <span className="pill">{s.status}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <section className="journey">
+          <BookOpen size={25} />
+          <h2>
+            One ID.
+            <br />
+            An evolving skillset.
+          </h2>
+          <p>
+            Your passport keeps the same permanent ID as new achievements are
+            added.
+          </p>
+          <ol>
+            {[
+              "Learn through an eligible experience",
+              "Add skills to the same passport",
+              "Keep a history of every version",
+            ].map((x) => (
+              <li key={x}>{x}</li>
+            ))}
+          </ol>
+          <Link className="action-link" href="/passport">
+            See how it comes together <ArrowRight size={16} />
+          </Link>
+        </section>
+      </div>
+      <footer className="page-footer">
+        <span>OrionX / AI Skills Digital Passport</span>
+        <Link href="/verify">
+          Explore verification <ArrowUpRight size={14} />
+        </Link>
+      </footer>
+    </Shell>
+  );
+}

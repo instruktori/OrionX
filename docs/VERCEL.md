@@ -2,7 +2,7 @@
 
 Import `instruktori/OrionX` as one Vercel project with the repository root as its Root Directory. Keep dashboard build/install/framework overrides unset: root `vercel.json` owns per-service settings. Use Node.js 22. Both services use the committed lockfile and install the root npm workspace so `@orionx/core` and other workspace dependencies resolve.
 
-Both HTTP service build commands regenerate Prisma Client after their install step. Each service's root `npm ci` replaces shared `node_modules`; the later web install removes the client generated during the API build. Regenerating it in the web build preserves the API's traced Prisma files through final deployment packaging. The worker image generates its own client independently. These commands generate code only and do not apply database migrations.
+Both HTTP service build commands regenerate Prisma Client after their install step. Each service's root `npm ci` replaces shared `node_modules`; the later web install removes the client generated during the API build. Regenerating it in the web build preserves the API's traced Prisma files through final deployment packaging. A manually built worker image generates its own client independently. These commands generate code only and do not apply database migrations.
 
 The Solana client's `rpc-websockets` dependency uses CommonJS `require('uuid')`. Its UUID dependency is scoped to version 11.1.0 through a root override because newer UUID releases are ESM-only and fail in Vercel's CommonJS runtime. `npm run test:runtime` exercises the Solana import with Node's experimental require(ESM) support disabled, matching the observed hosted failure.
 
@@ -35,15 +35,11 @@ PostgreSQL, Redis, Supabase and Solana RPC are external dependencies, not Vercel
 
 Vercel Functions have request body limits; the current UI/API's 10 MB PDF allowance is not a guarantee that a 10 MB upload passes the platform gateway. Test within the platform limit; larger files need a separate direct-upload design.
 
-## Optional private worker daemon
+## Manual worker only
 
-`daemons.worker` builds the root `Dockerfile.worker` using the repository as its context, preserving shared workspace packages. It has no public route, open port, or HTTP binding. It reads PostgreSQL jobs and writes PDFs directly to artifact storage.
+The default `vercel.json` does not declare a worker daemon, and automatic GitHub CI does not build its Docker image. This keeps frontend/API pushes from rebuilding and storing an approximately 951 MB worker container every time. A daemon with zero instances still builds and stores its image; zero instances alone does not prevent registry storage growth.
 
-The committed `instances: {"iad1": 0}` keeps it paused while there is no configured database. To enable it, provide `DATABASE_URL`, apply the schema with `npm run db:push` for the disposable demo database, set `STORAGE_MODE=supabase` and the `SUPABASE_*` storage credentials, then set an instance count to 1. Choose a region near your database. Counts and regions can be changed in `vercel.json` or through Vercel daemon scaling. Do not automatically migrate databases during application builds.
-
-The worker container explicitly generates Prisma Client before checking the worker. Runtime settings are `WORKER_POLL_MS` (3000), `WORKER_LEASE_MS` (120000), and `WORKER_MAX_ATTEMPTS` (5), all positive integers. Database polling failures back off instead of crashing repeatedly. SIGTERM/SIGINT stop new claims, drain the current job, and disconnect Prisma. The daemon has a 150-second shutdown grace period. Keep each render within the lease and grace periods; longer jobs need lease renewal before scaling. Existing row locking supports multiple workers, but database recovery/concurrency testing is still required before increasing instance counts.
-
-During Vercel's daemon beta, daemons run only in production and `vercel dev` does not run them. For local PDF processing, run `npm run dev:worker` alongside the HTTP router, with database and storage configuration exported in that shell. The daemon filesystem is ephemeral; cloud execution requires durable Supabase storage. Local development may use `STORAGE_MODE=local`.
+The worker source, `Dockerfile.worker`, and local `npm run dev:worker` command remain available. Worker hosting must be explicitly enabled as separate work. Do not restore a worker daemon to the default deployment merely to keep it paused. Do not automatically migrate databases during application builds.
 
 To build locally when Docker is installed:
 
@@ -52,7 +48,7 @@ docker build -f Dockerfile.worker -t orionx-worker .
 docker run --rm --env-file .env orionx-worker
 ```
 
-The worker still stops at STORED. Blockchain submission and real credential issuance remain separate work.
+For local PDF processing, run `npm run dev:worker` alongside the HTTP router, with database and storage configuration exported in that shell. Local development may use `STORAGE_MODE=local`; future cloud worker hosting requires durable artifact storage. Existing stored container images must be cleaned up separately when removing the daemon configuration.
 
 ## Verification
 
@@ -67,4 +63,4 @@ npm test
 npm run dev:services
 ```
 
-Use the URL printed by Vercel for both UI and API. The HTTP service names are `api`/`web`, the public API is `/api/*`, and web handles the catch-all. There are no current server-to-server HTTP bindings; `worker` is a private daemon. For future request-time server calls, use caller-side bindings rather than deployment hostnames. Root npm scripts expose API-only, web-only, combined HTTP, worker, schema generation, schema validation, type checks, and tests independently.
+Use the URL printed by Vercel for both UI and API. The HTTP service names are `api`/`web`, the public API is `/api/*`, and web handles the catch-all. There are no current server-to-server HTTP bindings; the worker runs manually outside the default deployment. For future request-time server calls, use caller-side bindings rather than deployment hostnames. Root npm scripts expose API-only, web-only, combined HTTP, worker, schema generation, schema validation, type checks, and tests independently.

@@ -21,6 +21,9 @@ finalized versions. Public/private artifacts and signing authority remain separa
 SYNC jobs. SIGTERM stops new claims, drains current work and disconnects Prisma.
 Longer stages need a sufficiently measured lease or a future renewal mechanism.
 
-The cloud daemon remains at zero instances. A worker must receive its own signer
+The cloud daemon is not declared in the default Vercel deployment, and automatic
+CI does not build its Docker image. Setting a daemon to zero instances stops its
+runtime but still builds and stores a container on each deployment. Keep worker
+builds manual until worker hosting is explicitly enabled. A worker must receive its own signer
 secret/file; do not publish operator/admin/upgrade keys or put them in frontend
 configuration. See SETUP_REMAINING.md before real Devnet activation.

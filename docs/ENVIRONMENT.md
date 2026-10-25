@@ -61,7 +61,7 @@ The `passport-pdfs` bucket is private, accepts only `application/pdf`, and limit
 
 To initialize another disposable demo database, verify `DATABASE_URL` and `DIRECT_URL`, then run `npm run db:push`. Ensure RLS is enabled on every application table before exposing the project to clients; this project's automatic RLS trigger already enabled it. Schema commands are never part of application builds.
 
-The server API key is installed in Vercel Production and Development and in ignored local configuration. `npm run env:check -- --cloud` passes. The worker remains paused in `vercel.json`; its database-to-PDF flow has been verified locally against the cloud database and storage. Google Sheets, Solana program deployment, issuer keys, actual sign-in screens, and live credential issuance require their own setup; current configuration keeps fixture/offline demo behavior.
+The server API key is installed in Vercel Production and Development and in ignored local configuration. `npm run env:check -- --cloud` passes. The worker is not declared in `vercel.json`, so web/API deployments do not build or store its container image; its database-to-PDF flow has been verified locally against the cloud database and storage. Google Sheets, Solana program deployment, issuer keys, actual sign-in screens, and live credential issuance require their own setup; current configuration keeps fixture/offline demo behavior.
 
 ## Verification performed
 

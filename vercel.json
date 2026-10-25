@@ -35,15 +35,5 @@
         "service": "web"
       }
     }
-  ],
-  "daemons": {
-    "worker": {
-      "root": ".",
-      "entrypoint": "Dockerfile.worker",
-      "instances": {
-        "iad1": 0
-      },
-      "terminationGracePeriodSeconds": 150
-    }
-  }
+  ]
 }

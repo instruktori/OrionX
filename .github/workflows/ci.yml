@@ -20,4 +20,3 @@ jobs:
       - run: npm run typecheck
       - run: npm run build -w @orionx/web
       - run: npm test
-      - run: docker build -f Dockerfile.worker -t orionx-worker .

@@ -24,14 +24,20 @@ type Version = {
   awards: Award[];
 };
 type Passport = {
-  passportId: string;
-  originalIssueDate: string;
+  official: boolean;
+  status: "EMPTY_WORKSPACE" | "ISSUED";
+  passportId: string | null;
+  workspaceId: string | null;
+  universityVerified: boolean;
+  account: { email: string | null };
+  counts: { skills: number; badges: number; versions: number };
+  originalIssueDate: string | null;
   student: {
     firstName: string;
     lastName: string;
     program: string;
     educationLevel: string;
-  };
+  } | null;
   latest: Version | null;
   pending: boolean;
 };
@@ -91,36 +97,6 @@ export default function PassportPage() {
             Continue with Google <ArrowRight size={16} />
           </Link>
         </section>
-      ) : !session.authorized || !session.role ? (
-        <section className="card" style={{ maxWidth: 640 }}>
-          <h2>Your account isn’t linked to a student record yet</h2>
-          <p role="alert" className="notice">
-            Signed in with Google as{" "}
-            <b>{session.email || "authenticated user"}</b>. Ask your university
-            administrator to link this account to your record, then check again.
-          </p>
-          <div className="identity-box">
-            <span className="mini-kicker">
-              ACCOUNT REFERENCE FOR YOUR ADMINISTRATOR
-            </span>
-            <code>{session.subject}</code>
-          </div>
-          <div className="page-actions" style={{ marginTop: 18 }}>
-            <button type="button" className="button" onClick={() => refresh()}>
-              Check account access
-            </button>
-            <Link className="button secondary" href="/verify">
-              Public verifier
-            </Link>
-            <button
-              type="button"
-              className="button secondary"
-              onClick={() => signOut()}
-            >
-              Sign out
-            </button>
-          </div>
-        </section>
       ) : session.role === "admin" && !session.studentId ? (
         <section className="card" style={{ maxWidth: 560 }}>
           <h2>Signed in as Administrator</h2>
@@ -155,7 +131,65 @@ export default function PassportPage() {
             Try again
           </button>
         </section>
-      ) : passport ? (
+      ) : passport && (!passport.official || !passport.student) ? (
+        <section className="card empty-passport" aria-labelledby="empty-passport-title">
+          <span className="pill">
+            {passport.universityVerified
+              ? "UNIVERSITY VERIFIED · NO PASSPORT ISSUED YET"
+              : "SELF-REGISTERED WORKSPACE"}
+          </span>
+          <h2 id="empty-passport-title" style={{ marginTop: 20 }}>
+            Your AI Skills Passport
+          </h2>
+          <p className="muted">
+            Your passport is ready. Verified AI skills and badges will appear
+            here once they are issued by your university.
+          </p>
+          <div className="passport-grid" style={{ marginTop: 22 }}>
+            <div className="passport-metric">
+              <strong>{passport.counts.skills}</strong>
+              <small>Verified skills</small>
+            </div>
+            <div className="passport-metric">
+              <strong>{passport.counts.badges}</strong>
+              <small>Earned badges</small>
+            </div>
+            <div className="passport-metric">
+              <strong>{passport.counts.versions}</strong>
+              <small>Issued document versions</small>
+            </div>
+          </div>
+          <div className="identity-box" style={{ marginTop: 22 }}>
+            <span className="mini-kicker">SIGNED IN WITH GOOGLE</span>
+            <code>{passport.account.email || session.email || "authenticated account"}</code>
+          </div>
+          {passport.workspaceId && (
+            <div className="identity-box" style={{ marginTop: 12 }}>
+              <span className="mini-kicker">
+                WORKSPACE IDENTIFIER · NOT AN OFFICIAL PASSPORT ID
+              </span>
+              <code>{passport.workspaceId}</code>
+            </div>
+          )}
+          <p className="notice" style={{ marginTop: 18 }}>
+            {passport.universityVerified
+              ? "Your account is linked to a university record. No official passport has been issued yet, so there is nothing to download or verify."
+              : "Signing in with Google does not verify university enrollment. Your university links your account to your student record through its own trusted process before any credential is issued. Nothing here is blockchain-verified."}
+          </p>
+          <div className="page-actions" style={{ marginTop: 18 }}>
+            <Link className="button secondary" href="/verify">
+              Public verifier
+            </Link>
+            <button
+              type="button"
+              className="button secondary"
+              onClick={() => signOut()}
+            >
+              Sign out
+            </button>
+          </div>
+        </section>
+      ) : passport && passport.student ? (
         <>
           <div className="columns">
             <section className="passport-visual">

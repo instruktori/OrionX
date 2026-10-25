@@ -19,7 +19,7 @@ Open the URL printed by `vercel dev` for the UI, and `/api/v1/health/live` on th
 The repository is linked locally to the existing Vercel project. On a new machine, link it before pulling settings. See [environment configuration](docs/ENVIRONMENT.md) for Supabase credentials, local overrides, and safe Vercel updates. To use local development databases instead, copy `.env.example` to `.env.development.local` and run `docker compose up -d`.
 
 ## Implemented
-- Supabase sign-in, refresh/logout, server-owned student/admin bindings and private ownership-checked downloads
+- Supabase sign-in, refresh/logout, self-service empty student workspaces, server-owned student/admin bindings and private ownership-checked downloads ([onboarding](docs/STUDENT_ONBOARDING.md))
 - Exact source fixtures, transactional import, immutable cumulative snapshots and PostgreSQL job leases
 - BTU reference artwork, Unicode multi-page PDFs, private create-only artifacts and exact SHA-256 checks
 - Compiled Anchor registry, issuer rotation/pause, signed-attempt recovery and independent verification

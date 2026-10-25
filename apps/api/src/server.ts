@@ -19,6 +19,7 @@ import {
   openOAuthState,
   buildGoogleAuthorizeUrl,
   bindIdentity,
+  linkWorkspaceToStudent,
   type Snapshot,
 } from "@orionx/core";
 import {DomainError} from "@orionx/core/src/errors";
@@ -247,6 +248,8 @@ class ApiController {
       authenticated: true,
       authorized: resolved.authorized,
       role: resolved.role,
+      verification: resolved.verification,
+      workspaceId: resolved.workspaceId,
       studentId: resolved.studentId,
       subject: resolved.subject,
       email: resolved.email,
@@ -322,7 +325,7 @@ class ApiController {
     const resolved = await resolveSession("Bearer " + session.access_token);
     this.sessionCookies(res, session, req);
     res.setHeader("Cache-Control", "no-store");
-    res.json({ok: true, authenticated: true, authorized: resolved.authorized, role: resolved.role});
+    res.json({ok: true, authenticated: true, authorized: resolved.authorized, role: resolved.role, verification: resolved.verification});
   }
 
   @Post("auth/logout")
@@ -359,6 +362,8 @@ class ApiController {
       authenticated: true,
       authorized: user.authorized,
       role: user.role,
+      verification: user.verification,
+      workspaceId: user.workspaceId,
       studentId: user.studentId,
       subject: user.subject,
       email: user.email,
@@ -388,6 +393,31 @@ class ApiController {
     return {ok: true, binding};
   }
 
+  @Get("admin/workspaces")
+  async workspaces(@Req() req: Request) {
+    await admin(req);
+    return prisma.studentWorkspace.findMany({
+      take: 100,
+      orderBy: {createdAt: "desc"},
+      select: {workspaceId: true, email: true, subject: true, linkedStudentId: true, linkedAt: true, createdAt: true},
+    });
+  }
+
+  @Post("admin/workspaces/:workspaceId/link")
+  @HttpCode(200)
+  async linkWorkspace(@Req() req: Request, @Param("workspaceId") workspaceId: string, @Body() body: unknown) {
+    const actor = await admin(req);
+    const parsed = z
+      .object({studentExternalId: z.string().min(1).max(64).optional(), studentId: z.string().min(1).max(64).optional()})
+      .refine(v => Boolean(v.studentExternalId) !== Boolean(v.studentId), "Provide exactly one student reference")
+      .safeParse(body);
+    if (!parsed.success || !/^WS-[A-Z2-7]{16}$/.test(workspaceId)) {
+      throw new DomainError("INVALID_REQUEST", "Valid workspace and exactly one student reference required", 400);
+    }
+    const result = await linkWorkspaceToStudent({workspaceId, ...parsed.data, linkedBy: actor.subject});
+    return {ok: true, workspaceId, studentId: result.studentId, alreadyLinked: result.alreadyLinked};
+  }
+
   @Post("admin/sync")
   @HttpCode(202)
   async sync(@Req() req: Request) {
@@ -403,22 +433,37 @@ class ApiController {
   if (!job || !["FAILED_PERMANENT", "RETRY_WAIT", "STORED"].includes(job.state)) throw new DomainError("NOT_RETRYABLE", "Job requires conflict resolution or is already active");
   await prisma.$transaction([prisma.job.update({where: {id}, data: {state: "QUEUED", attempts: 0, availableAt: new Date(), leaseOwner: null, leaseUntil: null}}), prisma.auditEvent.create({data: {actorId: user.subject, action: "JOB_RETRIED", targetId: id, detail: {stage: job.stage}}})]); return {ok: true};
  }
- private async ownPassport(req: Request) {
-  const user = await identity(req);
-  if (!user.studentId) throw new DomainError("NOT_FOUND", "No student passport binding", 404);
-  const passport = await prisma.passport.findUnique({where: {studentId: user.studentId}, include: {student: true}});
-  if (!passport) throw new DomainError("NOT_FOUND", "Passport not found", 404); return passport;
- }
- @Get("me/passport") async myPassport(@Req() req: Request, @Res() res: Response) {
-  const passport = await this.ownPassport(req), latest = await prisma.version.findUnique({where: {passportId_number: {passportId: passport.id, number: passport.latestFinalizedVersion}}});
-  res.setHeader("Cache-Control", "no-store"); res.json({passportId: passport.publicId, originalIssueDate: passport.initialIssueDate.toISOString().slice(0, 10), student: {firstName: passport.student.firstName, lastName: passport.student.lastName, program: passport.student.program, educationLevel: passport.student.educationLevel}, latest: latest ? summary(latest, passport.latestFinalizedVersion) : null, pending: !!passport.activeVersionId});
- }
- @Get("me/passport/versions") async myVersions(@Req() req: Request, @Res() res: Response) {
-  const passport = await this.ownPassport(req), versions = await prisma.version.findMany({where: {passportId: passport.id, finalizedSlot: {not: null}}, take: 100, orderBy: {number: "desc"}});
-  res.setHeader("Cache-Control", "no-store"); res.json(versions.map(v => ({...summary(v, passport.latestFinalizedVersion), awards: (v.snapshot as unknown as Snapshot).awards})));
- }
+  /** Returns the caller's identity plus their OFFICIAL passport, or null for an empty workspace. */
+  private async ownPassport(req: Request) {
+   const user = await identity(req);
+   if (user.role === "admin" && !user.studentId) throw new DomainError("NOT_FOUND", "Administrators have no student passport", 404);
+   const passport = user.studentId ? await prisma.passport.findUnique({where: {studentId: user.studentId}, include: {student: true}}) : null;
+   return {user, passport};
+  }
+  @Get("me/passport") async myPassport(@Req() req: Request, @Res() res: Response) {
+   const {user, passport} = await this.ownPassport(req);
+   res.setHeader("Cache-Control", "no-store");
+   if (!passport) {
+    // Valid application state: no official passport has been issued. Nothing here is signed,
+    // anchored or verifiable, and no passport identifier, issue date or chain reference exists.
+    res.json({official: false, status: "EMPTY_WORKSPACE", passportId: null, workspaceId: user.workspaceId ?? null, verification: user.verification, universityVerified: user.verification === "UNIVERSITY_VERIFIED", account: {email: user.email ?? null}, originalIssueDate: null, student: null, latest: null, pending: false, counts: {skills: 0, badges: 0, versions: 0}});
+    return;
+   }
+   const latest = await prisma.version.findUnique({where: {passportId_number: {passportId: passport.id, number: passport.latestFinalizedVersion}}});
+   const finalized = await prisma.version.count({where: {passportId: passport.id, finalizedSlot: {not: null}}});
+   const awardCount = latest ? (latest.snapshot as unknown as Snapshot).awards.length : 0;
+   res.json({official: true, status: "ISSUED", workspaceId: null, verification: user.verification, universityVerified: true, account: {email: user.email ?? null}, counts: {skills: awardCount, badges: awardCount, versions: finalized}, passportId: passport.publicId, originalIssueDate: passport.initialIssueDate.toISOString().slice(0, 10), student: {firstName: passport.student.firstName, lastName: passport.student.lastName, program: passport.student.program, educationLevel: passport.student.educationLevel}, latest: latest ? summary(latest, passport.latestFinalizedVersion) : null, pending: !!passport.activeVersionId});
+  }
+  @Get("me/passport/versions") async myVersions(@Req() req: Request, @Res() res: Response) {
+   const {passport} = await this.ownPassport(req);
+   res.setHeader("Cache-Control", "no-store");
+   if (!passport) { res.json([]); return; }
+   const versions = await prisma.version.findMany({where: {passportId: passport.id, finalizedSlot: {not: null}}, take: 100, orderBy: {number: "desc"}});
+   res.json(versions.map(v => ({...summary(v, passport.latestFinalizedVersion), awards: (v.snapshot as unknown as Snapshot).awards})));
+  }
  @Get("me/passport/versions/:version/download") async download(@Req() req: Request, @Res() res: Response, @Param("version") number: string) {
-  const passport = await this.ownPassport(req);
+  const {passport} = await this.ownPassport(req);
+  if (!passport) throw new DomainError("NOT_FOUND", "Issued version not found", 404);
   if (!/^[1-9]\d{0,8}$/.test(number)) throw new DomainError("INVALID_REQUEST", "Invalid version", 400);
   const version = await prisma.version.findUnique({where: {passportId_number: {passportId: passport.id, number: Number(number)}}});
   if (!version?.finalizedSlot || !version.storageKey) throw new DomainError("NOT_FOUND", "Issued version not found", 404);

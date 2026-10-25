@@ -1020,6 +1020,11 @@ button.action-link {
   gap: 13px;
   margin-top: 24px;
 }
+.empty-passport {
+  max-width: 760px;
+  border-top: 4px solid var(--accent);
+  overflow-wrap: anywhere;
+}
 .passport-metric {
   border-top: 1px solid var(--line);
   padding-top: 14px;

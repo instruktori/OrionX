@@ -7,6 +7,8 @@ export type Session = {
   authenticated: boolean;
   authorized: boolean;
   role: "student" | "admin" | null;
+  verification?: "SELF_REGISTERED" | "UNIVERSITY_VERIFIED" | "ADMIN" | null;
+  workspaceId?: string;
   studentId?: string;
   subject: string;
   email?: string;

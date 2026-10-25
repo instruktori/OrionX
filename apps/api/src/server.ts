@@ -4,6 +4,7 @@ import {Module, Controller, Get, Post, Param, Query, Req, Res, Body, HttpCode, C
 import type {Request, Response} from "express";
 import {randomUUID} from "node:crypto";
 import {prisma} from "@orionx/db";
+import type {Prisma} from "@prisma/client";
 import {
   decodeCode,
   verifyDevnet,
@@ -25,6 +26,7 @@ import {
 import {DomainError} from "@orionx/core/src/errors";
 import {queueSynchronization} from "@orionx/core/src/sync";
 import {supabaseAuthServiceConfig} from "@orionx/core/src/config";
+import {createJobProcessor} from "@orionx/core/src/processor";
 import {z} from "zod";
 import multer from "multer";
 
@@ -424,14 +426,34 @@ class ApiController {
     const user = await admin(req);
     return queueSynchronization(String(req.headers["idempotency-key"] || randomUUID()), user.subject);
   }
+  @Post("admin/jobs/process")
+  @HttpCode(200)
+  async processJobs(@Req() req: Request) {
+    await admin(req);
+    if (process.env.MANUAL_WORKER_ENABLED !== "true") throw new DomainError("PROCESSOR_DISABLED", "On-demand processing is not enabled", 503);
+    if (process.env.STORAGE_MODE !== "supabase" || process.env.CHAIN_MODE !== "devnet" || process.env.SOURCE_MODE !== "sheets") throw new DomainError("PROCESSOR_UNCONFIGURED", "Live source, private storage and Devnet must be configured", 503);
+    if (!process.env.SOLANA_ISSUER_KEYPAIR_JSON && !process.env.SOLANA_ISSUER_KEYPAIR_PATH) throw new DomainError("PROCESSOR_UNCONFIGURED", "Server-side issuer credential is missing", 503);
+    const result = await createJobProcessor({writebackLimit: 1}).processNext();
+    const active = {type: {in: ["ISSUE", "SYNC"]}, state: {in: ["QUEUED", "RETRY_WAIT", "RENDERED"]}} satisfies Prisma.JobWhereInput;
+    const [remaining, blocked, next] = await Promise.all([
+      prisma.job.count({where: active}),
+      prisma.job.count({where: {type: {in: ["ISSUE", "SYNC"]}, state: {in: ["BLOCKED_CONFLICT", "FAILED_PERMANENT"]}}}),
+      prisma.job.findFirst({where: active, orderBy: {availableAt: "asc"}, select: {availableAt: true}}),
+    ]);
+    return {...result, remaining, blocked, nextAvailableAt: next?.availableAt ?? null};
+  }
  @Get("admin/sync-runs/:id") async syncRun(@Req() req: Request, @Param("id") id: string) { await admin(req); const run = await prisma.importRun.findUnique({where: {id}, include: {conflicts: {take: 100}}}); if (!run) throw new DomainError("NOT_FOUND", "Run not found", 404); return run; }
  @Get("admin/passports") async passports(@Req() req: Request) { await admin(req); return prisma.passport.findMany({take: 100, include: {student: {select: {externalId: true, firstName: true, lastName: true, program: true}}, _count: {select: {versions: true}}}, orderBy: {publicId: "asc"}}); }
  @Get("admin/passports/:id/versions") async versions(@Req() req: Request, @Param("id") id: string) { await admin(req); return safeJSON(await prisma.version.findMany({where: {passport: {publicId: id}}, take: 100, orderBy: {number: "desc"}})); }
  @Get("admin/audit") async audit(@Req() req: Request) { await admin(req); return prisma.auditEvent.findMany({take: 100, orderBy: {createdAt: "desc"}}); }
  @Post("admin/jobs/:id/retry") async retry(@Req() req: Request, @Param("id") id: string) {
-  const user = await admin(req), job = await prisma.job.findUnique({where: {id}});
-  if (!job || !["FAILED_PERMANENT", "RETRY_WAIT", "STORED"].includes(job.state)) throw new DomainError("NOT_RETRYABLE", "Job requires conflict resolution or is already active");
-  await prisma.$transaction([prisma.job.update({where: {id}, data: {state: "QUEUED", attempts: 0, availableAt: new Date(), leaseOwner: null, leaseUntil: null}}), prisma.auditEvent.create({data: {actorId: user.subject, action: "JOB_RETRIED", targetId: id, detail: {stage: job.stage}}})]); return {ok: true};
+  const user = await admin(req);
+  await prisma.$transaction(async tx => {
+   const changed = await tx.job.updateMany({where: {id, state: {in: ["FAILED_PERMANENT", "RETRY_WAIT", "STORED"]}}, data: {state: "QUEUED", attempts: 0, availableAt: new Date(), leaseOwner: null, leaseUntil: null, lastError: null}});
+   if (changed.count !== 1) throw new DomainError("NOT_RETRYABLE", "Job requires conflict resolution or is already active", 409);
+   const job = await tx.job.findUniqueOrThrow({where: {id}});
+   await tx.auditEvent.create({data: {actorId: user.subject, action: "JOB_RETRIED", targetId: id, detail: {stage: job.stage}}});
+  }); return {ok: true};
  }
   /** Returns the caller's identity plus their OFFICIAL passport, or null for an empty workspace. */
   private async ownPassport(req: Request) {

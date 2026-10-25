@@ -1,0 +1,47 @@
+{
+  "environment": "ISOLATED_POSTGRES_WITH_REAL_DEVNET_SUPABASE_STORAGE_AND_AUTH",
+  "devnetEvidence": true,
+  "liveSheetsEvidence": false,
+  "hostedBrowserEvidence": false,
+  "officialBtu": false,
+  "versions": 2,
+  "awards": 5,
+  "checks": [
+    "durable reservation",
+    "private exact-byte storage",
+    "signed attempt before broadcast",
+    "crash and restart recovery",
+    "real SBF registration",
+    "finalized verification",
+    "cumulative V2 and backdated discovery",
+    "V1 authentic and superseded",
+    "tamper rejection",
+    "public API verification and tamper rejection",
+    "real authenticated download",
+    "anonymous and unrelated student denied",
+    "idempotent replay"
+  ],
+  "proofs": [
+    {
+      "version": 1,
+      "code": "D1-PREFSC4INL7NE2ITV6Q7AKEBIQYCGT7T",
+      "pdfSha256": "b68032a7324e78e02bd0cc0bcbf43b231ab2fe0f2b2f924cc5b5ed0b1b4a92ac",
+      "versionPda": "7jmkVULWTz2Tyc3zSb66iysXaHG4mFXEuqxZ3Lj3ATU2",
+      "signature": "M2W36mq5svGdJdguTDKG2gLRTuNYu2r8oPyfhRaPaptYq86vdKZNKXr4szjNsj7YeP5Qup1J9ooW4DrXBiVbReN",
+      "cluster": "devnet",
+      "programId": "9q3EFytGCsR2hk5FnerXxMWomC2yCajpx78durY91JPa"
+    },
+    {
+      "version": 2,
+      "code": "D1-342XS2O6HOOM2F63MMQVOK7NEUMHIVWO",
+      "pdfSha256": "dafff92917d1c021953a651e210becdb2b33d0d84e2a459db67a4fe4d360f29d",
+      "versionPda": "ARstaLMGuSJbUUxK7GmPZmATdZ69EKrhj4MMzkZPjYRo",
+      "signature": "5V9cgbH823vvswb2qDpZg8ZucfYfWsMdYvU9v4jzzT3cqUHjjnweTjFGLdXqksgWZmFWCuRmGwBF9PeTV72yKHLD",
+      "cluster": "devnet",
+      "programId": "9q3EFytGCsR2hk5FnerXxMWomC2yCajpx78durY91JPa"
+    }
+  ],
+  "elapsedSeconds": 81.908,
+  "setupTransaction": null,
+  "checkedAt": "2026-10-25T13:11:53.499Z"
+}

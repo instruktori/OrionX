@@ -33,7 +33,7 @@ export async function sheetsClient() {
   if (!sheetId) throw Error("Google Sheets integration is not configured");
   const {google} = await import("googleapis");
   const auth = new google.auth.GoogleAuth({credentials: credentials ? JSON.parse(credentials) : undefined, scopes: ["https://www.googleapis.com/auth/spreadsheets"]});
-  return {sheets: google.sheets({version: "v4", auth}), sheetId, tab: (process.env.GOOGLE_SHEET_TAB || "Passport Skill Records").replace(/'/g, "''")};
+  return {sheets: google.sheets({version: "v4", auth, timeout: 15000}), sheetId, tab: (process.env.GOOGLE_SHEET_TAB || "Passport Skill Records").replace(/'/g, "''")};
 }
 export async function fetchSheetRows(): Promise<SourceRow[]> {
   const {sheets, sheetId, tab} = await sheetsClient();

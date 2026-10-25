@@ -1,0 +1,18 @@
+{
+  "checkedAt": "2026-10-25T13:47:12.561099+00:00",
+  "origin": "https://orionx-phi.vercel.app",
+  "checks": [
+    "real Google sign-in",
+    "Supabase PKCE callback",
+    "redirect to private student workspace",
+    "self-registration does not claim academic credentials"
+  ],
+  "googleOAuthBrowserEvidence": true,
+  "universityCredentialClaimed": false,
+  "screenshot": "output/google-workspace.png",
+  "verificationCheckedAt": "2026-10-25T14:08:43.114938+00:00",
+  "verificationDeepLinkEvidence": true,
+  "registeredLatestVersionObserved": 3,
+  "verificationScreenshot": "output/verified-v3.png",
+  "sheetLayoutScreenshot": "output/live-sheets.png"
+}

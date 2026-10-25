@@ -2,7 +2,7 @@ import {PDFDocument,rgb,type PDFFont,type PDFPage} from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import QRCode from 'qrcode';
 import {readFileSync} from 'node:fs';
-import {resolve} from 'node:path';
+import {repositoryResource} from './resources';
 import type {Snapshot} from './index';
 import type {TemplateAdapter} from './pdf';
 
@@ -11,8 +11,8 @@ import type {TemplateAdapter} from './pdf';
  */
 export async function renderBtuReferencePdf(s:Snapshot){
  const doc=await PDFDocument.create();doc.registerFontkit(fontkit);
- const font=await doc.embedFont(readFileSync(resolve(__dirname,'../assets/NotoSans-Regular.ttf')),{subset:true});
- const georgian=await doc.embedFont(readFileSync(resolve(__dirname,'../assets/NotoSansGeorgian-Regular.ttf')),{subset:true});
+ const font=await doc.embedFont(readFileSync(repositoryResource('packages/core/assets/NotoSans-Regular.ttf')),{subset:true});
+ const georgian=await doc.embedFont(readFileSync(repositoryResource('packages/core/assets/NotoSansGeorgian-Regular.ttf')),{subset:true});
  const latin=new Set(font.getCharacterSet()),geo=new Set(georgian.getCharacterSet());
  const runs=(value:string)=>{const out:{value:string;font:PDFFont}[]=[];for(const char of value.replace(/[\r\n\t]/g,' ')){const point=char.codePointAt(0)!,f=latin.has(point)?font:geo.has(point)?georgian:null;if(!f)throw Error('Unsupported PDF character');const last=out[out.length-1];if(last?.font===f)last.value+=char;else out.push({value:char,font:f})}return out};
  const width=(value:string,size:number)=>runs(value).reduce((a,r)=>a+r.font.widthOfTextAtSize(r.value,size),0);
@@ -22,14 +22,14 @@ export async function renderBtuReferencePdf(s:Snapshot){
  const orange=rgb(1,.4,0),gray=rgb(.84,.84,.86);
  const page=(title:string,subtitle:string)=>{const p=doc.addPage([842,595]);p.drawRectangle({x:20,y:20,width:802,height:555,borderWidth:1,borderColor:gray});text(p,title,48,533,23);text(p,subtitle,48,510,10);p.drawLine({start:{x:48,y:494},end:{x:794,y:494},color:gray,thickness:1});return p};
  const stamps=new Map<string,Awaited<ReturnType<typeof doc.embedPng>>>();
- for(const [code,file]of [['BDG-AI-001','Artboard 3 (2).png'],['BDG-AI-002','Artboard 4 (1).png'],['BDG-AI-003','Artboard 5 (1).png']])stamps.set(code,await doc.embedPng(readFileSync(resolve(__dirname,'../assets/btu/skills',file))));
+ for(const [code,file]of [['BDG-AI-001','Artboard 3 (2).png'],['BDG-AI-002','Artboard 4 (1).png'],['BDG-AI-003','Artboard 5 (1).png']])stamps.set(code,await doc.embedPng(readFileSync(repositoryResource('packages/core/assets/btu/skills/'+file))));
  const stamp=(p:PDFPage,code:string,x:number,y:number,w:number,h:number)=>{const image=stamps.get(code);if(!image)throw Error('Unknown category stamp');const scale=Math.min(w/image.width,h/image.height);p.drawImage(image,{x:x+(w-image.width*scale)/2,y:y+(h-image.height*scale)/2,width:image.width*scale,height:image.height*scale})};
  const date=new Date(s.student.initialIssueDate+'T00:00:00Z');doc.setCreationDate(date);doc.setModificationDate(date);doc.setTitle(s.student.passportId+' V'+s.version);doc.setCreator('OrionX BTU reference adapter');doc.setProducer('OrionX btu-reference-v1');doc.setSubject('Fictional demo - issuer authority unconfirmed');
  const cover=page('AI SKILLS','DIGITAL PASSPORT');
  cover.drawRectangle({x:48,y:470,width:260,height:17,color:orange});text(cover,'DEMO - NOT BTU ISSUED',55,475,9);
  let y=420;text(cover,'NAME',48,y,10);y=paragraph(cover,s.student.firstName,48,y-28,400,24)-20;text(cover,'SURNAME',48,y,10);paragraph(cover,s.student.lastName,48,y-28,400,24);
  text(cover,'ORIGINAL DATE OF ISSUE',500,420,10);text(cover,s.student.initialIssueDate,500,394,17);
- const coverStamp=await doc.embedPng(readFileSync(resolve(__dirname,'../assets/btu/cover/3_1@3x.png')));cover.drawImage(coverStamp,{x:510,y:210,width:240,height:123});
+ const coverStamp=await doc.embedPng(readFileSync(repositoryResource('packages/core/assets/btu/cover/3_1@3x.png')));cover.drawImage(coverStamp,{x:510,y:210,width:240,height:123});
  text(cover,'PASSPORT ID: '+s.student.passportId,48,185,12);text(cover,'VERSION '+s.version+' | '+s.awards.length+' CUMULATIVE AWARDS',48,158,10);
  text(cover,'VERIFICATION CODE',48,125,9);text(cover,s.code,48,105,11);
  const url=new URL('/verify',s.verificationOrigin||process.env.VERIFICATION_PUBLIC_ORIGIN||'http://localhost:3000');url.searchParams.set('code',s.code);const qr=await doc.embedPng(await QRCode.toBuffer(url.toString(),{width:180,margin:1}));cover.drawImage(qr,{x:690,y:65,width:75,height:75});

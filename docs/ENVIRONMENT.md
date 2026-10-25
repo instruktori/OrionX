@@ -32,7 +32,7 @@ API, web, worker, and Prisma workspace commands load the repository's environmen
 | `AUTH_JWT_ISSUER` | Defaults to `<SUPABASE_URL>/auth/v1` | Config |
 | `AUTH_JWT_AUDIENCE` | Defaults to `authenticated` | Config |
 
-Development secrets use Vercel Config so authorized developers can pull them. Never prefix server credentials with `NEXT_PUBLIC_`. The current UI has no Supabase login flow, so it does not need a public Supabase key. JWT verification requires the project's asymmetric signing keys; this project's ES256 JWKS endpoint has been checked.
+Development secrets use Vercel Config so authorized developers can pull them. Never prefix server credentials with `NEXT_PUBLIC_`. Google OAuth is mediated by the API through Supabase, so the browser does not need a Supabase API key. JWT verification requires the project's asymmetric signing keys; this project's ES256 JWKS endpoint has been checked.
 
 Same-origin Vercel routing does not need `NEXT_PUBLIC_API_ORIGIN` or `WEB_ORIGIN`. Keep them unset unless hosting the frontend separately.
 
@@ -61,10 +61,8 @@ The `passport-pdfs` bucket is private, accepts only `application/pdf`, and limit
 
 To initialize another disposable demo database, verify `DATABASE_URL` and `DIRECT_URL`, then run `npm run db:push`. Ensure RLS is enabled on every application table before exposing the project to clients; this project's automatic RLS trigger already enabled it. Schema commands are never part of application builds.
 
-The server API key is installed in Vercel Production and Development and in ignored local configuration. `npm run env:check -- --cloud` passes. The worker is not declared in `vercel.json`, so web/API deployments do not build or store its container image; its database-to-PDF flow has been verified locally against the cloud database and storage. Google Sheets, Solana program deployment, issuer keys, actual sign-in screens, and live credential issuance require their own setup; current configuration keeps fixture/offline demo behavior.
+The API storage/auth key is configured server-side. Devnet deployment, live Sheets access, private issuance and Google browser sign-in have since been verified; see [the checkpoint](ARCHITECTURE_PROGRESS.md) for timestamped evidence.
 
-## Verification performed
+Manual processing additionally uses `MANUAL_WORKER_ENABLED=true`, `SOLANA_ISSUER_KEYPAIR_JSON` and `GOOGLE_SERVICE_ACCOUNT_JSON` as server-only secrets. `SOURCE_MODE=sheets`, the demo Sheet ID/named range, `CHAIN_MODE=devnet` and pinned program/genesis configure the source and chain. `SYNC_ENABLED=false` keeps automatic polling off. The user's Google account retains student permissions; only database-bound administrators may trigger processing.
 
-Database authentication and Prisma model queries were checked through the regional pooler. The public JWKS endpoint returned ES256 keys. Bucket settings and table RLS were read back from Supabase; Vercel environment names/types and Node.js 22 were read back after updates. Local schema validation, type checks, all 19 tests, and the production web build pass. The API returned HTTP 200 for liveness and HTTP 404 for an unknown route.
-
-A synthetic worker job passed through the actual database claim, PDF rendering, private upload, byte-for-byte readback, STORED state updates, and audit event creation. A separate storage check confirmed that duplicate uploads are rejected and public reads are blocked. All synthetic rows and PDFs were removed after the checks; the database and bucket remain empty. These checks did not deploy the local code or enable the cloud daemon.
+For a local optional worker, use ignored key files instead of inline JSON. Never upload admin/upgrade keys or expose credentials with NEXT_PUBLIC_. `env:sync` handles secret values through stdin and prints names/types only.

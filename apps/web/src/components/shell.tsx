@@ -15,6 +15,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { useSession } from "@/lib/session";
+import { oauthCallbackTarget } from "@/lib/oauth-redirect";
 
 const links = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
@@ -68,11 +69,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
   }, [open]);
 
   useEffect(() => {
-    if (typeof window === "undefined" || path === "/auth/callback") return;
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("code")) {
-      router.replace(`/auth/callback${window.location.search}`);
-    }
+    if (typeof window === "undefined") return;
+    const callback = oauthCallbackTarget(path, window.location.search);
+    if (callback) router.replace(callback);
   }, [path, router]);
 
   const handleSignOut = async () => {

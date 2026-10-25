@@ -3,11 +3,56 @@ const assert = require('node:assert/strict');
 const {spawnSync} = require('node:child_process');
 const {resolve} = require('node:path');
 const {spawn} = require('node:child_process');
-const {mkdtempSync, symlinkSync, readFileSync, rmSync} = require('node:fs');
+const {mkdtempSync, symlinkSync, readFileSync, rmSync, cpSync} = require('node:fs');
 const {tmpdir} = require('node:os');
 const {createServer} = require('node:net');
 const {setTimeout: delay} = require('node:timers/promises');
 const {build} = require('esbuild');
+
+test('public verification deep links never enter the OAuth callback', () => {
+  const root = resolve(__dirname, '..');
+  const result = spawnSync(process.execPath, ['--import', 'tsx', '--input-type=module', '-e', `
+    import assert from 'node:assert/strict';
+    import {oauthCallbackTarget} from './apps/web/src/lib/oauth-redirect.ts';
+    assert.equal(oauthCallbackTarget('/verify', '?code=D1-PUBLIC'), null);
+    assert.equal(oauthCallbackTarget('/passport', '?code=anything'), null);
+    assert.equal(oauthCallbackTarget('/auth/callback', '?code=oauth-code'), null);
+    assert.equal(oauthCallbackTarget('/', '?code=D1-PUBLIC'), null);
+    assert.equal(oauthCallbackTarget('/', '?code=oauth-code'), '/auth/callback?code=oauth-code');
+    assert.equal(oauthCallbackTarget('/login', '?code=oauth-code'), '/auth/callback?code=oauth-code');
+  `], {cwd: root, encoding: 'utf8', timeout: 10000});
+  assert.ifError(result.error);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+});
+
+test('isolated ESM function bundle reads its catalog and renders a PDF from packaged resources', {timeout: 30000}, async () => {
+  const root = resolve(__dirname, '..');
+  const folder = mkdtempSync(resolve(tmpdir(), 'orionx-render-runtime-'));
+  try {
+    symlinkSync(resolve(root, 'node_modules'), resolve(folder, 'node_modules'), 'dir');
+    cpSync(resolve(root, 'fixtures'), resolve(folder, 'runtime-resources/fixtures'), {recursive: true});
+    cpSync(resolve(root, 'packages/core/assets'), resolve(folder, 'runtime-resources/core-assets'), {recursive: true, filter: path => !path.endsWith('.zip')});
+    const output = resolve(folder, 'render.mjs');
+    await build({absWorkingDir: root, stdin: {contents: `
+      import assert from 'node:assert/strict';
+      import {fixtureRows} from './packages/core/src/fixtures';
+      import {snapshot,newCode} from './packages/core/src/index';
+      import {renderPassportPdf} from './packages/core/src/templates';
+      import {PDFDocument} from 'pdf-lib';
+      const row=fixtureRows()[0], frozen=snapshot(row.student,[row.award],1,newCode());
+      const bytes=await renderPassportPdf(frozen);
+      assert.ok(bytes.length>10000);
+      assert.ok((await PDFDocument.load(bytes)).getPageCount()>=2);
+      console.log('PACKAGED_RENDER_OK');
+    `, resolveDir: root, sourcefile: 'render-runtime.ts'}, outfile: output, bundle: true, platform: 'node', target: 'node22', format: 'esm', logLevel: 'silent', plugins: [{name: 'external-runtime-packages', setup(builder) {
+      builder.onResolve({filter: /^[^./]/}, args => args.path.startsWith('@orionx/') ? undefined : {path: args.path, external: true});
+    }}]});
+    const result = spawnSync(process.execPath, ['--no-experimental-require-module', output], {cwd: folder, encoding: 'utf8', timeout: 20000, env: {...process.env, TEMPLATE_REVISION: 'btu-reference-v1'}});
+    assert.ifError(result.error);
+    assert.equal(result.status, 0, result.stderr || result.stdout);
+    assert.match(result.stdout, /PACKAGED_RENDER_OK/);
+  } finally { rmSync(folder, {recursive: true, force: true}); }
+});
 
 test('Solana client loads in the Vercel CommonJS runtime without require(ESM)', () => {
   const result = spawnSync(process.execPath, ['--no-experimental-require-module', '-e', `

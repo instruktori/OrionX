@@ -1,0 +1,37 @@
+{
+  "checkedAt": "2026-10-25T14:03:58.019Z",
+  "checks": [
+    {
+      "name": "Database schema",
+      "passed": true,
+      "detail": "Workspace and chain-proof schema accessible"
+    },
+    {
+      "name": "Private durable storage",
+      "passed": true,
+      "detail": "Configured bucket exists and is private"
+    },
+    {
+      "name": "Devnet program and issuer",
+      "passed": true,
+      "detail": "Pinned Devnet program deployed; issuer active; funded worker signer matches"
+    },
+    {
+      "name": "Live Google Sheets",
+      "passed": true,
+      "detail": "62 valid source rows; unique metadata bindings present (read-only check)"
+    },
+    {
+      "name": "Hosted web and public verification",
+      "passed": true,
+      "detail": "Web, API readiness and anonymous Devnet code lookup reachable over HTTPS"
+    }
+  ],
+  "complete": true,
+  "scope": {
+    "worker": true,
+    "sheets": true,
+    "hosted": true
+  },
+  "note": "Read-only readiness checks. These do not establish live writeback, a persistent hosted worker, or authenticated browser acceptance."
+}

@@ -8,12 +8,15 @@ import {DomainError} from "./errors";
 
 export async function issuerEnvironment() {
  if (!["devnet", "local"].includes(process.env.CHAIN_MODE || "")) throw new DomainError("CHAIN_DISABLED", "Issuance requires CHAIN_MODE=devnet", 503);
- const id = process.env.SOLANA_PROGRAM_ID, path = process.env.SOLANA_ISSUER_KEYPAIR_PATH;
- if (!id || !path || !process.env.SOLANA_EXPECTED_GENESIS_HASH) throw new DomainError("CHAIN_UNCONFIGURED", "Pinned Devnet issuer environment is incomplete", 503);
+ const id = process.env.SOLANA_PROGRAM_ID, path = process.env.SOLANA_ISSUER_KEYPAIR_PATH, secret = process.env.SOLANA_ISSUER_KEYPAIR_JSON;
+ if (!id || (!path && !secret) || !process.env.SOLANA_EXPECTED_GENESIS_HASH) throw new DomainError("CHAIN_UNCONFIGURED", "Pinned Devnet issuer environment is incomplete", 503);
  const policy = clusterPolicy();
  const connection = new Connection(policy.rpc, "finalized");
  if (await connection.getGenesisHash() !== policy.genesisHash) throw new DomainError("WRONG_CLUSTER", "Wrong Solana network", 503);
- const keypair = Keypair.fromSecretKey(Uint8Array.from(JSON.parse(await readFile(path, "utf8")))), programId = new PublicKey(id);
+ let keypair: Keypair;
+ try { keypair = Keypair.fromSecretKey(Uint8Array.from(JSON.parse(secret || await readFile(path!, "utf8")))); }
+ catch { throw new DomainError("CHAIN_UNCONFIGURED", "Issuer signing credential is invalid", 503); }
+ const programId = new PublicKey(id);
  if (programId.equals(PublicKey.default)) throw new DomainError("INVALID_PROGRAM", "Placeholder program", 503);
  return {connection, keypair, programId};
 }

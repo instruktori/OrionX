@@ -1,0 +1,15 @@
+{
+  "checkedAt": "2026-10-25T14:07:01.028Z",
+  "deploymentId": "dpl_38JNwwFNp6UMesvC4s4H7eGc9hJS",
+  "productionOrigin": "https://orionx-phi.vercel.app",
+  "automatedTests": 81,
+  "passports": 18,
+  "versions": 20,
+  "awards": 62,
+  "syncedSourceRecords": 62,
+  "activeJobs": 0,
+  "blockedJobs": 0,
+  "manualProcessing": true,
+  "unattendedWorker": false,
+  "officialBtu": false
+}

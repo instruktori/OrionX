@@ -1,13 +1,22 @@
 # Backend status
 
-See [architecture checkpoint](ARCHITECTURE_PROGRESS.md) for the current evidence
-and [remaining setup](SETUP_REMAINING.md) for the two external dependencies.
+The Devnet program and simulated issuer are deployed. An isolated V1/V2 flow
+passed with real PostgreSQL, private Supabase Storage, Supabase Auth and finalized
+Devnet transactions, including crash recovery, downloads, historical verification
+and one-bit tamper rejection.
 
-Authentication, database-bound student/admin roles, protected APIs, private PDF
-delivery, durable import/version reservation, PDF/chain/writeback worker stages,
-and the compiled Anchor protocol are implemented. The complete flow has passed
-with real PostgreSQL/Supabase Auth and a local Solana validator.
+Worker leases renew during long jobs, source polling uses durable jobs, operator
+retries atomically respect state, and fixture-finalized writebacks can move to
+live Sheets without reissuance.
 
-Real Devnet deployment, unattended live Google Sheets integration, and hosted
-end-to-end acceptance are still pending. A simulated BTU issuer is authorized for
-development; no official university issuance is claimed.
+Live acceptance now includes 18 demo passports, 20 finalized versions, 62 real
+Sheets writebacks, a complete hosted administrator-triggered V3 issuance without
+a daemon, real Google browser sign-in, row reorder/replay, private downloads and
+one-bit tamper rejection. Source sync, packaged server resources, bounded manual
+processing and failed-import retries have passed deployed checks.
+
+Automatic worker hosting is deferred by user choice. Use the administrator's
+manual synchronization/processing buttons. The user's account retains student
+permissions. No official university issuance is claimed.
+
+See [the checkpoint](ARCHITECTURE_PROGRESS.md) and `docs/evidence/`.

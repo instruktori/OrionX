@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "npm run dev -w @orionx/web",
     "build": "npm run build -w @orionx/web",
+    "prepare:api-resources": "node scripts/prepare-api-resources.mjs",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "dev:services": "node scripts/with-env.mjs --mode development vercel dev --local",
     "dev:web": "npm run dev -w @orionx/web",
@@ -20,6 +21,9 @@
     "test:runtime": "node --test scripts/runtime.test.cjs",
     "env:pull": "vercel env pull .env.local --environment=development --yes",
     "env:check": "node scripts/with-env.mjs tsx scripts/check-env.ts",
+    "check:readiness": "node scripts/with-env.mjs tsx scripts/check-readiness.ts",
+    "test:live": "node scripts/with-env.mjs tsx scripts/check-live.ts",
+    "test:manual": "node scripts/with-env.mjs tsx scripts/test-manual.ts",
     "test:config": "node --test scripts/env.test.mjs",
     "env:sync": "node scripts/sync-vercel-env.mjs",
     "sync": "node scripts/with-env.mjs tsx scripts/sync.ts",
@@ -29,6 +33,7 @@
     "test:api": "node scripts/with-env.mjs tsx scripts/check-api.ts",
     "test:capacity": "node scripts/with-env.mjs tsx scripts/test-capacity.ts",
     "test:pipeline": "node scripts/with-env.mjs tsx scripts/test-pipeline.ts",
+    "test:pipeline:devnet": "node scripts/with-env.mjs tsx scripts/test-pipeline.ts --devnet",
     "deploy:devnet": "node scripts/with-env.mjs tsx scripts/deploy-devnet.ts",
     "issuer:admin": "node scripts/with-env.mjs tsx scripts/issuer-admin.ts",
     "preview:pdf": "tsx scripts/preview-pdf.ts"

@@ -9,7 +9,7 @@ const source=fixtureRows()[0],live=fixtureValues()[4];
 const update={recordId:source.award.recordId,version:1,status:'SYNCED' as const,timestamp:'2026-10-24T12:00:00.000Z',expectedFingerprint:inputFingerprint(source),passportId:source.student.passportId,initialIssueDate:source.student.initialIssueDate};
 let read:ReturnType<typeof vi.fn>,write:ReturnType<typeof vi.fn>;
 beforeEach(()=>{
- vi.stubEnv('SOURCE_MODE','sheets');vi.clearAllMocks();
+ vi.stubEnv('SOURCE_MODE','sheets');vi.stubEnv('SOLANA_PROGRAM_ID','pinned-program');vi.clearAllMocks();
  vi.mocked(prisma.sourceObservation.findFirst).mockResolvedValue({payload:source} as never);
  vi.mocked(prisma.sourceSync.findUnique).mockResolvedValue({syncedVersion:null} as never);
  vi.mocked(prisma.version.findFirst).mockResolvedValue({chainCluster:'devnet',finalizedSlot:1n} as never);
@@ -30,5 +30,16 @@ describe('retry-safe Sheets success writeback',()=>{
  });
  it('detects metadata resolving to another record before writing',async()=>{
   const moved=[...live];moved[9]='REC-SOMEONE-ELSE';read.mockReset().mockResolvedValue({data:{valueRanges:[{valueRange:{values:[moved]}}]}});await expect(writeBack([source],[update])).rejects.toThrow('Source binding changed');expect(write).not.toHaveBeenCalled();
+ });
+ it('does not commit the sync ledger if inputs change during writeback',async()=>{
+  const changed=[...live];changed[14]+=' unauthorized mutation';
+  read.mockReset().mockResolvedValueOnce({data:{valueRanges:[{valueRange:{values:[live]}}]}}).mockResolvedValueOnce({data:{valueRanges:[{valueRange:{values:[[...changed.slice(0,16),'SYNCED','V1',update.timestamp,'']]}}]}});
+  await expect(writeBack([source],[update])).rejects.toThrow('Writeback readback mismatch');
+  expect(prisma.sourceSync.update).not.toHaveBeenCalled();
+ });
+ it('requires the pinned program, genesis and exact finalization timestamp',async()=>{
+  vi.stubEnv('SOLANA_PROGRAM_ID','pinned-program');
+  await writeBack([source],[update]);
+  expect(vi.mocked(prisma.version.findFirst).mock.calls[0][0]?.where).toMatchObject({chainProgramId:'pinned-program',chainGenesisHash:'EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG',finalizedAt:new Date(update.timestamp)});
  });
 });

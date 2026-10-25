@@ -1,58 +1,39 @@
-# Two external setup steps
+# Remaining external setup
 
-## 1. Free Solana Devnet funding
+## Devnet is deployed
 
-The demo keys have been generated and the program compiled. Automated faucet
-requests were rate-limited; the deployment wallet has no Devnet funds.
+The program and simulated issuer are deployed. Real V1/V2 issuance, crash
+recovery, private downloads and tamper rejection passed. See
+`evidence/devnet-deployment.json` and `evidence/devnet-pipeline.json`.
+Earlier deployment-wallet funding instructions are complete.
 
-1. Open https://faucet.solana.com and leave the network on **devnet**.
-2. Enter deployment wallet `BNcEvP3benzCX7tc1W2U6upZ5HVT4hzneZahVKMpCPiv`.
-3. Request a total of **4 Devnet SOL** (for example two requests of 2 SOL, subject
-   to the faucet's current limits). Sign in through the faucet if it requires it.
-4. Tell the implementation operator when funded. Do not buy or send mainnet SOL.
+## Hackathon setup is configured
 
-The current helper estimates 2.481 Devnet SOL for the initial deployment budget,
-plus issuer funding. This is test-network currency, not a real payment.
+The Google service account has Editor access to the demo source and a renewable
+credential, with protected source structure/system outputs and 62 stable record
+bindings. All 18 passports and 20 finalized versions have verified writeback.
+Real hosted Google sign-in and authenticated download/public tamper checks passed.
 
-Then run `npm run deploy:devnet`. It checks the actual network, uses separate
-program/admin/issuer/upgrade keys, initializes the issuer, updates ignored local
-configuration and writes public deployment evidence only after success. Private
-CLI recovery diagnostics stay in `.secrets/deployment.log`.
+Credentials stay in ignored local files and server-only Vercel secrets. The API
+receives the simulated issuer credential for on-demand processing; admin and
+upgrade keys remain operator-only. The user's account remains a student.
 
-Official faucet guidance: https://solana.com/developers/cookbook/development/airdrops-and-faucets
+## Manual operation
 
-## 2. Worker identity for Google Sheets
+An administrator opens `/admin` and selects **Run synchronization** to import and
+process changes, or **Process pending jobs** to resume saved work. Keep the page
+open until the queue drains. **Stop after current step** preserves pending work.
 
-The chat connector can operate Sheets interactively. It does not provide the
-application worker with a renewable runtime credential or Google Cloud project
-administration access.
+The optional local worker is stopped and `SYNC_ENABLED=false`. Separate always-on
+hosting and periodic scheduling are deferred by explicit user choice. No default
+worker daemon or container build was added.
 
-1. Select/create a project in https://console.cloud.google.com.
-2. Under APIs & Services → Library, enable **Google Sheets API**.
-3. Under IAM & Admin → Service Accounts, create `orionx-passport-sync`.
-   No broad Google Cloud project role or domain-wide delegation is needed for
-   access to this one shared spreadsheet; skip optional project-role grants.
-4. On that account, open Keys → Add key → Create new key → JSON.
-5. Save the JSON locally as
-   `/Users/luka/Desktop/OrionX/.secrets/google-service-account.json`.
-   Keep it out of chat and source control.
-6. Copy its `client_email` and share only the demo source Sheet with that email
-   as an Editor:
-   https://docs.google.com/spreadsheets/d/1myYLRd8gSwhmHoe8rcY3D1Y2NJhMU55AzRs1HGnVQMQ/edit
-7. Tell the operator the file is ready. They can configure the worker's
-   GOOGLE_APPLICATION_CREDENTIALS (or its server-only JSON secret), verify access,
-   protect Q–T for the service identity, and switch SOURCE_MODE from fixture to sheets.
+To add a synthetic verified award, insert a complete data row inside the named
+`PassportRecords` range (above an existing data row), copy its native structure,
+and use a unique Record ID with a known skill definition. Preserve original
+identity/history and the badge formula. The worker enrolls stable metadata under
+the configured structural protection, then writes system output only after proof
+finalizes. Do not edit synchronized historical award inputs or system outputs.
 
-The Sheet ID, numeric tab ID, `PassportRecords` named range and 60 row metadata
-bindings are already prepared. The original shared workbook is unchanged.
-
-Google credential documentation:
-https://developers.google.com/workspace/guides/create-credentials
-
-## After these steps
-
-The operator handles deployment, worker activation, real Sheets → PDF → Devnet
-issuance, student download, public verification, one-bit tamper rejection, V2
-history and failure-recovery evidence. No institutional approval is required for
-the explicitly labeled simulated issuer. A later official university deployment
-requires approved key/trust material and a separate network/deployment review.
+Official university authorization, real-student deployment, mainnet and a full
+5,000-transaction load test remain outside the approved hackathon scope.

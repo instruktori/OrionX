@@ -16,7 +16,12 @@ integration tests require a local validator loaded with that binary and the
 matching ignored demo keys. `npm run deploy:devnet` requires free test-network
 funding and refuses other clusters.
 
-No successful local test substitutes for actual Devnet, live-Sheets or hosted
-acceptance evidence. Keep the deployment worker paused until its intended
-source, private storage, signing credentials and public verification origin are
-configured. Never migrate or reset databases during application builds.
+Actual Devnet, live Sheets, hosted verification/download and Google browser
+sign-in evidence is recorded in `docs/evidence/`. `test:pipeline:devnet` uses a
+disposable SQL schema and real test-network issuance; `test:live` checks existing
+live source/proof/download evidence. `test:manual` expects a deliberately added
+synthetic award and validates hosted administrator-triggered issuance without a
+daemon. These tests retain immutable PDFs and chain accounts.
+
+Automatic polling hosting is deferred by user choice. Use the admin page's
+manual controls for the hackathon. Never migrate or reset databases during builds.

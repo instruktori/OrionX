@@ -14,7 +14,31 @@ export async function sourceRows() {
   if (mode === "sheets") return fetchSheetRows();
   throw new DomainError("INVALID_SOURCE", "Unsupported source mode", 503);
 }
-export function sourceId() { return process.env.SOURCE_MODE === "sheets" ? process.env.GOOGLE_SHEET_ID! : "fixture"; }
+export function sourceId() {
+ const mode = process.env.SOURCE_MODE || "fixture";
+ if (mode === "fixture") return "fixture";
+ if (mode !== "sheets") throw new DomainError("INVALID_SOURCE", "Unsupported source mode", 503);
+ if (!process.env.GOOGLE_SHEET_ID) throw new DomainError("SOURCE_UNCONFIGURED", "GOOGLE_SHEET_ID is required for live synchronization", 503);
+ return process.env.GOOGLE_SHEET_ID;
+}
+
+/** Connect already finalized demo versions to the live source without reissuing them. */
+export async function queueLiveWritebacks(tx: Prisma.TransactionClient, rows: SourceRow[]) {
+ if (process.env.SOURCE_MODE !== "sheets") return 0;
+ const byRecord = new Map(rows.map(row => [row.award.recordId, row]));
+ const deferred = await tx.sheetWriteback.findMany({where: {recordId: {in: [...byRecord.keys()]}, state: "FIXTURE_ONLY", version: {chainCluster: "devnet", chainProgramId: process.env.SOLANA_PROGRAM_ID, finalizedSlot: {not: null}}}});
+ const versions = new Set<string>();
+ for (const update of deferred) {
+  await tx.sheetWriteback.update({where: {id: update.id}, data: {state: "PENDING", completedAt: null, expectedFingerprint: inputFingerprint(byRecord.get(update.recordId)!)}});
+  versions.add(update.versionId);
+ }
+ for (const versionId of versions) {
+  await tx.job.upsert({where: {idempotencyKey: "live-writeback:" + versionId + ":" + sourceId()}, create: {type: "ISSUE", stage: "WRITEBACK", versionId, idempotencyKey: "live-writeback:" + versionId + ":" + sourceId()}, update: {}});
+  await tx.version.update({where: {id: versionId}, data: {state: "SYNC_WRITEBACK_PENDING"}});
+  await tx.auditEvent.create({data: {action: "LIVE_WRITEBACK_QUEUED", targetId: versionId, detail: {sourceId: sourceId()}}});
+ }
+ return versions.size;
+}
 export async function queueSynchronization(key: string, actorId: string) {
   if (!key || key.length > 200) throw new DomainError("INVALID_REQUEST", "Invalid idempotency key", 400);
   return prisma.$transaction(async tx => {
@@ -27,7 +51,8 @@ export async function queueSynchronization(key: string, actorId: string) {
 export async function synchronize(key: string = randomUUID(), actorId = "worker", suppliedRows?: SourceRow[]) {
   if (!key || key.length > 200) throw new DomainError("INVALID_REQUEST", "Invalid idempotency key", 400);
   const previous = await prisma.importRun.findUnique({where: {idempotencyKey: key}});
-  if (previous && !["QUEUED", "RUNNING"].includes(previous.state)) return previous;
+  if (previous && !["QUEUED", "RUNNING", "FAILED"].includes(previous.state)) return previous;
+  if (previous?.state === "FAILED") await prisma.importRun.updateMany({where: {id: previous.id, state: "FAILED"}, data: {state: "RUNNING", error: null, completedAt: null}});
   const run = await prisma.importRun.upsert({where: {idempotencyKey: key}, create: {sourceId: sourceId(), idempotencyKey: key, totals: {}}, update: {}});
   if (!["QUEUED", "RUNNING"].includes(run.state)) return run;
   try {
@@ -39,7 +64,7 @@ export async function synchronize(key: string = randomUUID(), actorId = "worker"
       await tx.$queryRaw`SELECT 1 AS locked FROM pg_advisory_xact_lock(744092101)`;
       const current = await tx.importRun.findUniqueOrThrow({where: {id: run.id}});
       if (!["QUEUED", "RUNNING"].includes(current.state)) return current;
-      const totals = {students: 0, awards: rows.length, newAwards: 0, queued: 0, conflicts: 0, pendingSource: rows.filter(r => r.syncStatus === "NOT SYNCED").length, simulatedSource: rows.filter(r => r.syncStatus === "SYNCED").length};
+      const totals = {students: 0, awards: rows.length, newAwards: 0, queued: 0, writebacksQueued: 0, conflicts: 0, pendingSource: rows.filter(r => r.syncStatus === "NOT SYNCED").length, simulatedSource: rows.filter(r => r.syncStatus === "SYNCED").length};
       const savedStudents = await tx.student.findMany({where: {externalId: {in: rows.map(r => r.student.studentId)}}, include: {passport: true, awards: true}});
       const studentMap = new Map(savedStudents.map(s => [s.externalId, s]));
       const awardOwners = new Map((await tx.award.findMany({where: {sourceRecordId: {in: rows.map(r => r.award.recordId)}}, select: {sourceRecordId: true, studentId: true}})).map(a => [a.sourceRecordId, a.studentId]));
@@ -75,6 +100,7 @@ export async function synchronize(key: string = randomUUID(), actorId = "worker"
           if (synced?.syncedVersion && (row.syncStatus !== "SYNCED" || row.syncedVersion !== "V" + synced.syncedVersion || row.syncedAt !== synced.syncedAt?.toISOString())) problem = "System-managed synchronized output changed: " + row.award.recordId;
         }
         if (problem) { await conflict(problem); continue; }
+        totals.writebacksQueued += await queueLiveWritebacks(tx, group);
         const unchanged = existing?.passport && existing.awards.length === group.length && group.every(row => savedSyncs.get(row.award.recordId)?.fingerprint === inputFingerprint(row) && savedSyncs.get(row.award.recordId)?.sourceId === sourceId());
         if (unchanged && (existing.passport!.activeVersionId || existing.awards.every(a => a.firstIncludedVersion !== null))) { totals.students++; continue; }
         const student = existing || await tx.student.create({data: {externalId, email: input.email, firstName: input.firstName, lastName: input.lastName, program: input.program, educationLevel: input.educationLevel, status: input.status}});

@@ -1,11 +1,11 @@
 import {readFileSync} from "node:fs";
-import {resolve} from "node:path";
+import {repositoryResource} from "./resources";
 import {parse} from "csv-parse/sync";
 import {parseSheetRows, SHEET_HEADERS, type SourceRow} from "./sheets";
 
 /** Lossless join of the supplied three canonical CSV tables. */
 export function fixtureValues(): string[][] {
-  const read = (name: string): Record<string, string>[] => parse(readFileSync(resolve(__dirname, "../../../fixtures", name + ".csv"), "utf8"), {columns: true, skip_empty_lines: true, bom: true});
+  const read = (name: string): Record<string, string>[] => parse(readFileSync(repositoryResource("fixtures/" + name + ".csv"), "utf8"), {columns: true, skip_empty_lines: true, bom: true});
   const students = new Map(read("students").map(s => [s.student_id, s]));
   const skills = new Map(read("skills").map(s => [s.skill_id, s]));
   const rows: string[][] = [[], [], [], [...SHEET_HEADERS]];

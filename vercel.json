@@ -5,8 +5,14 @@
       "root": "apps/api",
       "framework": "nestjs",
       "entrypoint": "src/server.ts",
+      "functions": {
+        "src/server.ts": {
+          "maxDuration": 60,
+          "includeFiles": "runtime-resources/**"
+        }
+      },
       "installCommand": "cd ../.. && npm ci",
-      "buildCommand": "npm run db:generate --prefix ../.. && npm run typecheck"
+      "buildCommand": "npm run prepare:api-resources --prefix ../.. && npm run db:generate --prefix ../.. && npm run typecheck"
     },
     "web": {
       "root": "apps/web",

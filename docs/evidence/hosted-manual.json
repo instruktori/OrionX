@@ -1,0 +1,24 @@
+{
+  "checkedAt": "2026-10-25T13:59:39.460Z",
+  "origin": "https://orionx-phi.vercel.app",
+  "processingMode": "ADMIN_TRIGGERED_HTTP_STAGES_WITH_NO_DAEMON",
+  "steps": 5,
+  "checks": [
+    "anonymous rejected",
+    "student rejected",
+    "administrator accepted",
+    "live Sheet import",
+    "hosted PDF rendering and private storage",
+    "signed Devnet registration and finality",
+    "real Sheets writeback",
+    "same permanent passport identity",
+    "cumulative next version",
+    "queue drained"
+  ],
+  "version": 3,
+  "code": "D1-BA4V45SHOBSRMOBTFYDFU7M4LUFOELZR",
+  "versionPda": "63eb4WVt2wfD61LnYazkR6DHDQizDD5hyDzfDDT1zYcw",
+  "signature": "K6HKc2iZ4MxZZgf6wTnjfy3bkBXmTERZQ4FwQjd7detGs1bSAayzTYVBxqvwYyd3MS8eGLHHsY6JBgo4XjNh5xp",
+  "pdfSha256": "05600d807e05027040b607fde5b59aff13db3887387e973720d22ef274885371",
+  "officialBtu": false
+}

@@ -1,0 +1,189 @@
+{
+  "checkedAt": "2026-10-25T14:07:18.283Z",
+  "source": "1myYLRd8gSwhmHoe8rcY3D1Y2NJhMU55AzRs1HGnVQMQ",
+  "sourceAwards": 62,
+  "passports": 18,
+  "finalizedVersions": 20,
+  "syncedRecords": 62,
+  "officialBtu": false,
+  "runtime": "HOSTED_WEB_API_ACCEPTANCE_WITH_REAL_GOOGLE_SHEETS_SUPABASE_DEVNET",
+  "checks": [
+    "renewable service-account access",
+    "stable row metadata",
+    "real finalized Devnet evidence before writeback",
+    "Q–T status/version/timestamp readback",
+    "exact private PDF hashes",
+    "hosted anonymous verification",
+    "hosted original PDF accepted",
+    "hosted one-bit tamper rejected",
+    "hosted authenticated download",
+    "anonymous and unrelated-document denial",
+    "student denied admin access"
+  ],
+  "googleOAuthBrowserEvidence": true,
+  "hostedManualEvidence": true,
+  "persistentCloudWorker": false,
+  "unattendedPolling": false,
+  "proofs": [
+    {
+      "passportId": "BTU-AI-000139",
+      "version": 1,
+      "code": "D1-VK7Z4XKN2T6UF4GXBNSRE4FXX5LSG5DP",
+      "pdfSha256": "0d66ea19720471bd360ba0d187a4d64b69edf98558844a1f2123ccfc3caa483f",
+      "versionPda": "E1NTtq3Z6LtGCD1q1c3kWQ1TdqWXeAKVpqtHvC63xc8G",
+      "signature": "5GsNzdrCLhVPu3tqbtouKJTd2TTNi9wZyEzLaTVVz8T7EMNXkwy142udHBaLoYhaoLUdo3ZrkrE6aKJx3rKhaAaV"
+    },
+    {
+      "passportId": "BTU-AI-000127",
+      "version": 1,
+      "code": "D1-YMFJM6ZAMOLBGPZKT2B7QHDFMA3ZAUOH",
+      "pdfSha256": "d31ca7070b2226159d6a5400ee0f67e02aaf6f5f4dbde9b5e86835cc9efd83dc",
+      "versionPda": "Fnx1SmZQPrysXCfuX5UgcMSkh5cQRJDtrsGVoP8bdPsa",
+      "signature": "4SWn5kr9RW53w38WFK4DGyp8VfD5E2YFcr4dUQQsYWqvvet6NZgsqnDcNZdDLSZfJDDGw5ot5cXC8bqSvaynwJjX"
+    },
+    {
+      "passportId": "BTU-AI-000129",
+      "version": 1,
+      "code": "D1-VR3R5QNE5VUFYOR3LOBHAYUUACIELCGP",
+      "pdfSha256": "c4dfb00844bd433821a1cb5f4f01830644b4c0766dae5ffd4c50997b289cf29b",
+      "versionPda": "D2ryHogf6PJtqgkcfiseVYUdWnBwsepNYEQ1mVZT2YkK",
+      "signature": "5dXbUmeSE9FJCEuT5s8ZWSxCMA8R26h9b47fikvpvSHjx13e2S6kpk2e2wKGFiLcgcUBXdyE3Qq2HND9rQ2sLrhT"
+    },
+    {
+      "passportId": "BTU-AI-000140",
+      "version": 1,
+      "code": "D1-3JUVX7NFE72Q2LVZIQRFP5MNI4ISRCCG",
+      "pdfSha256": "e8281714fdac22de3d4858a1d4a2676fd00f31da6256872d19d0a7cb65f2e7a5",
+      "versionPda": "BJgDKSGqe9Unyto9H5d5kYvQ7r9Fhp7tUQjFLmwUsp5h",
+      "signature": "5ieK5tR2FTfPjrk7xecFjobDhzkXBczKJfyMTk4VfvfotLrGCHe13Gmv1vsqkF8vF2wEiC9k32DQriY3d8J6k2im"
+    },
+    {
+      "passportId": "BTU-AI-000125",
+      "version": 2,
+      "code": "D1-X5POOCLB2IIGHTO6MZKMFCTVDOGDJWP4",
+      "pdfSha256": "c5887c4c56416ddb4bcdf14df0154cac5fdacefd52efd19121118c97464a1280",
+      "versionPda": "DcBqg2T8TN56KNUT8tDdV7UK4yd7D7YQ9mBGeC1q2HgB",
+      "signature": "4F4hcQqUYCbWb5RBLrKD2Jqp1yj1uH7UBGfhjduxhM7unAXm6p7iCcAA42dSwuewG1eJP94Csjood77Y8i4Lxf6b"
+    },
+    {
+      "passportId": "BTU-AI-000136",
+      "version": 1,
+      "code": "D1-7FU3MR346MBUIIGQYYODOKWDN5XKQYIC",
+      "pdfSha256": "b43f83d44fbfe4a021d8fcc41f4e7b1e0b36e16f2b2bd3bca01e1e0dec13fde9",
+      "versionPda": "HMH2CakfNfdmqRmGsuHLsAJqitNza4M13Q9BQacShQu1",
+      "signature": "4C1HTEaxtPFTp1ya6jTrzfu6DxbzTSUG2ep3PvFCUjF9t1W7iQNDGzzzQPdx5EJBmNLqGU2C2LqYKvyoKeRHfkHt"
+    },
+    {
+      "passportId": "BTU-AI-000131",
+      "version": 1,
+      "code": "D1-RYVPLVNQFDRFMNTRZYDJKKVGRCMU65R2",
+      "pdfSha256": "a470617046124e2d64c15bede887b979515f715aeaf1f407a511307bf3271a8c",
+      "versionPda": "BA8xma9ssvTPGYmBL1g73hVgTi5eJHh1Kt5WLnY6CwqT",
+      "signature": "5HGJjPAM2TaNhGvEg5euebavyMAQYwz8BiUcpAfjo93CPJMDSU6jweodggZcGSZRFrRELon1LA1FCiwqmrjz1KR1"
+    },
+    {
+      "passportId": "BTU-AI-000138",
+      "version": 1,
+      "code": "D1-AMVMF3MG2TNKWDEBFC5HQUUO3E446JTC",
+      "pdfSha256": "987c988862cdac06373fbf18339e4343483d1d59f3593e5dd8a4f5f4df858137",
+      "versionPda": "8hAKmSytWKo739vgSP6rxSP3Zg4T7BpKhe8KDdLdasnj",
+      "signature": "QPih9sKwuuH8BvMsxbrzwnpSrV3nE42jYFuFbpMt5tTLmdTWeksrgPANdxmcwUPEgy89zrRG8cfhgJ1Vd6ptd54"
+    },
+    {
+      "passportId": "BTU-AI-000135",
+      "version": 1,
+      "code": "D1-IIYPZ65SESQLYFJBQMP4V5IG32KUJ7UJ",
+      "pdfSha256": "b302a789a547f420bb04c917d79be3fc9d1fbe7bce056d32e2fd761619839416",
+      "versionPda": "8hJoaU2uFuuYdSdPAX4FgbUdxWv3HVaYm2BF7YBwBStL",
+      "signature": "57dwwEdNXU7fzAGGJXXsbcb4KqdAsc8FvpuPvWoCBanNn8ZxekcehrZXiupH1W9pETsg1mHuG4RYbq2ikwrck6Sc"
+    },
+    {
+      "passportId": "BTU-AI-000128",
+      "version": 1,
+      "code": "D1-FPB4JYFNZHBUSLQSD4WFIHNGRBHBN5GS",
+      "pdfSha256": "6faeb4f0470b05bcee3b34c7e96274d7b647efd53b8fce9dbfd28c6f322e9765",
+      "versionPda": "7W54yDtp29ALE27TdS3DDXakvzfT4WaR21Z8eXjuP1BC",
+      "signature": "NToDcbJLSQ6efDPtRRaXHENegDnZBXyjdpszxko7UBP2Q6XMKkZ8ZkqArDnirM9849LXBi2UqRJkf7hK33ksx1L"
+    },
+    {
+      "passportId": "BTU-AI-000130",
+      "version": 1,
+      "code": "D1-TI6C7QF4STAMHVWV2BAA7YU4G3ROHBJN",
+      "pdfSha256": "0878e244e5de4c9b849cc3f7a2bb747d28266f05e87bca9f3ac5e5e2ae472dd1",
+      "versionPda": "DUjEbWaV1bjbygKa336Zrv9fwXRTCEo8bTmCqQHzMfHL",
+      "signature": "2MNQFdZkpXZ9raRkppqbCLPGrqcXyco2NCUbfZkoiCtw4WLFwSHDBYE4unDGU6c7Jb18y9hyKGtzL78etPSTZPxw"
+    },
+    {
+      "passportId": "BTU-AI-000125",
+      "version": 3,
+      "code": "D1-BA4V45SHOBSRMOBTFYDFU7M4LUFOELZR",
+      "pdfSha256": "05600d807e05027040b607fde5b59aff13db3887387e973720d22ef274885371",
+      "versionPda": "63eb4WVt2wfD61LnYazkR6DHDQizDD5hyDzfDDT1zYcw",
+      "signature": "K6HKc2iZ4MxZZgf6wTnjfy3bkBXmTERZQ4FwQjd7detGs1bSAayzTYVBxqvwYyd3MS8eGLHHsY6JBgo4XjNh5xp"
+    },
+    {
+      "passportId": "BTU-AI-000133",
+      "version": 1,
+      "code": "D1-UWKQNST2DKFZ75A4IMMBXVMMZ72UDALE",
+      "pdfSha256": "8bc82548d2053cfdc5effd4e02501472620843867e399c851d3f95d63cc49156",
+      "versionPda": "7ZBrQF8ZPDeTtGLpaiiSmBHEtAcZkJCKcXczTiAUSuZu",
+      "signature": "591JRrnQDJQW3vNn3iFN1vuq5mKXCxcc6aNPCxL3ha3kL6Mz49g3P9q8y1yG2DeBtxuFEtNpxLcrMFzZZFmvnKzz"
+    },
+    {
+      "passportId": "BTU-AI-000126",
+      "version": 1,
+      "code": "D1-OVSMOE76GUERF4G2ELPC2AVCNWZ5WPYL",
+      "pdfSha256": "d36b29c69aaa3c479546704e8900049b0567bbc6eb59abaf5dc2e99d94159fde",
+      "versionPda": "5XCj3hKGvtubuv1XFEVEGcV4NAZfGC2kQxFEA4KrwK2W",
+      "signature": "4vJCGkkM5ya3F7TBy9z7v9Ju5o8PCh1UuSjBT3k8kUsBnrTRoBqJa9DxPVSpk2WbBv1d5gYoMbvDMjLPDzNSCptz"
+    },
+    {
+      "passportId": "BTU-AI-000141",
+      "version": 1,
+      "code": "D1-GDI2BVB23EBJWXS5T3ZTA2XCPYTBYXQR",
+      "pdfSha256": "e3839ae549d29ea55078c096a1f7bdd29ba125ba3cc3cd20abc1d68484dffe11",
+      "versionPda": "Fas7MNx5645AYPDXRMSjfD5x2NK3r9A5buEqBcpp29vo",
+      "signature": "2MpxFWe7ejm8egzZ54M2rYkNnAXEjjxNN6h36L67YJ2vTx1M1R2i44y2etnPxKczhrVu5yYoGYZBppvakxhF3B1o"
+    },
+    {
+      "passportId": "BTU-AI-000142",
+      "version": 1,
+      "code": "D1-VNI2KVZJ45FRRKBMEAXJY6NGTX4AX77U",
+      "pdfSha256": "53fbcb14de7243cd8f920a4f34823004c2ded21c928eb4c240b41de7743501fa",
+      "versionPda": "ENe5zLpu7u73GbxzkZ7D6j1fubQLLPLAQoto5W54Q9VC",
+      "signature": "2NhR1zmDHsz7HAYTJJVXn8RdHNBVewsJBuoEx1cDNiK7QQJx6HiD6D4G3UjRS4kWoNY6PzgbDnP1Jvrxd2ritNjo"
+    },
+    {
+      "passportId": "BTU-AI-000125",
+      "version": 1,
+      "code": "D1-2B6TZKXJLUGFIEXAA4MCDURADX3ST4KY",
+      "pdfSha256": "3e5f27b68ccc8bb4e80a1aa387ebbffe7aafca975b920d23de3336d6abb696e0",
+      "versionPda": "HyEvLheZ9H4rsXf3LU58HysSBywwtfqpND5cEi17dKNS",
+      "signature": "3TECw43FfB3iFVgGHgp4nL1AiSw4HVrqawr9Ni7waSns4qtHUdoyYjxZgK9QvmXvY26zf4bhxQHCU9C7bbgRD477"
+    },
+    {
+      "passportId": "BTU-AI-000134",
+      "version": 1,
+      "code": "D1-BJ3L4C3HNQRFZOTZRJMLLP7FDQYLQJHO",
+      "pdfSha256": "8c02a54e438f4416897f19ab630c75a423bc3b790ef424d167c56ea1fb7f457b",
+      "versionPda": "44VoHLSeFVFxR3F6uHQWCmqhYzPjMDraWL7mUGAuUkay",
+      "signature": "3DAhM39DtePemtDF8AJh8q2drGWGjdnD83tQMQ6KrGb5m7m6LCkJVviQb1EZdxzGxNzJ9k85Vu9Hqf5MSShG4NNm"
+    },
+    {
+      "passportId": "BTU-AI-000137",
+      "version": 1,
+      "code": "D1-UDKRZ6TJHLGPKBTSGVQWTZ7U5WY4D7IX",
+      "pdfSha256": "81a909bdf982bc2f3b861fd32152d2573d5ca0b4d5848c64b898f5b24871a24a",
+      "versionPda": "B7dCPpTh3Vwp47N2Lnr77qmaWoM3vQxUzSELEHHu17wv",
+      "signature": "49ExMy2VaSjDc8dStFYPJy35XGcQQD2LdB8FtpMNbbHE1U3BnJv4vkau72tcJPZhP48QCe6fEcVLaujbMZ4R8jWS"
+    },
+    {
+      "passportId": "BTU-AI-000132",
+      "version": 1,
+      "code": "D1-XESMLNLRSO3XB4CZRX7MGMDTOCC6UUF5",
+      "pdfSha256": "d980344ff99d1ae2279ac8fc4d315b73e831ee1c0faa1f3e9d288f88292e78b9",
+      "versionPda": "233wUy61qbzCfae3wCA1qAP6GH5PBCQxBAJQ4gj1eiVF",
+      "signature": "5LwYqinxnT6wZE45vQGizGm6ohfbLAR7wQJExgGQ2dbZxT5tJ39x32GBb5WS83PqJmrb71F4cGG8vxGEAJnM9LEB"
+    }
+  ]
+}

@@ -42,3 +42,4 @@ test-ledger/
 *.tsbuildinfo
 next-env.d.ts
 output/
+apps/api/runtime-resources/

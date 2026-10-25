@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Shell } from "@/components/shell";
 import { api, useSession } from "@/lib/session";
 
@@ -24,6 +24,9 @@ export default function Admin() {
   const [query, setQuery] = useState("");
   const [error, setError] = useState("");
   const [syncing, setSyncing] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const [progress, setProgress] = useState("");
+  const stopProcessing = useRef(false);
   const [run, setRun] = useState<{
     id: string;
     state: string;
@@ -38,6 +41,32 @@ export default function Admin() {
           e instanceof Error ? e.message : "Unable to load student records",
         ),
       );
+
+  useEffect(() => () => { stopProcessing.current = true; }, []);
+
+  const processJobs = async () => {
+    stopProcessing.current = false;
+    setProcessing(true);
+    setError("");
+    setProgress("Checking pending jobs…");
+    let completedStages = 0;
+    try {
+      while (!stopProcessing.current) {
+        const result = await api("/admin/jobs/process", {method: "POST"});
+        if (result.processed) completedStages++;
+        setProgress(`${completedStages} processing steps finished · ${result.remaining} jobs remaining${result.blocked ? ` · ${result.blocked} need administrator review` : ""}`);
+        if (!result.remaining) { await load(); break; }
+        const next = result.nextAvailableAt ? new Date(result.nextAvailableAt).getTime() - Date.now() : 2000;
+        await new Promise(resolve => setTimeout(resolve, Math.min(10000, Math.max(2000, result.processed ? 2000 : next))));
+      }
+      if (stopProcessing.current) setProgress("Stopped after the current step. Pending jobs are saved; select Process pending jobs to continue.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Processing unavailable. Pending jobs are saved; try again.");
+    } finally {
+      setProcessing(false);
+      await load();
+    }
+  };
 
   useEffect(() => {
     if (session?.role === "admin") load();
@@ -147,7 +176,7 @@ export default function Admin() {
               <h2>Synchronize source</h2>
               <button
                 className="button"
-                disabled={syncing}
+                disabled={syncing || processing}
                 onClick={async () => {
                   setSyncing(true);
                   setError("");
@@ -159,6 +188,7 @@ export default function Admin() {
                       }),
                     );
                     await load();
+                    await processJobs();
                   } catch (e) {
                     setError(
                       e instanceof Error
@@ -174,9 +204,17 @@ export default function Admin() {
               </button>
             </div>
             <p className="muted">
-              Source status never establishes blockchain proof. Only finalized
-              registrations count as issued.
+              Run synchronization to import verified source changes and process their PDFs,
+              blockchain registration and source updates. Keep this page open while it runs.
+              Only finalized registrations count as issued.
             </p>
+            <div className="page-actions">
+              <button type="button" className="button secondary" disabled={processing || syncing} onClick={() => void processJobs()}>
+                {processing ? "Processing jobs…" : "Process pending jobs"}
+              </button>
+              {processing && <button type="button" className="button secondary" onClick={() => { stopProcessing.current = true; setProgress("Finishing the current step before stopping…"); }}>Stop after current step</button>}
+            </div>
+            {progress && <p role="status" aria-live="polite" style={{marginTop: 16}}>{progress}</p>}
             {run && (
               <div role="status">
                 <strong>{run.state.replaceAll("_", " ")}</strong>

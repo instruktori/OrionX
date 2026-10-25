@@ -2,7 +2,7 @@ import {PDFDocument, rgb, type PDFFont, type PDFPage} from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import QRCode from "qrcode";
 import {readFileSync} from "node:fs";
-import {resolve} from "node:path";
+import {repositoryResource} from "./resources";
 import type {Snapshot} from "./index";
 
 export interface TemplateAdapter { revision: string; render(snapshot: Snapshot): Promise<Uint8Array> }
@@ -12,7 +12,7 @@ const ink = rgb(.12, .13, .2), muted = rgb(.38, .4, .46), accent = rgb(.32, .27,
 export async function renderDemoPdf(s: Snapshot) {
   const doc = await PDFDocument.create();
   doc.registerFontkit(fontkit);
-  const fonts = await Promise.all(["NotoSans-Regular.ttf", "NotoSansGeorgian-Regular.ttf"].map(name => doc.embedFont(readFileSync(resolve(__dirname, "../assets", name)), {subset: true})));
+  const fonts = await Promise.all(["NotoSans-Regular.ttf", "NotoSansGeorgian-Regular.ttf"].map(name => doc.embedFont(readFileSync(repositoryResource("packages/core/assets/" + name)), {subset: true})));
   const glyphs = fonts.map(f => new Set(f.getCharacterSet()));
   const parts = (value: string): {value: string; font: PDFFont}[] => {
     const segments: {value: string; font: PDFFont}[] = [];

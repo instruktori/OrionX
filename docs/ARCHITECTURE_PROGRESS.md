@@ -1,72 +1,78 @@
-# Architecture implementation checkpoint — 24 October 2026
+# Architecture implementation checkpoint — 25 October 2026
 
-Estimated implementation coverage: **75–80%** of the supplied architecture.
-This is an engineering estimate, not a count of passing acceptance gates or a
-claim of deployed Devnet issuance. The user approved a simulated BTU issuer for
-development; official university authorization is deferred to a later approved
-institutional deployment. The application keeps `officialBtu=false` in demo mode.
+The Devnet program and simulated issuer are deployed. A complete isolated V1/V2
+pipeline passed on real Devnet, PostgreSQL, private Supabase Storage and Supabase
+Auth. Demo proofs keep `officialBtu=false`; official university authorization is
+outside this hackathon deployment.
 
 ## Implemented and checked
 
-- Canonical 18 students, 16 skills, 60 awards and three category mappings.
-  All 1,220 original workbook header/data cells matched the reconstructed fixture.
-- Transactional import, immutable identity/award checks, cumulative version
-  reservation, stable public codes, audit/conflict observations and replay safety.
-- PostgreSQL job queue, schema-qualified atomic leases, fenced commits, immutable
-  staging/final artifacts, signed-attempt ledger, finality reconciliation and
-  independently retried Sheets writeback. PostgreSQL is the explicit ADR-05 fallback.
-- Real Supabase email/password sign-in with HttpOnly cookies, refresh/logout,
-  signature/issuer/audience verification and server-owned subject bindings.
-- Database-assigned student/admin roles, protected admin endpoints, student-only
-  passport queries, hash-checked private downloads and origin/rate-limit controls.
-- BTU-supplied category stamps and visual reference adapter, Unicode, original
-  dates, verification QR/code, continuation pages and exact-byte hashing.
-- Anchor account protocol, authorization, immutable versions, pause, two-signer
-  issuer rotation, history linkage, account parsing and independent hash checks.
-- Connected admin/student portal screens, public code/file verification and
-  same-origin development API routing.
+- Canonical 18 synthetic students, 16 skills and 60 awards; lossless source fixtures.
+- Transactional import, immutable identities/awards/snapshots, cumulative versions,
+  unique codes, replay safety and source conflict quarantine.
+- PostgreSQL atomic queue claims, fenced commits and lease renewal during slow
+  jobs. Lost renewals prevent further side effects; expired owners cannot commit
+  job failures. Operator retries atomically respect the current job state.
+- Automatic polls create durable, idempotent SYNC jobs shared across workers.
+- Immutable staging/final multi-page PDFs, exact-byte readback hashing, signed
+  attempts saved before broadcast, finality reconciliation and restart recovery.
+- Google OAuth/PKCE, verified Supabase JWTs, private workspaces, trusted identity
+  binding and ownership-checked PDF downloads.
+- Supplied artwork, Unicode, original identity/dates and verification QR/code.
+- Compiled Anchor authorization, sequencing, rotation/pause and historical lineage.
+- Sheets writes use stable row metadata, fresh input validation, pinned Devnet
+  program/genesis/finalization and post-write input/output validation.
+- Fixture-finalized writebacks can transition to live Sheets without creating
+  another PDF, version or blockchain transaction.
 
 ## Observed evidence
 
-- 31 automated tests (26 core, four worker, one environment) passed at this checkpoint.
-- Rust serialization/layout tests and SBF compilation passed.
-- Actual compiled program passed authorization, version ordering, duplicate code,
-  pause, rotation and historical preservation checks on a **local validator**.
-- Full isolated pipeline passed using real PostgreSQL, real Supabase Auth and the
-  local SBF program: V1 → stored PDF → finalized account → V2 → old-version
-  supersession → tamper failure → authorized download → unrelated-user denial.
-- 5,000 synthetic students/passports/awards/versions/jobs persisted in an isolated
-  schema. Two claimers obtained 50 unique jobs without duplication; ten PDFs were
-  rendered. See `docs/evidence/capacity.json` for measured timings and limits.
-- All 18 canonical PDFs have create-only private storage and readback checks.
-  Unbroadcast earlier demo reservations were archived in the audit ledger when
-  the supplied artwork/public verification origin became available. No signed
-  or finalized document was rewritten.
+- `evidence/devnet-deployment.json`: deployed program, issuer config, network and
+  actual initialization signature.
+- `evidence/devnet-pipeline.json`: real V1 → killed worker/restart → finalization →
+  cumulative V2 → old-version supersession → one-bit tamper rejection → public
+  API verification → authenticated download → unrelated/anonymous denial → replay.
+  Public transaction/account/hash evidence is recorded for both versions.
+- `evidence/readiness.json`: dependency checks with explicit scope and timestamps.
+  Readiness alone does not establish a live writeback or interactive browser flow.
+- Earlier local program/pipeline and measured 5,000-row persistence/concurrent
+  claim/PDF-sample evidence remains under `evidence/`.
 
-Local-validator evidence is **not** Devnet evidence. The capacity run measures
-persistence, queue claims and PDF samples, not 5,000 complete blockchain issuances.
-The original 16 workbook SYNCED statuses remain simulated source metadata.
+## Live hackathon acceptance
 
-## Remaining acceptance gates
+- All **18 demo passports, 20 finalized versions and 62 award records** have real
+  Devnet proof and verified Google Sheets writeback. The two added synthetic
+  awards demonstrate cumulative V2 and V3 with the original permanent ID/date.
+- `evidence/live-sheets.json`: all source ledger/output comparisons, private hashes,
+  hosted verification/file tamper checks, authenticated download and ownership denial.
+- `evidence/live-reorder.json`: real row movement, metadata tracking, unchanged
+  fingerprints, no duplicate issuance and original-order restoration.
+- `evidence/hosted-manual.json`: a full hosted V3 issuance in five HTTP stages,
+  including PDF rendering, finality and writeback, with no daemon running.
+  Anonymous and student processing attempts were denied.
+- `evidence/hosted-browser.json`: actual Google sign-in/callback/student workspace.
+  The user's account remains a student; it was not promoted or linked to a demo
+  academic record. Bound demo students' private downloads were checked separately.
+- 81 automated checks cover core/API/worker/environment/runtime behavior, including
+  packaged ESM PDF rendering, failed-import retries and verification QR routing.
+  Type checking, production build, live ledger guards and all 20 staging/final PDF
+  object pairs passed. See individual evidence timestamps.
 
-1. Fund and deploy the compiled program to real Solana Devnet; initialize the
-   simulated issuer and record actual transaction/account evidence.
-2. Give the persistent worker a renewable Google runtime identity, then verify
-   real polling, metadata-based Q–T writeback, reorder and failure recovery.
-3. Verify the hosted web/API/worker configuration, authenticated browser flow,
-   real issue/verify/tamper smoke and final recovery/load checks in that environment.
-4. Complete the remaining T01–T25 combinations against the deployed services;
-   local/unit coverage does not mark all integration/Devnet gates passed.
+The approved deployment uses **manual administrator processing**. The admin page
+queues source synchronization and processes one durable stage per HTTP request,
+shows progress and can stop after the current stage. Closing the page leaves
+pending work saved for the next manual run. Always-on hosting and automatic
+scheduling are deferred by explicit user choice; no worker daemon is deployed.
 
-The prepared Google Sheet is a private demo copy, with a named source range and
-60 stable row metadata bindings. Its existence does not configure backend OAuth.
+The isolated Devnet test retains its own immutable artifacts and chain records
+but removes its disposable SQL schema and processes. Original workbook statuses
+were simulated; the demo copy's current outputs are backed by the application
+ledger and finalized Devnet proof.
 
-## Operational constraints
+## Scope limits
 
-- Devnet-only deployment helpers refuse a different network genesis hash.
-- Local-chain mode requires APP_ENV=test, NODE_ENV=test, a loopback RPC and no
-  Vercel runtime; proofs record their actual cluster/program/genesis context.
-- Issuer keys remain in ignored `.secrets/`, excluded from Git, Docker and Vercel
-  uploads. The API/browser do not need issuer/admin/upgrade signing keys.
-- BTU key replacement uses issuer rotation plus worker configuration. Historical
-  epochs remain verifiable. Mainnet is not enabled by this change.
+Official BTU authorization, real-student release and mainnet are outside the
+approved simulated-issuer hackathon scope. Capacity evidence measures 5,000-row
+persistence, concurrent claims and PDF samples; it does not claim 5,000 complete
+chain issuances or a burst SLA. Manual processing requires an administrator and
+an open admin page; unattended updates require separately enabled worker hosting.

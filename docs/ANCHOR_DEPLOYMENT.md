@@ -1,7 +1,6 @@
 # Solana Devnet registry deployment
 
-The program is compiled and tested on a local validator. It is not yet deployed
-to Devnet and has not received an independent security audit.
+The program is deployed to Devnet and has passed real V1/V2 issuance and recovery checks. It has not received an independent security audit. See `evidence/devnet-deployment.json` and `evidence/devnet-pipeline.json`.
 
 - Program: `9q3EFytGCsR2hk5FnerXxMWomC2yCajpx78durY91JPa`
 - Bootstrap admin: `BNcEvP3benzCX7tc1W2U6upZ5HVT4hzneZahVKMpCPiv`
@@ -12,11 +11,10 @@ this simulated issuer for development. Demo mode always reports
 `officialBtu=false`; future official issuer trust requires authenticated university
 authorization and the configured trust material.
 
-Follow [remaining setup](SETUP_REMAINING.md) to fund the deployment wallet, then
-run `npm run deploy:devnet`. The helper verifies the expected Devnet genesis hash,
+The initial deployment and funding are complete. For a new approved Devnet deployment, use `npm run deploy:devnet`. The helper verifies the expected Devnet genesis hash,
 matching program/bootstrap keys and balance, deploys with a separate upgrade
 authority, initializes the issuer and records actual public evidence after success.
-Never commit keypairs or upload operator keys to the web/API runtime.
+Never commit keypairs or upload admin/upgrade keys to the API. Manual processing receives only the server-side demo issuer key; the browser receives no signing credential.
 
 Local evidence and its limits are in [the checkpoint](ARCHITECTURE_PROGRESS.md)
 and `evidence/local-chain.json`. Tests cover unauthorized initialization/issuance,

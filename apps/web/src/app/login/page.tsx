@@ -47,7 +47,7 @@ function LoginContent() {
   const authCode = searchParams.get("code");
 
   useEffect(() => {
-    if (authCode) {
+    if (authCode && !authCode.startsWith("D1-")) {
       const qs = searchParams.toString();
       router.replace(`/auth/callback?${qs}`);
     }

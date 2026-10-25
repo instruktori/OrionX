@@ -68,7 +68,7 @@ afterAll(async () => {
   await new Promise<void>(resolve => api.close(() => resolve()));
 });
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => { vi.restoreAllMocks(); vi.unstubAllEnvs(); });
 
 function mockUnboundUser() {
   vi.spyOn(prisma.studentIdentity, "findUnique").mockResolvedValue(null);
@@ -140,6 +140,7 @@ describe("self-service student onboarding over HTTP", () => {
       ["POST", "/admin/identities"],
       ["POST", `/admin/workspaces/${WORKSPACE.workspaceId}/link`],
       ["POST", "/admin/jobs/x/retry"],
+      ["POST", "/admin/jobs/process"],
     ] as const) {
       const response = await call(path, t, {method, body: method === "POST" ? JSON.stringify({subject: NEW_SUB, role: "admin", studentExternalId: "BTU-1"}) : undefined});
       expect({path, status: response.status}).toEqual({path, status: 403});
@@ -205,6 +206,39 @@ describe("self-service student onboarding over HTTP", () => {
     expect((await call("/admin/passports", t)).status).toBe(200);
     expect((await call("/me/passport", t)).status).toBe(404);
     expect(ensure).not.toHaveBeenCalled();
+  });
+
+  it.each([0, 1])("atomically retries only an eligible job (matched rows: %i)", async count => {
+    vi.spyOn(prisma.studentIdentity, "findUnique").mockResolvedValue({id: "i", provider: issuer, subject: NEW_SUB, role: "admin", studentId: null, verifiedBy: "seed", verifiedAt: new Date()});
+    const tx = {job: {updateMany: vi.fn().mockResolvedValue({count}), findUniqueOrThrow: vi.fn().mockResolvedValue({stage: "CHAIN"})}, auditEvent: {create: vi.fn()}};
+    vi.spyOn(prisma, "$transaction").mockImplementation(async (work: any) => work(tx));
+    const response = await call("/admin/jobs/job-1/retry", await token(NEW_SUB), {method: "POST"});
+    expect(response.status).toBe(count ? 201 : 409);
+    expect(tx.job.updateMany.mock.calls[0][0].where).toEqual({id: "job-1", state: {in: ["FAILED_PERMANENT", "RETRY_WAIT", "STORED"]}});
+    expect(tx.auditEvent.create).toHaveBeenCalledTimes(count);
+  });
+
+  it("keeps on-demand processing disabled until server credentials are configured", async () => {
+    vi.spyOn(prisma.studentIdentity, "findUnique").mockResolvedValue({id: "i", provider: issuer, subject: NEW_SUB, role: "admin", studentId: null, verifiedBy: "seed", verifiedAt: new Date()});
+    vi.stubEnv("MANUAL_WORKER_ENABLED", "false");
+    const response = await call("/admin/jobs/process", await token(NEW_SUB), {method: "POST"});
+    expect(response.status).toBe(503);
+    expect(response.body.error.code).toBe("PROCESSOR_DISABLED");
+  });
+
+  it("processes one durable step for an administrator and returns only queue progress", async () => {
+    vi.spyOn(prisma.studentIdentity, "findUnique").mockResolvedValue({id: "i", provider: issuer, subject: NEW_SUB, role: "admin", studentId: null, verifiedBy: "seed", verifiedAt: new Date()});
+    for (const [key, value] of Object.entries({MANUAL_WORKER_ENABLED: "true", SOURCE_MODE: "sheets", CHAIN_MODE: "devnet", STORAGE_MODE: "supabase", SOLANA_ISSUER_KEYPAIR_JSON: "server-only-test-value"})) vi.stubEnv(key, value);
+    const processor = await import("@orionx/core/src/processor");
+    const processNext = vi.fn().mockResolvedValue({processed: true, jobId: "job-1", errorCode: null});
+    vi.spyOn(processor, "createJobProcessor").mockReturnValue({workerId: "00000000-0000-4000-8000-000000000001", pollMs: 3000, processNext});
+    vi.spyOn(prisma.job, "count").mockResolvedValueOnce(2).mockResolvedValueOnce(0);
+    vi.spyOn(prisma.job, "findFirst").mockResolvedValue(null);
+    const response = await call("/admin/jobs/process", await token(NEW_SUB), {method: "POST"});
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({processed: true, jobId: "job-1", errorCode: null, remaining: 2, blocked: 0, nextAvailableAt: null});
+    expect(processor.createJobProcessor).toHaveBeenCalledWith({writebackLimit: 1});
+    expect(JSON.stringify(response.body)).not.toContain("server-only-test-value");
   });
 
   it("redirects a first-time Google callback to /passport (not an admin-linking screen)", async () => {

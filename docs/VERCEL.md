@@ -35,11 +35,17 @@ PostgreSQL, Redis, Supabase and Solana RPC are external dependencies, not Vercel
 
 Vercel Functions have request body limits; the current UI/API's 10 MB PDF allowance is not a guarantee that a 10 MB upload passes the platform gateway. Test within the platform limit; larger files need a separate direct-upload design.
 
-## Manual worker only
+## Administrator-triggered processing
 
 The default `vercel.json` does not declare a worker daemon, and automatic GitHub CI does not build its Docker image. This keeps frontend/API pushes from rebuilding and storing an approximately 951 MB worker container every time. A daemon with zero instances still builds and stores its image; zero instances alone does not prevent registry storage growth.
 
-The worker source, `Dockerfile.worker`, and local `npm run dev:worker` command remain available. Worker hosting must be explicitly enabled as separate work. Do not restore a worker daemon to the default deployment merely to keep it paused. Do not automatically migrate databases during application builds.
+The deployed admin page has **Run synchronization** and **Process pending jobs** controls. They call the authenticated `POST /api/v1/admin/jobs/process` endpoint, processing one durable stage per HTTP request (one source row per writeback stage). The browser continues until the queue drains or the administrator stops after the current stage. Closing the page stops further requests; work and signed attempts remain durable for the next run. Automatic polling/always-on hosting is deferred by user choice.
+
+The API needs `MANUAL_WORKER_ENABLED=true`, the server-only `SOLANA_ISSUER_KEYPAIR_JSON` (issuer only), and `GOOGLE_SERVICE_ACCOUNT_JSON`, plus the existing private storage/database and pinned Devnet/source configuration. These secrets are not public frontend variables. Admin and upgrade keys remain operator-only. Student and anonymous callers cannot process jobs.
+
+API builds prepare `apps/api/runtime-resources` with the canonical catalog, fonts and artwork, included explicitly in the function package. `maxDuration=60` bounds each request. The isolated ESM rendering regression test checks the same resource layout. Builds never migrate or reset databases.
+
+The worker source, `Dockerfile.worker`, and local `npm run dev:worker` remain optional for future unattended polling. No daemon or automatic worker image build is added.
 
 To build locally when Docker is installed:
 

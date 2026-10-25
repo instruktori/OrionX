@@ -50,3 +50,7 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION public.orionx_membership() FROM PUBLIC, anon, authenticated;
 CREATE TRIGGER valid_membership BEFORE INSERT OR UPDATE ON "VersionAward" FOR EACH ROW EXECUTE FUNCTION public.orionx_membership();
+
+-- Self-service workspaces (migration 0003): private backend table, never browser-accessible.
+ALTER TABLE "StudentWorkspace" ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON "StudentWorkspace" FROM anon, authenticated;

@@ -10,11 +10,20 @@ export type AuthenticatedSubject = {
   email?: string;
 };
 
+/**
+ * How the account's authority was established. Google authentication alone only ever yields
+ * SELF_REGISTERED (a private, empty workspace). UNIVERSITY_VERIFIED and ADMIN exist only through
+ * an explicit StudentIdentity binding created by an authorized administrator or trusted process.
+ */
+export type VerificationLevel = "SELF_REGISTERED" | "UNIVERSITY_VERIFIED" | "ADMIN";
+
 export type Identity = {
   subject: string;
   provider: string;
   role: "student" | "admin";
+  verification: VerificationLevel;
   studentId?: string;
+  workspaceId?: string;
   email?: string;
 };
 
@@ -24,7 +33,9 @@ export type SessionStatus = {
   subject: string;
   provider: string;
   role: "student" | "admin" | null;
+  verification: VerificationLevel | null;
   studentId?: string;
+  workspaceId?: string;
   email?: string;
 };
 
@@ -49,38 +60,83 @@ export async function verifyJwt(authorization?: string): Promise<AuthenticatedSu
   }
 }
 
+const WORKSPACE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+
+/** Workspace identifier: a private pre-issuance label, never a BTU passport ID. */
+export function newWorkspaceId(): string {
+  const bytes = randomBytes(16);
+  let id = "WS-";
+  for (const byte of bytes) id += WORKSPACE_ALPHABET[byte & 31];
+  return id;
+}
+
+const isUniqueViolation = (error: unknown) => (error as {code?: string} | null)?.code === "P2002";
+
+/**
+ * Idempotently resolves the private workspace for an authenticated (provider, subject).
+ * Keyed only by the immutable subject; email is informational and never used for matching.
+ * Concurrent first logins converge on one row through the (provider, subject) unique index.
+ */
+export async function ensureWorkspace(provider: string, subject: string, email?: string) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const existing = await prisma.studentWorkspace.findUnique({where: {provider_subject: {provider, subject}}});
+    if (existing) return existing;
+    try {
+      return await prisma.studentWorkspace.create({data: {workspaceId: newWorkspaceId(), provider, subject, email: email ?? null}});
+    } catch (error) {
+      if (!isUniqueViolation(error)) throw error;
+    }
+  }
+  throw new DomainError("WORKSPACE_UNAVAILABLE", "Unable to initialize workspace; try again", 503, true);
+}
+
 export async function resolveSession(authorization?: string): Promise<SessionStatus> {
   const {subject, provider, email} = await verifyJwt(authorization);
-  // Neither email, email domain nor browser/OAuth metadata grants access.
+  // Neither email, email domain nor browser/OAuth metadata grants elevated access.
   const binding = await prisma.studentIdentity.findUnique({
     where: {provider_subject: {provider, subject}},
   });
-  const isAdmin = binding?.role === "admin";
-  const isStudent = binding?.role === "student" && Boolean(binding.studentId);
-  if (!binding || (!isAdmin && !isStudent)) {
-    return {authenticated: true, authorized: false, subject, provider, role: null, email};
+  if (binding?.role === "admin") {
+    return {authenticated: true, authorized: true, subject, provider, role: "admin", verification: "ADMIN", email};
   }
+  if (binding?.role === "student" && binding.studentId) {
+    return {
+      authenticated: true,
+      authorized: true,
+      subject,
+      provider,
+      role: "student",
+      verification: "UNIVERSITY_VERIFIED",
+      studentId: binding.studentId,
+      email,
+    };
+  }
+  // No trusted binding: grant only the user's own empty, private workspace.
+  const workspace = await ensureWorkspace(provider, subject, email);
   return {
     authenticated: true,
     authorized: true,
     subject,
     provider,
-    role: isAdmin ? "admin" : "student",
-    studentId: isStudent ? binding.studentId || undefined : undefined,
+    role: "student",
+    verification: "SELF_REGISTERED",
+    workspaceId: workspace.workspaceId,
     email,
   };
 }
 
 export async function authenticate(authorization?: string): Promise<Identity> {
   const session = await resolveSession(authorization);
-  if (!session.authorized || !session.role) {
-    throw new DomainError("IDENTITY_UNBOUND", "Account has no authorized passport binding", 403);
+  if (!session.authorized || !session.role || !session.verification) {
+    throw new DomainError("IDENTITY_UNBOUND", "Account has no authorized workspace", 403);
   }
   return {
     subject: session.subject,
     provider: session.provider,
     role: session.role,
+    verification: session.verification,
     studentId: session.studentId,
+    workspaceId: session.workspaceId,
     email: session.email,
   };
 }
@@ -296,6 +352,11 @@ export async function bindIdentity(params: {
       create: {provider, subject, role: params.role, studentId: resolvedStudentId, verifiedBy},
       update: {role: params.role, studentId: resolvedStudentId, verifiedBy, verifiedAt: new Date()},
     }),
+    // A trusted student binding reconciles any existing unlinked self-service workspace.
+    prisma.studentWorkspace.updateMany({
+      where: {provider, subject, linkedStudentId: null},
+      data: params.role === "student" && resolvedStudentId ? {linkedStudentId: resolvedStudentId, linkedBy: verifiedBy, linkedAt: new Date()} : {},
+    }),
     prisma.auditEvent.create({
       data: {
         actorId: verifiedBy,
@@ -306,4 +367,61 @@ export async function bindIdentity(params: {
     }),
   ]);
   return binding;
+}
+
+/**
+ * Administrator-only reconciliation: associates an existing self-service workspace with an
+ * authoritative Student record. Never driven by email equality. Conflicts fail closed (409)
+ * and require explicit resolution; nothing about existing passports, awards or versions changes.
+ */
+export async function linkWorkspaceToStudent(params: {
+  workspaceId: string;
+  studentId?: string;
+  studentExternalId?: string;
+  linkedBy: string;
+}) {
+  const linkedBy = params.linkedBy?.trim();
+  if (!linkedBy) throw new DomainError("INVALID_REQUEST", "linkedBy actor is required", 400);
+  if (!params.studentId && !params.studentExternalId) {
+    throw new DomainError("INVALID_REQUEST", "studentId or studentExternalId is required", 400);
+  }
+  return prisma.$transaction(async tx => {
+    const workspace = await tx.studentWorkspace.findUnique({where: {workspaceId: params.workspaceId}});
+    if (!workspace) throw new DomainError("NOT_FOUND", "Workspace not found", 404);
+    const student = params.studentId
+      ? await tx.student.findUnique({where: {id: params.studentId}})
+      : await tx.student.findUnique({where: {externalId: params.studentExternalId as string}});
+    if (!student) throw new DomainError("NOT_FOUND", "Student record not found", 404);
+    if (workspace.linkedStudentId === student.id) return {workspace, studentId: student.id, alreadyLinked: true};
+    if (workspace.linkedStudentId) {
+      throw new DomainError("WORKSPACE_ALREADY_LINKED", "Workspace is already linked to a different student record", 409);
+    }
+    const binding = await tx.studentIdentity.findUnique({
+      where: {provider_subject: {provider: workspace.provider, subject: workspace.subject}},
+    });
+    if (binding) {
+      throw new DomainError("IDENTITY_CONFLICT", "This account already has an authoritative binding; resolve it explicitly", 409);
+    }
+    const competing = await tx.studentIdentity.findFirst({where: {studentId: student.id, role: "student"}});
+    if (competing) {
+      throw new DomainError("IDENTITY_CONFLICT", "Student record is already bound to another account; resolve it explicitly", 409);
+    }
+    const claimed = await tx.studentWorkspace.updateMany({
+      where: {id: workspace.id, linkedStudentId: null},
+      data: {linkedStudentId: student.id, linkedBy, linkedAt: new Date()},
+    });
+    if (claimed.count !== 1) throw new DomainError("WORKSPACE_ALREADY_LINKED", "Workspace was linked concurrently", 409);
+    await tx.studentIdentity.create({
+      data: {provider: workspace.provider, subject: workspace.subject, role: "student", studentId: student.id, verifiedBy: linkedBy},
+    });
+    await tx.auditEvent.create({
+      data: {
+        actorId: linkedBy,
+        action: "WORKSPACE_LINKED",
+        targetId: workspace.workspaceId,
+        detail: {studentId: student.id, studentExternalId: student.externalId, provider: workspace.provider},
+      },
+    });
+    return {workspace: {...workspace, linkedStudentId: student.id}, studentId: student.id, alreadyLinked: false};
+  });
 }

@@ -166,6 +166,25 @@ model StudentIdentity {
   @@index([studentId])
 }
 
+/// Private pre-issuance workspace created automatically for any Google-authenticated user.
+/// Holds NO academic data and proves no university enrollment. It is deliberately separate
+/// from Student/StudentIdentity so self-registration can never claim or alter official records.
+/// linkedStudentId is set only by an authorized administrator reconciliation.
+model StudentWorkspace {
+  id              String    @id @default(cuid())
+  workspaceId     String    @unique
+  provider        String
+  subject         String
+  email           String?
+  linkedStudentId String?
+  linkedBy        String?
+  linkedAt        DateTime?
+  createdAt       DateTime  @default(now())
+
+  @@unique([provider, subject])
+  @@index([linkedStudentId])
+}
+
 model VersionAward {
   versionId    String
   version      Version @relation(fields: [versionId], references: [id])

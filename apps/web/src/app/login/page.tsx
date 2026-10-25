@@ -2,13 +2,7 @@
 import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  ShieldCheck,
-  LockKeyhole,
-  LogOut,
-  ArrowRight,
-  RefreshCw,
-} from "lucide-react";
+import { ShieldCheck, LockKeyhole, LogOut, ArrowRight } from "lucide-react";
 import { Shell } from "@/components/shell";
 import { startGoogleSignIn, useSession } from "@/lib/session";
 
@@ -44,7 +38,7 @@ function GoogleMark() {
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { session, loading: sessionLoading, refresh, signOut } = useSession();
+  const { session, loading: sessionLoading, signOut } = useSession();
   const [error, setError] = useState("");
   const [connecting, setConnecting] = useState(false);
 
@@ -85,8 +79,8 @@ function LoginContent() {
         </div>
         <h2>Sign in to OrionX</h2>
         <p className="muted" style={{ lineHeight: 1.7, marginBottom: 22 }}>
-          Use your Google account to access your passport. Your university must
-          link your account to your student record first.
+          Continue with Google to open your private AI Skills Passport
+          workspace instantly. No administrator approval is needed to sign in.
         </p>
 
         {activeError && (
@@ -107,8 +101,14 @@ function LoginContent() {
           <div className="result-panel" style={{ marginTop: 0 }}>
             <strong>Signed in as {session.email || session.subject}</strong>
             <p>
-              Active role:{" "}
-              <span className="pill">{session.role.toUpperCase()}</span>
+              Access:{" "}
+              <span className="pill">
+                {session.role === "admin"
+                  ? "ADMINISTRATOR"
+                  : session.verification === "UNIVERSITY_VERIFIED"
+                    ? "UNIVERSITY VERIFIED"
+                    : "SELF-REGISTERED"}
+              </span>
             </p>
             <div className="page-actions" style={{ marginTop: 14 }}>
               <Link
@@ -125,37 +125,6 @@ function LoginContent() {
                 onClick={async () => {
                   await signOut();
                 }}
-              >
-                <LogOut size={15} /> Sign out
-              </button>
-            </div>
-          </div>
-        ) : session?.authenticated && !session.authorized ? (
-          <div className="result-panel" role="status" style={{ marginTop: 0 }}>
-            <strong>Signed in. Your student record is not linked yet.</strong>
-            <p>
-              You are signed in as <b>{session.email || "Google user"}</b>. Ask
-              your university administrator to link this account to your record,
-              then check again.
-            </p>
-            <div className="identity-box">
-              <span className="mini-kicker">
-                ACCOUNT REFERENCE FOR YOUR ADMINISTRATOR
-              </span>
-              <code>{session.subject}</code>
-            </div>
-            <div className="page-actions" style={{ marginTop: 16 }}>
-              <button
-                type="button"
-                className="button"
-                onClick={() => refresh()}
-              >
-                <RefreshCw size={15} /> Check authorization status
-              </button>
-              <button
-                type="button"
-                className="button secondary"
-                onClick={() => signOut()}
               >
                 <LogOut size={15} /> Sign out
               </button>
@@ -187,8 +156,9 @@ function LoginContent() {
             <div>
               <strong>Your academic record stays private</strong>
               <p>
-                Signing in confirms your identity. Only accounts linked by the
-                university can access student passports or administration tools.
+                Signing in gives you access to your own workspace only. Verified
+                skills and official passports appear once your university issues
+                them; administration tools stay restricted to authorized staff.
               </p>
             </div>
           </div>

@@ -1,0 +1,14 @@
+{
+  "cluster": "devnet",
+  "genesisHash": "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG",
+  "programId": "9q3EFytGCsR2hk5FnerXxMWomC2yCajpx78durY91JPa",
+  "configPda": "A2AMhBSJdgzaW1fVkZ2EYH9soLRyFTL8btkabcNhWba9",
+  "admin": "BNcEvP3benzCX7tc1W2U6upZ5HVT4hzneZahVKMpCPiv",
+  "issuer": "DoBPRwB5HkE6Hu3J6khzwdZhH6nSrrHmiuwx68wrdJWt",
+  "upgradeAuthority": "J5b7nCc422szL9iAxWVZjVpckdcUfQzC7QATWSJmaVSN",
+  "binarySha256": "0b5a2c4c67450ac38aa9b86f3a29e73060a23c241570816252b52421f3a69294",
+  "initializationSignature": "xPgBMuLqz5mr1cq1wJ8K4KEaBqeui3ihoYt5KwQ86btHTcjknngFHYtZkeKy6RxPaAsJWqxwXiVBLuJnAvaThnp",
+  "officialBtu": false,
+  "issuerMode": "SIMULATED_BTU",
+  "checkedAt": "2026-10-25T12:50:23.915Z"
+}

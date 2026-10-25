@@ -39,9 +39,14 @@ export default function Home() {
             Every new skill belongs in your story. Explore a passport that grows
             with you.
           </p>
-          <Link className="button" href="/passport">
-            Explore your passport <ArrowRight size={17} />
-          </Link>
+          <div className="page-actions" style={{ marginTop: 8 }}>
+            <Link className="button" href="/passport">
+              Explore your passport <ArrowRight size={17} />
+            </Link>
+            <Link className="button secondary" href="/verify">
+              Verify a document <ShieldCheck size={16} />
+            </Link>
+          </div>
           <a className="hero-text-link" href="#skill-collection">
             Browse sample skills <ArrowUpRight size={15} />
           </a>
@@ -118,8 +123,8 @@ export default function Home() {
         <section className="card recent-passports">
           <div className="section-head">
             <h2>Recent sample passports</h2>
-            <Link className="action-link" href="/admin">
-              Administration <ArrowUpRight size={16} />
+            <Link className="action-link" href="/verify">
+              Verify a passport <ArrowUpRight size={16} />
             </Link>
           </div>
           <div

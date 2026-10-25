@@ -21,10 +21,11 @@ import {
   buildGoogleAuthorizeUrl,
   bindIdentity,
   linkWorkspaceToStudent,
+  extractVerificationCodesFromPdf,
   type Snapshot,
 } from "@orionx/core";
 import {DomainError} from "@orionx/core/src/errors";
-import {queueSynchronization} from "@orionx/core/src/sync";
+import {queueSynchronization, listCatalogSkills, appendSourceAward} from "@orionx/core/src/sync";
 import {supabaseAuthServiceConfig} from "@orionx/core/src/config";
 import {createJobProcessor} from "@orionx/core/src/processor";
 import {z} from "zod";
@@ -245,7 +246,10 @@ class ApiController {
     const resolved = await resolveSession("Bearer " + session.access_token);
     this.sessionCookies(res, session, req);
     res.setHeader("Cache-Control", "no-store");
-    const redirectTo = resolved.role === "admin" && oauthState.next === "/passport" ? "/admin" : oauthState.next;
+    const redirectTo =
+      resolved.role === "admin" && (oauthState.next === "/passport" || oauthState.next === "/login" || oauthState.next === "/")
+        ? "/admin"
+        : oauthState.next;
     return {
       authenticated: true,
       authorized: resolved.authorized,
@@ -372,6 +376,61 @@ class ApiController {
     });
   }
 
+  @Get("admin/overview")
+  async adminOverview(@Req() req: Request) {
+    await admin(req);
+    const [
+      passportsTotal,
+      studentsTotal,
+      versionsFinalized,
+      awardsTotal,
+      activeUpdates,
+      jobsGrouped,
+      workspacesTotal,
+      workspacesUnlinked,
+      bindingsStudent,
+      bindingsAdmin,
+      bindingsDual,
+      latestSyncRun,
+    ] = await Promise.all([
+      prisma.passport.count(),
+      prisma.student.count(),
+      prisma.version.count({where: {finalizedSlot: {not: null}}}),
+      prisma.award.count(),
+      prisma.passport.count({where: {activeVersionId: {not: null}}}),
+      prisma.job.groupBy({by: ["state"], _count: {_all: true}}),
+      prisma.studentWorkspace.count(),
+      prisma.studentWorkspace.count({where: {linkedStudentId: null}}),
+      prisma.studentIdentity.count({where: {role: "student"}}),
+      prisma.studentIdentity.count({where: {role: "admin"}}),
+      prisma.studentIdentity.count({where: {role: "admin", studentId: {not: null}}}),
+      prisma.importRun.findFirst({orderBy: {createdAt: "desc"}, include: {_count: {select: {conflicts: true}}}}),
+    ]);
+    const jobsByState = Object.fromEntries(jobsGrouped.map(g => [g.state, g._count._all]));
+    return {
+      passportsTotal,
+      studentsTotal,
+      versionsFinalized,
+      awardsTotal,
+      activeUpdates,
+      jobs: {
+        queued: (jobsByState.QUEUED || 0) + (jobsByState.DISCOVERED || 0) + (jobsByState.VALIDATED || 0),
+        running: (jobsByState.RENDERED || 0) + (jobsByState.STORED || 0) + (jobsByState.CHAIN_PENDING || 0) + (jobsByState.SYNC_WRITEBACK_PENDING || 0),
+        retryWait: jobsByState.RETRY_WAIT || 0,
+        blocked: (jobsByState.BLOCKED_CONFLICT || 0) + (jobsByState.FAILED_PERMANENT || 0),
+        completed: (jobsByState.COMPLETED || 0) + (jobsByState.FINALIZED || 0),
+      },
+      accounts: {
+        workspacesTotal,
+        workspacesUnlinked,
+        bindingsStudent,
+        bindingsAdmin,
+        bindingsDual,
+      },
+      latestSyncRun,
+    };
+  }
+
   @Post("admin/identities")
   @HttpCode(200)
   async bindAdminIdentity(@Req() req: Request, @Body() body: unknown) {
@@ -382,6 +441,8 @@ class ApiController {
         role: z.enum(["student", "admin"]),
         studentExternalId: z.string().min(1).max(64).optional(),
         studentId: z.string().min(1).max(64).optional(),
+        preserveStudentLink: z.boolean().optional(),
+        provider: z.string().min(1).max(256).optional(),
       })
       .safeParse(body);
     if (!parsed.success) throw new DomainError("INVALID_REQUEST", "Valid subject, role, and student reference required", 400);
@@ -390,16 +451,155 @@ class ApiController {
       role: parsed.data.role,
       studentExternalId: parsed.data.studentExternalId,
       studentId: parsed.data.studentId,
+      preserveStudentLink: parsed.data.preserveStudentLink,
+      provider: parsed.data.provider,
       verifiedBy: actor.subject,
     });
     return {ok: true, binding};
   }
 
-  @Get("admin/workspaces")
-  async workspaces(@Req() req: Request) {
+  @Post("admin/identities/unlink")
+  @HttpCode(200)
+  async unlinkAdminIdentity(@Req() req: Request, @Body() body: unknown) {
+    const actor = await admin(req);
+    const parsed = z
+      .object({
+        subject: z.string().min(1).max(128),
+        provider: z.string().min(1).max(256).optional(),
+      })
+      .safeParse(body);
+    if (!parsed.success) throw new DomainError("INVALID_REQUEST", "Valid subject is required", 400);
+    const subject = parsed.data.subject.trim();
+    if (subject === actor.subject) {
+      throw new DomainError("INVALID_REQUEST", "You cannot remove your own active administrator binding", 400);
+    }
+    await prisma.$transaction(async tx => {
+      const deleted = await tx.studentIdentity.deleteMany({
+        where: {subject, ...(parsed.data.provider ? {provider: parsed.data.provider} : {})},
+      });
+      await tx.studentWorkspace.updateMany({
+        where: {subject, ...(parsed.data.provider ? {provider: parsed.data.provider} : {})},
+        data: {linkedStudentId: null, linkedBy: null, linkedAt: null},
+      });
+      await tx.auditEvent.create({
+        data: {
+          actorId: actor.subject,
+          action: "IDENTITY_UNBOUND",
+          targetId: subject,
+          detail: {deletedCount: deleted.count},
+        },
+      });
+    });
+    return {ok: true};
+  }
+
+  @Get("admin/accounts")
+  async adminAccounts(@Req() req: Request, @Query() query: Record<string, string | undefined>) {
     await admin(req);
+    const q = (query.q || "").trim();
+    const skip = Math.max(0, Number(query.skip) || 0);
+    const take = Math.min(500, Math.max(1, Number(query.take) || 200));
+
+    const [identities, workspaces, students] = await Promise.all([
+      prisma.studentIdentity.findMany({
+        where: q
+          ? {
+              OR: [
+                {subject: {contains: q, mode: "insensitive"}},
+                {role: {contains: q, mode: "insensitive"}},
+                {student: {OR: [{externalId: {contains: q, mode: "insensitive"}}, {firstName: {contains: q, mode: "insensitive"}}, {lastName: {contains: q, mode: "insensitive"}}, {email: {contains: q, mode: "insensitive"}}]}},
+              ],
+            }
+          : undefined,
+        include: {
+          student: {
+            select: {
+              id: true,
+              externalId: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              program: true,
+              passport: {select: {publicId: true, latestFinalizedVersion: true}},
+            },
+          },
+        },
+        orderBy: {verifiedAt: "desc"},
+        skip,
+        take,
+      }),
+      prisma.studentWorkspace.findMany({
+        where: q
+          ? {
+              OR: [
+                {workspaceId: {contains: q, mode: "insensitive"}},
+                {email: {contains: q, mode: "insensitive"}},
+                {subject: {contains: q, mode: "insensitive"}},
+              ],
+            }
+          : undefined,
+        orderBy: {createdAt: "desc"},
+        skip,
+        take,
+      }),
+      prisma.student.findMany({
+        where: q
+          ? {
+              OR: [
+                {externalId: {contains: q, mode: "insensitive"}},
+                {firstName: {contains: q, mode: "insensitive"}},
+                {lastName: {contains: q, mode: "insensitive"}},
+                {email: {contains: q, mode: "insensitive"}},
+                {program: {contains: q, mode: "insensitive"}},
+              ],
+            }
+          : undefined,
+        include: {
+          passport: {select: {id: true, publicId: true, latestFinalizedVersion: true}},
+          identities: {select: {id: true, subject: true, role: true, provider: true, verifiedAt: true}},
+        },
+        orderBy: {externalId: "asc"},
+        skip,
+        take,
+      }),
+    ]);
+
+    const allWorkspacesBySubject = new Map(workspaces.map(w => [w.subject, w]));
+    const allStudentsById = new Map(students.map(s => [s.id, s]));
+    const allIdentitiesBySubject = new Map(identities.map(i => [i.subject, i]));
+
+    return {
+      identities: identities.map(i => ({
+        ...i,
+        workspace: allWorkspacesBySubject.get(i.subject) || null,
+      })),
+      workspaces: workspaces.map(w => ({
+        ...w,
+        linkedStudent: w.linkedStudentId ? allStudentsById.get(w.linkedStudentId) || null : null,
+        binding: allIdentitiesBySubject.get(w.subject) || null,
+      })),
+      students,
+    };
+  }
+
+  @Get("admin/workspaces")
+  async workspaces(@Req() req: Request, @Query() query: Record<string, string | undefined>) {
+    await admin(req);
+    const q = (query.q || "").trim();
+    const skip = Math.max(0, Number(query.skip) || 0);
+    const take = Math.min(500, Math.max(1, Number(query.take) || 100));
     return prisma.studentWorkspace.findMany({
-      take: 100,
+      where: q
+        ? {
+            OR: [
+              {workspaceId: {contains: q, mode: "insensitive"}},
+              {email: {contains: q, mode: "insensitive"}},
+              {subject: {contains: q, mode: "insensitive"}},
+            ],
+          }
+        : undefined,
+      skip,
+      take,
       orderBy: {createdAt: "desc"},
       select: {workspaceId: true, email: true, subject: true, linkedStudentId: true, linkedAt: true, createdAt: true},
     });
@@ -442,10 +642,291 @@ class ApiController {
     ]);
     return {...result, remaining, blocked, nextAvailableAt: next?.availableAt ?? null};
   }
- @Get("admin/sync-runs/:id") async syncRun(@Req() req: Request, @Param("id") id: string) { await admin(req); const run = await prisma.importRun.findUnique({where: {id}, include: {conflicts: {take: 100}}}); if (!run) throw new DomainError("NOT_FOUND", "Run not found", 404); return run; }
- @Get("admin/passports") async passports(@Req() req: Request) { await admin(req); return prisma.passport.findMany({take: 100, include: {student: {select: {externalId: true, firstName: true, lastName: true, program: true}}, _count: {select: {versions: true}}}, orderBy: {publicId: "asc"}}); }
- @Get("admin/passports/:id/versions") async versions(@Req() req: Request, @Param("id") id: string) { await admin(req); return safeJSON(await prisma.version.findMany({where: {passport: {publicId: id}}, take: 100, orderBy: {number: "desc"}})); }
- @Get("admin/audit") async audit(@Req() req: Request) { await admin(req); return prisma.auditEvent.findMany({take: 100, orderBy: {createdAt: "desc"}}); }
+
+  @Get("admin/jobs")
+  async listJobs(@Req() req: Request, @Query() query: Record<string, string | undefined>) {
+    await admin(req);
+    const filter = (query.state || "ALL").toUpperCase();
+    const skip = Math.max(0, Number(query.skip) || 0);
+    const take = Math.min(500, Math.max(1, Number(query.take) || 100));
+    const where: Prisma.JobWhereInput =
+      filter === "ACTIVE"
+        ? {state: {in: ["DISCOVERED", "VALIDATED", "QUEUED", "RENDERED", "STORED", "CHAIN_PENDING", "SYNC_WRITEBACK_PENDING", "RETRY_WAIT"]}}
+        : filter === "FAILED"
+          ? {state: {in: ["BLOCKED_CONFLICT", "FAILED_PERMANENT", "RETRY_WAIT"]}}
+          : filter === "COMPLETED"
+            ? {state: {in: ["COMPLETED", "FINALIZED"]}}
+            : {};
+
+    const [items, total, recentRuns, conflicts] = await Promise.all([
+      prisma.job.findMany({
+        where,
+        include: {
+          version: {
+            select: {
+              id: true,
+              number: true,
+              code: true,
+              state: true,
+              txSignature: true,
+              passport: {
+                select: {
+                  id: true,
+                  publicId: true,
+                  student: {select: {externalId: true, firstName: true, lastName: true}},
+                },
+              },
+            },
+          },
+        },
+        orderBy: [{updatedAt: "desc"}, {createdAt: "desc"}],
+        skip,
+        take,
+      }),
+      prisma.job.count({where}),
+      prisma.importRun.findMany({
+        take: 15,
+        orderBy: {createdAt: "desc"},
+        include: {conflicts: {take: 50}},
+      }),
+      prisma.importConflict.findMany({
+        take: 100,
+        orderBy: {createdAt: "desc"},
+      }),
+    ]);
+
+    return safeJSON({items, total, skip, take, recentRuns, conflicts});
+  }
+
+  @Get("admin/sync-runs/:id")
+  async syncRun(@Req() req: Request, @Param("id") id: string) {
+    await admin(req);
+    const run = await prisma.importRun.findUnique({where: {id}, include: {conflicts: {take: 250}}});
+    if (!run) throw new DomainError("NOT_FOUND", "Run not found", 404);
+    return run;
+  }
+
+  @Get("admin/passports")
+  async passports(@Req() req: Request, @Res({passthrough: true}) res: Response, @Query() query: Record<string, string | undefined>) {
+    await admin(req);
+    const q = (query.q || "").trim();
+    const status = (query.status || "").toUpperCase();
+    const skip = Math.max(0, Number(query.skip) || 0);
+    const take = Math.min(1000, Math.max(1, Number(query.take) || 200));
+
+    const where: Prisma.PassportWhereInput = {
+      ...(q
+        ? {
+            OR: [
+              {publicId: {contains: q, mode: "insensitive"}},
+              {student: {externalId: {contains: q, mode: "insensitive"}}},
+              {student: {firstName: {contains: q, mode: "insensitive"}}},
+              {student: {lastName: {contains: q, mode: "insensitive"}}},
+              {student: {email: {contains: q, mode: "insensitive"}}},
+              {student: {program: {contains: q, mode: "insensitive"}}},
+            ],
+          }
+        : {}),
+      ...(status === "ISSUED"
+        ? {latestFinalizedVersion: {gt: 0}}
+        : status === "PROCESSING"
+          ? {activeVersionId: {not: null}}
+          : status === "UNISSUED"
+            ? {latestFinalizedVersion: 0}
+            : {}),
+    };
+
+    const isEnvelope = query.envelope === "1" || query.envelope === "true";
+    const items = await prisma.passport.findMany({
+      where,
+      skip,
+      take,
+      include: {
+        student: {
+          select: {
+            id: true,
+            externalId: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            program: true,
+            educationLevel: true,
+            status: true,
+            identities: {select: {id: true, role: true, subject: true, verifiedAt: true}},
+          },
+        },
+        _count: {select: {versions: true}},
+      },
+      orderBy: {publicId: "asc"},
+    });
+
+    if (isEnvelope) {
+      const total = await prisma.passport.count({where});
+      res.setHeader("X-Total-Count", String(total));
+      return {items, total, skip, take};
+    }
+    return items;
+  }
+
+  @Get("admin/passports/:id")
+  async passportDetail(@Req() req: Request, @Param("id") id: string) {
+    await admin(req);
+    const passport = await prisma.passport.findFirst({
+      where: {OR: [{publicId: id}, {id}]},
+      include: {
+        student: {
+          include: {
+            awards: {orderBy: [{earnedAt: "asc"}, {sourceRecordId: "asc"}]},
+            identities: true,
+          },
+        },
+        versions: {
+          orderBy: {number: "desc"},
+          include: {
+            jobs: {orderBy: {createdAt: "desc"}},
+            writebacks: true,
+          },
+        },
+      },
+    });
+    if (!passport) throw new DomainError("NOT_FOUND", "Passport not found", 404);
+    const subjects = passport.student.identities.map(i => i.subject);
+    const [workspaces, sourceSyncs] = await Promise.all([
+      prisma.studentWorkspace.findMany({
+        where: {
+          OR: [
+            {linkedStudentId: passport.student.id},
+            ...(subjects.length ? [{subject: {in: subjects}}] : []),
+          ],
+        },
+      }),
+      prisma.sourceSync.findMany({
+        where: {sourceStudentId: passport.student.externalId},
+        orderBy: {sourceRecordId: "asc"},
+      }),
+    ]);
+    return safeJSON({
+      ...passport,
+      workspaces,
+      sourceSyncs,
+    });
+  }
+
+  @Get("admin/passports/:id/versions")
+  async versions(@Req() req: Request, @Param("id") id: string) {
+    await admin(req);
+    return safeJSON(
+      await prisma.version.findMany({
+        where: {passport: {OR: [{publicId: id}, {id}]}},
+        take: 200,
+        orderBy: {number: "desc"},
+        include: {jobs: true, writebacks: true},
+      }),
+    );
+  }
+
+  @Get("admin/passports/:id/versions/:version/download")
+  async adminDownloadVersion(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Param("id") id: string,
+    @Param("version") versionNumber: string,
+  ) {
+    await admin(req);
+    if (!/^[1-9]\d{0,8}$/.test(versionNumber)) throw new DomainError("INVALID_REQUEST", "Invalid version number", 400);
+    const passport = await prisma.passport.findFirst({where: {OR: [{publicId: id}, {id}]}});
+    if (!passport) throw new DomainError("NOT_FOUND", "Passport not found", 404);
+    const version = await prisma.version.findUnique({
+      where: {passportId_number: {passportId: passport.id, number: Number(versionNumber)}},
+    });
+    if (!version?.finalizedSlot || !version.storageKey) {
+      throw new DomainError("NOT_FOUND", "Finalized PDF artifact not available for this version", 404);
+    }
+    const bytes = await artifactStore().get(version.storageKey);
+    if (sha256(bytes) !== version.pdfSha256) {
+      throw new DomainError("ARTIFACT_CORRUPTED", "Stored document failed integrity validation", 503);
+    }
+    res.setHeader("Cache-Control", "private, no-store");
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${passport.publicId}-v${version.number}.pdf"`);
+    res.send(Buffer.from(bytes));
+  }
+
+  @Get("admin/catalog")
+  async adminCatalog(@Req() req: Request) {
+    await admin(req);
+    const students = await prisma.student.findMany({
+      orderBy: {externalId: "asc"},
+      include: {
+        passport: {select: {publicId: true, initialIssueDate: true, latestFinalizedVersion: true}},
+        awards: {select: {skillId: true, sourceRecordId: true}},
+      },
+    });
+    return {
+      skills: listCatalogSkills(),
+      students,
+      sourceMode: process.env.SOURCE_MODE || "fixture",
+    };
+  }
+
+  @Post("admin/source/awards")
+  @HttpCode(200)
+  async addSourceAward(@Req() req: Request, @Body() body: unknown) {
+    const actor = await admin(req);
+    const parsed = z
+      .object({
+        studentId: z.string().min(1).max(64),
+        firstName: z.string().max(128).optional(),
+        lastName: z.string().max(128).optional(),
+        email: z.string().max(254).optional(),
+        program: z.string().max(200).optional(),
+        educationLevel: z.string().max(120).optional(),
+        passportId: z.string().max(64).optional(),
+        initialIssueDate: z.string().max(32).optional(),
+        status: z.enum(["Active", "Graduate"]).optional(),
+        skillId: z.string().min(1).max(64),
+        recordId: z.string().max(128).optional(),
+        dateEarned: z.string().min(10).max(10),
+        autoSync: z.boolean().optional(),
+      })
+      .safeParse(body);
+    if (!parsed.success) {
+      throw new DomainError("INVALID_REQUEST", "Valid studentId, skillId, and YYYY-MM-DD dateEarned are required", 400);
+    }
+    const result = await appendSourceAward({
+      ...parsed.data,
+      actorId: actor.subject,
+    });
+    let syncRun = "run" in result ? result.run : undefined;
+    if (parsed.data.autoSync && result.mode === "sheets") {
+      syncRun = await queueSynchronization(randomUUID(), actor.subject);
+    }
+    return {...result, syncRun};
+  }
+
+  @Get("admin/audit")
+  async audit(@Req() req: Request, @Query() query: Record<string, string | undefined>) {
+    await admin(req);
+    const q = (query.q || "").trim();
+    const skip = Math.max(0, Number(query.skip) || 0);
+    const take = Math.min(500, Math.max(1, Number(query.take) || 100));
+    const where: Prisma.AuditEventWhereInput = q
+      ? {
+          OR: [
+            {action: {contains: q, mode: "insensitive"}},
+            {actorId: {contains: q, mode: "insensitive"}},
+            {targetId: {contains: q, mode: "insensitive"}},
+          ],
+        }
+      : {};
+    const isEnvelope = query.envelope === "1" || query.envelope === "true";
+    const items = await prisma.auditEvent.findMany({where, skip, take, orderBy: {createdAt: "desc"}});
+    if (isEnvelope) {
+      const total = await prisma.auditEvent.count({where});
+      return {items, total, skip, take};
+    }
+    return items;
+  }
  @Post("admin/jobs/:id/retry") async retry(@Req() req: Request, @Param("id") id: string) {
   const user = await admin(req);
   await prisma.$transaction(async tx => {
@@ -501,10 +982,26 @@ class ApiController {
  @Post("verify/file") async verifyFile(@Req() req: Request, @Res() res: Response) {
   const upload = multer({storage: multer.memoryStorage(), limits: {fileSize: 10 * 1024 * 1024, files: 1, fields: 1, fieldSize: 128, parts: 2}}).single("file");
   await new Promise<void>((resolve, reject) => upload(req, res, error => error ? reject(new DomainError("UPLOAD_LIMIT", "Upload exceeds multipart limits", 413)) : resolve()));
-  const code = String(req.body?.code || ""); try { decodeCode(code); } catch { throw new DomainError("INVALID_CODE", "Malformed verification code", 400); }
   if (!req.file || req.file.mimetype !== "application/pdf" || req.file.buffer.subarray(0, 5).toString() !== "%PDF-") throw new DomainError("INVALID_PDF", "A PDF file is required", 415);
+  const discovery = extractVerificationCodesFromPdf(req.file.buffer);
+  let code = String(req.body?.code || "").trim().toUpperCase();
+  if (!code && discovery.codes.length === 1) {
+   code = discovery.codes[0];
+  } else if (!code && discovery.codes.length > 1) {
+   req.file.buffer.fill(0);
+   throw new DomainError("AMBIGUOUS_PDF_CODES", `Multiple verification codes found in PDF (${discovery.codes.join(", ")}); select which code to verify.`, 400);
+  }
+  try { decodeCode(code); } catch {
+   req.file.buffer.fill(0);
+   throw new DomainError("INVALID_CODE", discovery.unrelatedQrPayloads.length ? "PDF contains a QR code that is not an OrionX verification code; enter a valid D1- code." : "Malformed or missing verification code", 400);
+  }
   const proof = await verifyDevnet(code, req.file.buffer); req.file.buffer.fill(0);
-  res.setHeader("Cache-Control", "no-store"); res.status(proof.registration !== "REGISTERED" ? proof.errorCode === "UNKNOWN_CODE" ? 404 : 503 : proof.integrity === "MISMATCH" ? 422 : 200).json(proof);
+  res.setHeader("Cache-Control", "no-store");
+  res.status(proof.registration !== "REGISTERED" ? proof.errorCode === "UNKNOWN_CODE" ? 404 : 503 : proof.integrity === "MISMATCH" ? 422 : 200).json({
+   ...proof,
+   verifiedCode: code,
+   discoveredCodes: discovery.codes,
+  });
  }
 }
 @Module({controllers: [ApiController]}) class AppModule {}

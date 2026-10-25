@@ -208,6 +208,24 @@ describe("self-service student onboarding over HTTP", () => {
     expect(ensure).not.toHaveBeenCalled();
   });
 
+  it("allows a dual-role administrator (bound to a studentId) to access both admin routes and their own student passport", async () => {
+    vi.spyOn(prisma.studentIdentity, "findUnique").mockResolvedValue({id: "i-dual", provider: issuer, subject: NEW_SUB, role: "admin", studentId: "stu-dual", verifiedBy: "seed", verifiedAt: new Date()});
+    vi.spyOn(prisma.passport, "findMany").mockResolvedValue([]);
+    vi.spyOn(prisma.passport, "count").mockResolvedValue(120);
+    vi.spyOn(prisma.passport, "findUnique").mockResolvedValue({id: "p-dual", publicId: "BTU-AI-000125", studentId: "stu-dual", latestFinalizedVersion: 2, activeVersionId: null, initialIssueDate: new Date("2026-01-02"), student: {firstName: "Luka", lastName: "G", program: "AI", educationLevel: "BSc"}} as never);
+    vi.spyOn(prisma.version, "findUnique").mockResolvedValue(null);
+    vi.spyOn(prisma.version, "count").mockResolvedValue(2);
+    const t = await token(NEW_SUB);
+    const sess = await call("/auth/session", t);
+    expect(sess.body).toMatchObject({role: "admin", verification: "ADMIN", studentId: "stu-dual"});
+    const paged = await call("/admin/passports?envelope=1&skip=100&take=25", t);
+    expect(paged.status).toBe(200);
+    expect(paged.body).toMatchObject({total: 120, skip: 100, take: 25});
+    const myPass = await call("/me/passport", t);
+    expect(myPass.status).toBe(200);
+    expect(myPass.body).toMatchObject({official: true, passportId: "BTU-AI-000125"});
+  });
+
   it.each([0, 1])("atomically retries only an eligible job (matched rows: %i)", async count => {
     vi.spyOn(prisma.studentIdentity, "findUnique").mockResolvedValue({id: "i", provider: issuer, subject: NEW_SUB, role: "admin", studentId: null, verifiedBy: "seed", verifiedAt: new Date()});
     const tx = {job: {updateMany: vi.fn().mockResolvedValue({count}), findUniqueOrThrow: vi.fn().mockResolvedValue({stage: "CHAIN"})}, auditEvent: {create: vi.fn()}};

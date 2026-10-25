@@ -2,7 +2,15 @@
 import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ShieldCheck, LockKeyhole, LogOut, ArrowRight } from "lucide-react";
+import {
+  ShieldCheck,
+  LockKeyhole,
+  LogOut,
+  ArrowRight,
+  Sparkles,
+  UserCheck,
+  Settings2,
+} from "lucide-react";
 import { Shell } from "@/components/shell";
 import { startGoogleSignIn, useSession } from "@/lib/session";
 
@@ -53,6 +61,18 @@ function LoginContent() {
     }
   }, [authCode, router, searchParams]);
 
+  useEffect(() => {
+    if (!sessionLoading && session?.authorized && session.role && !queryError) {
+      const target =
+        searchParams.get("next") ||
+        (session.role === "admin" ? "/admin" : "/passport");
+      const timer = setTimeout(() => {
+        router.replace(target);
+      }, 350);
+      return () => clearTimeout(timer);
+    }
+  }, [sessionLoading, session?.authorized, session?.role, queryError, router, searchParams]);
+
   const activeError = error || queryError || "";
 
   const handleGoogleContinue = async () => {
@@ -71,22 +91,23 @@ function LoginContent() {
   };
 
   return (
-    <div className="auth-layout">
+    <div className="auth-bento-grid">
       <section className="card auth-card">
         <div className="auth-badge">
-          <ShieldCheck size={16} />
-          <span>SECURE STUDENT ACCESS</span>
+          <Sparkles size={15} />
+          <span>UNIFIED SINGLE SIGN-ON</span>
         </div>
-        <h2>Sign in to OrionX</h2>
+        <h2>Welcome to OrionX</h2>
         <p className="muted" style={{ lineHeight: 1.7, marginBottom: 22 }}>
-          Continue with Google to open your private AI Skills Passport
-          workspace instantly. No administrator approval is needed to sign in.
+          Sign in once with your Google account. OrionX automatically detects
+          your role—routing students directly to their private AI Skills
+          Passport and authorized staff to the Administrator Console.
         </p>
 
         {activeError && (
           <p
             role="alert"
-            className="notice"
+            className="notice notice-crimson"
             style={{ marginTop: 0, marginBottom: 20 }}
           >
             {activeError}
@@ -99,26 +120,34 @@ function LoginContent() {
           </p>
         ) : session?.authorized && session.role ? (
           <div className="result-panel" style={{ marginTop: 0 }}>
-            <strong>Signed in as {session.email || session.subject}</strong>
-            <p>
-              Access:{" "}
-              <span className="pill">
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+              <strong>{session.email || session.subject}</strong>
+              <span className={`pill ${session.role === "admin" ? "pill-blue" : "pill-pink"}`}>
                 {session.role === "admin"
-                  ? "ADMINISTRATOR"
+                  ? session.studentId
+                    ? "ADMINISTRATOR · DUAL ROLE"
+                    : "ADMINISTRATOR"
                   : session.verification === "UNIVERSITY_VERIFIED"
-                    ? "UNIVERSITY VERIFIED"
-                    : "SELF-REGISTERED"}
+                    ? "UNIVERSITY VERIFIED STUDENT"
+                    : "STUDENT WORKSPACE"}
               </span>
+            </div>
+            <p style={{ marginTop: 8 }}>
+              Redirecting you to your workspace automatically…
             </p>
             <div className="page-actions" style={{ marginTop: 14 }}>
               <Link
                 className="button"
                 href={session.role === "admin" ? "/admin" : "/passport"}
               >
-                Continue to{" "}
-                {session.role === "admin" ? "Administration" : "My Passport"}{" "}
+                Open {session.role === "admin" ? "Admin Console" : "My Passport"}{" "}
                 <ArrowRight size={15} />
               </Link>
+              {session.role === "admin" && session.studentId && (
+                <Link className="button secondary" href="/passport">
+                  Open My Student Passport
+                </Link>
+              )}
               <button
                 type="button"
                 className="button secondary"
@@ -147,18 +176,47 @@ function LoginContent() {
         <div className="auth-divider" />
 
         <div className="steps" style={{ gap: 10 }}>
-          <div className="step" style={{ padding: 14 }}>
-            <LockKeyhole
+          <div className="step">
+            <UserCheck
               size={18}
-              color="var(--accent-ink)"
+              color="var(--pink)"
               style={{ flexShrink: 0, marginTop: 2 }}
             />
             <div>
-              <strong>Your academic record stays private</strong>
+              <strong>Students & Self-Registered Learners</strong>
               <p>
-                Signing in gives you access to your own workspace only. Verified
-                skills and official passports appear once your university issues
-                them; administration tools stay restricted to authorized staff.
+                Opens your personal AI Skills Passport workspace immediately,
+                with private PDF downloads and version history once linked by
+                your university.
+              </p>
+            </div>
+          </div>
+          <div className="step">
+            <Settings2
+              size={18}
+              color="var(--primary)"
+              style={{ flexShrink: 0, marginTop: 2 }}
+            />
+            <div>
+              <strong>University Administrators</strong>
+              <p>
+                Accounts bound to the administrator role automatically enter the
+                Operations Console for source synchronization, job processing,
+                and account management.
+              </p>
+            </div>
+          </div>
+          <div className="step">
+            <LockKeyhole
+              size={18}
+              color="var(--cyan)"
+              style={{ flexShrink: 0, marginTop: 2 }}
+            />
+            <div>
+              <strong>Server-Enforced Role Security</strong>
+              <p>
+                Roles are determined strictly by immutable server-side identity
+                bindings—never by login form toggles or client-side claims.
               </p>
             </div>
           </div>
@@ -171,15 +229,22 @@ function LoginContent() {
 export default function Login() {
   return (
     <Shell>
-      <div className="eyebrow">YOUR PERSONAL WORKSPACE</div>
-      <h1>Access your passport</h1>
-      <p className="lead">
-        Sign in to access your student record or administration tools. Public
-        verification is available without an account.
-      </p>
+      <div className="page-heading">
+        <div>
+          <div className="eyebrow">CENTRALIZED AUTHENTICATION</div>
+          <h1>Sign in to OrionX</h1>
+          <p className="lead">
+            One unified sign-in for students and administrators. Public
+            verification requires no account.
+          </p>
+        </div>
+        <Link className="button secondary" href="/verify">
+          <ShieldCheck size={16} /> Public Verifier
+        </Link>
+      </div>
       <Suspense
         fallback={
-          <section className="card" style={{ maxWidth: 540 }}>
+          <section className="card" style={{ maxWidth: 560 }}>
             <p role="status">Loading sign-in…</p>
           </section>
         }

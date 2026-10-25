@@ -15,6 +15,7 @@ export function snapshot(student:Student,awards:Award[],version:number,code=newC
 
 export {verifyDevnet} from "./solana";
 export {renderDemoPdf} from "./pdf";
+export {extractVerificationCodesFromPdf, extractCodeFromText, type PdfCodeDiscovery} from "./pdf-extract";
 export {prepareIssuance} from "./issuance";
 export {artifactStore,persistVerified} from "./storage";
 export {

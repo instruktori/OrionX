@@ -53,10 +53,44 @@ outside this hackathon deployment.
 - `evidence/hosted-browser.json`: actual Google sign-in/callback/student workspace.
   The user's account remains a student; it was not promoted or linked to a demo
   academic record. Bound demo students' private downloads were checked separately.
-- 81 automated checks cover core/API/worker/environment/runtime behavior, including
-  packaged ESM PDF rendering, failed-import retries and verification QR routing.
+- 83 automated checks cover core/API/worker/environment/runtime behavior, including
+  packaged ESM PDF rendering, failed-import retries, dual-role admin/student session
+  resolution, embedded PDF QR/code auto-extraction and verification QR routing.
   Type checking, production build, live ledger guards and all 20 staging/final PDF
   object pairs passed. See individual evidence timestamps.
+
+## Admin workspace, centralized auth and zero-transcription verification
+
+- **Centralized Role-Adaptive Auth & Dual-Role Sessions**: Single unified Google OAuth
+  sign-in automatically resolves `admin` vs `student` roles, preserves linked
+  `studentId` on administrator accounts (allowing dual-role admins like `instruktori.ge@gmail.com`
+  to inspect both `/admin` and `/passport`), and provides a top-bar `Admin ⇄ Passport`
+  switcher.
+- **Complete Administrator Workspace (`/admin`)**:
+  - Server-side paginated and filtered passport directory (`GET /api/v1/admin/passports`),
+    accurate global database counts (`GET /api/v1/admin/overview`), slide-over
+    passport & version dossier (`GET /api/v1/admin/passports/:id`), and direct
+    admin PDF downloads (`GET /api/v1/admin/passports/:id/versions/:version/download`).
+  - Unified People, Accounts & Access control (`GET /api/v1/admin/accounts`,
+    `POST /api/v1/admin/identities`, `POST /api/v1/admin/identities/unlink`)
+    showing self-registered workspaces, explicit identity bindings and student records.
+  - In-App Source Award Entry (`GET /api/v1/admin/catalog`, `POST /api/v1/admin/source/awards`)
+    writing directly to Google Sheets (preserving `PassportRecords` named range,
+    badge formulas and `orionx.record` developer metadata) or local fixtures and
+    optionally queueing `SYNC`.
+  - Actionable Queue Jobs, Source Conflicts & Audit Log (`GET /api/v1/admin/jobs`,
+    `POST /api/v1/admin/jobs/:id/retry`, `GET /api/v1/admin/audit`).
+- **Verification Without Transcription (`/verify`)**:
+  - Automatic `D1-...` verification code discovery from uploaded PDFs on both client
+    and server (`extractVerificationCodesFromPdf` decompresses embedded QR image
+    and text streams) so users can drop a PDF with zero manual typing.
+  - Built-in live camera QR scanner, screenshot/photo QR decoder, and interactive
+    version-specific QR share modals across `/passport` and `/admin`.
+  - Full structured proof scorecard preserved on non-200 HTTP responses (including
+    HTTP 422 tampered-PDF `MISMATCH`).
+- **Electric Ice & Aurora Design System**: Complete visual overhaul using crisp
+  White, Electric Blue, Cyan, Pink and Reddish/Coral surfaces with a sticky glass
+  Top Navigation Bar and Bento Grid layout.
 
 The approved deployment uses **manual administrator processing**. The admin page
 queues source synchronization and processes one durable stage per HTTP request,

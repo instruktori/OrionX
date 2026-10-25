@@ -97,7 +97,16 @@ export async function resolveSession(authorization?: string): Promise<SessionSta
     where: {provider_subject: {provider, subject}},
   });
   if (binding?.role === "admin") {
-    return {authenticated: true, authorized: true, subject, provider, role: "admin", verification: "ADMIN", email};
+    return {
+      authenticated: true,
+      authorized: true,
+      subject,
+      provider,
+      role: "admin",
+      verification: "ADMIN",
+      ...(binding.studentId ? {studentId: binding.studentId} : {}),
+      email,
+    };
   }
   if (binding?.role === "student" && binding.studentId) {
     return {
@@ -319,6 +328,7 @@ export async function bindIdentity(params: {
   role: "student" | "admin";
   studentExternalId?: string;
   studentId?: string;
+  preserveStudentLink?: boolean;
   verifiedBy: string;
   provider?: string;
 }) {
@@ -335,7 +345,7 @@ export async function bindIdentity(params: {
   }
   const provider = params.provider || supabaseAuthConfig().issuer;
   let resolvedStudentId: string | null = null;
-  if (params.role === "student") {
+  if (params.role === "student" || params.studentId || params.studentExternalId) {
     const student = params.studentId
       ? await prisma.student.findUnique({where: {id: params.studentId}})
       : params.studentExternalId
@@ -345,6 +355,11 @@ export async function bindIdentity(params: {
       throw new DomainError("NOT_FOUND", "Student record not found for identity binding", 404);
     }
     resolvedStudentId = student.id;
+  } else if (params.role === "admin" && params.preserveStudentLink) {
+    const existing = await prisma.studentIdentity.findUnique({
+      where: {provider_subject: {provider, subject}},
+    });
+    resolvedStudentId = existing?.studentId ?? null;
   }
   const [binding] = await prisma.$transaction([
     prisma.studentIdentity.upsert({
@@ -355,7 +370,7 @@ export async function bindIdentity(params: {
     // A trusted student binding reconciles any existing unlinked self-service workspace.
     prisma.studentWorkspace.updateMany({
       where: {provider, subject, linkedStudentId: null},
-      data: params.role === "student" && resolvedStudentId ? {linkedStudentId: resolvedStudentId, linkedBy: verifiedBy, linkedAt: new Date()} : {},
+      data: resolvedStudentId ? {linkedStudentId: resolvedStudentId, linkedBy: verifiedBy, linkedAt: new Date()} : {},
     }),
     prisma.auditEvent.create({
       data: {

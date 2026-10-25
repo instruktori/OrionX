@@ -1,5 +1,8 @@
 # Implementation and acceptance
 
+The next development handoff is [admin management and QR verification](NEXT_IMPLEMENTATION_PLAN.md),
+covering the remaining management UI, scan/upload experience and current account state.
+
 The current implementation/evidence is tracked in
 [ARCHITECTURE_PROGRESS.md](ARCHITECTURE_PROGRESS.md). External setup steps are in
 [SETUP_REMAINING.md](SETUP_REMAINING.md).

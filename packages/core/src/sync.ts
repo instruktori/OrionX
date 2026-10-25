@@ -1,10 +1,235 @@
 import {randomBytes, randomUUID} from "node:crypto";
 import {Prisma} from "@prisma/client";
 import {prisma} from "@orionx/db";
-import {newCode, snapshot, sha256, type Award, type Student} from "./index";
-import {fetchSheetRows, inputFingerprint, type SourceRow} from "./sheets";
+import {newCode, snapshot, sha256, studentSchema, awardSchema, type Award, type Student} from "./index";
+import {fetchSheetRows, inputFingerprint, isoDate, sheetsClient, type SourceRow} from "./sheets";
 import {fixtureRows, skillCatalog} from "./fixtures";
 import {DomainError} from "./errors";
+
+export function listCatalogSkills() {
+  return [...skillCatalog().values()].map(s => ({
+    skillId: s.skillId,
+    name: s.name,
+    category: s.category,
+    badgeCode: s.badgeCode,
+    description: s.description,
+  }));
+}
+
+export async function appendSourceAward(params: {
+  studentId: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  program?: string;
+  educationLevel?: string;
+  passportId?: string;
+  initialIssueDate?: string;
+  status?: "Active" | "Graduate";
+  skillId: string;
+  recordId?: string;
+  dateEarned: string;
+  actorId: string;
+}) {
+  let validDate: string;
+  try {
+    validDate = isoDate(params.dateEarned);
+  } catch {
+    throw new DomainError("INVALID_REQUEST", "Date earned must be a valid YYYY-MM-DD ISO date", 400);
+  }
+  const catalog = skillCatalog();
+  const skill = catalog.get(params.skillId.trim());
+  if (!skill) {
+    throw new DomainError("INVALID_REQUEST", `Unknown catalog skill ID: ${params.skillId}`, 400);
+  }
+  const mode = process.env.SOURCE_MODE || "fixture";
+  const before = await sourceRows();
+  const existingRow = before.find(r => r.student.studentId === params.studentId.trim());
+
+  let student: Student;
+  if (existingRow) {
+    student = existingRow.student;
+  } else {
+    const dbStudent = await prisma.student.findUnique({
+      where: {externalId: params.studentId.trim()},
+      include: {passport: true},
+    });
+    const parsedStudent = studentSchema.safeParse({
+      studentId: params.studentId.trim(),
+      firstName: (params.firstName ?? dbStudent?.firstName ?? "").trim(),
+      lastName: (params.lastName ?? dbStudent?.lastName ?? "").trim(),
+      email: (params.email ?? dbStudent?.email ?? "").trim(),
+      program: (params.program ?? dbStudent?.program ?? "").trim(),
+      educationLevel: (params.educationLevel ?? dbStudent?.educationLevel ?? "").trim(),
+      passportId: (params.passportId ?? dbStudent?.passport?.publicId ?? "").trim(),
+      initialIssueDate: params.initialIssueDate
+        ? isoDate(params.initialIssueDate)
+        : dbStudent?.passport?.initialIssueDate
+          ? dbStudent.passport.initialIssueDate.toISOString().slice(0, 10)
+          : "",
+      status: params.status ?? (dbStudent?.status === "Graduate" ? "Graduate" : "Active"),
+    });
+    if (!parsedStudent.success) {
+      throw new DomainError("INVALID_REQUEST", "Complete student details are required for a new student record", 400);
+    }
+    student = parsedStudent.data;
+  }
+
+  const takenRecords = new Set(before.map(r => r.award.recordId));
+  let recordId = params.recordId?.trim() || "";
+  if (recordId) {
+    if (takenRecords.has(recordId)) {
+      throw new DomainError("DUPLICATE_RECORD", `Record ID ${recordId} already exists in the source`, 409);
+    }
+  } else {
+    const compactDate = validDate.replaceAll("-", "");
+    let seq = before.length + 1;
+    do {
+      recordId = `DEMO-ADMIN-${compactDate}-${String(seq).padStart(3, "0")}`;
+      seq++;
+    } while (takenRecords.has(recordId));
+  }
+
+  const award = awardSchema.parse({
+    recordId,
+    studentId: student.studentId,
+    skillId: skill.skillId,
+    name: skill.name,
+    category: skill.category,
+    badgeCode: skill.badgeCode,
+    description: skill.description,
+    dateEarned: validDate,
+  });
+
+  if (mode === "sheets") {
+    const {sheets, sheetId} = await sheetsClient();
+    const metadata = await sheets.spreadsheets.get({
+      spreadsheetId: sheetId,
+      fields: "namedRanges,sheets(properties,protectedRanges)",
+    });
+    const named = metadata.data.namedRanges?.find(range => range.name === "PassportRecords");
+    if (named?.range?.sheetId == null || named.range.endRowIndex == null) {
+      throw new DomainError("SOURCE_UNCONFIGURED", "Sheet is missing the PassportRecords named range", 503);
+    }
+    const sheet = metadata.data.sheets?.find(s => s.properties?.sheetId === named.range!.sheetId);
+    const protection = sheet?.protectedRanges?.find(r => r.description?.startsWith("OrionX: protect structure"));
+    const sheetTabId = named.range.sheetId;
+    const referenceRow = existingRow ?? before[before.length - 1];
+    if (!referenceRow) {
+      throw new DomainError("SOURCE_UNCONFIGURED", "Sheet has no existing template row to copy formulas from", 503);
+    }
+    const index = referenceRow.rowNumber - 1;
+    const first = [
+      student.studentId,
+      student.firstName,
+      student.lastName,
+      student.email,
+      student.program,
+      student.educationLevel,
+      student.passportId,
+      student.initialIssueDate,
+      student.status,
+      award.recordId,
+      award.skillId,
+      award.name,
+      award.category,
+    ];
+    const last = [award.description, award.dateEarned, "NOT SYNCED", "", "", ""];
+    const cells = (values: string[]) => values.map(value => ({userEnteredValue: {stringValue: value}}));
+
+    const requests: Record<string, unknown>[] = [
+      {
+        insertDimension: {
+          range: {sheetId: sheetTabId, dimension: "ROWS", startIndex: index, endIndex: index + 1},
+          inheritFromBefore: false,
+        },
+      },
+      {
+        copyPaste: {
+          source: {sheetId: sheetTabId, startRowIndex: index + 1, endRowIndex: index + 2, startColumnIndex: 0, endColumnIndex: 20},
+          destination: {sheetId: sheetTabId, startRowIndex: index, endRowIndex: index + 1, startColumnIndex: 0, endColumnIndex: 20},
+          pasteType: "PASTE_NORMAL",
+        },
+      },
+      {
+        updateCells: {
+          range: {sheetId: sheetTabId, startRowIndex: index, endRowIndex: index + 1, startColumnIndex: 0, endColumnIndex: 13},
+          rows: [{values: cells(first)}],
+          fields: "userEnteredValue",
+        },
+      },
+      {
+        updateCells: {
+          range: {sheetId: sheetTabId, startRowIndex: index, endRowIndex: index + 1, startColumnIndex: 14, endColumnIndex: 20},
+          rows: [{values: cells(last)}],
+          fields: "userEnteredValue",
+        },
+      },
+      {
+        createDeveloperMetadata: {
+          developerMetadata: {
+            metadataKey: "orionx.record",
+            metadataValue: award.recordId,
+            visibility: "DOCUMENT",
+            location: {dimensionRange: {sheetId: sheetTabId, dimension: "ROWS", startIndex: index, endIndex: index + 1}},
+          },
+        },
+      },
+    ];
+    if (protection?.protectedRangeId != null) {
+      requests.push({
+        updateProtectedRange: {
+          protectedRange: {
+            protectedRangeId: protection.protectedRangeId,
+            unprotectedRanges: [
+              {sheetId: sheetTabId, startRowIndex: 4, endRowIndex: named.range.endRowIndex + 1, startColumnIndex: 0, endColumnIndex: 16},
+            ],
+          },
+          fields: "unprotectedRanges",
+        },
+      });
+    }
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId: sheetId,
+      requestBody: {requests},
+    });
+    const after = await fetchSheetRows();
+    const inserted = after.find(r => r.award.recordId === award.recordId);
+    if (!inserted || inserted.award.badgeCode !== skill.badgeCode) {
+      throw new DomainError("SOURCE_CONFLICT", "Sheet write succeeded but readback formula validation failed", 503);
+    }
+    await prisma.auditEvent.create({
+      data: {
+        actorId: params.actorId,
+        action: "SOURCE_AWARD_ADDED",
+        targetId: award.recordId,
+        detail: {mode: "sheets", studentId: student.studentId, skillId: award.skillId, dateEarned: award.dateEarned},
+      },
+    });
+    return {ok: true, mode: "sheets" as const, row: inserted, totalRows: after.length};
+  }
+
+  // In fixture mode, synthesize the SourceRow and run synchronize with the augmented rows
+  const syntheticRow: SourceRow = {
+    rowNumber: before.length + 5,
+    student,
+    award,
+    syncStatus: "NOT SYNCED",
+    syncedVersion: "",
+    syncedAt: "",
+    syncError: "",
+  };
+  const run = await synchronize(randomUUID(), params.actorId, [...before, syntheticRow]);
+  await prisma.auditEvent.create({
+    data: {
+      actorId: params.actorId,
+      action: "SOURCE_AWARD_ADDED",
+      targetId: award.recordId,
+      detail: {mode: "fixture", studentId: student.studentId, skillId: award.skillId, dateEarned: award.dateEarned, runId: run.id},
+    },
+  });
+  return {ok: true, mode: "fixture" as const, row: syntheticRow, totalRows: before.length + 1, run};
+}
 
 const json = (value: unknown) => JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
 export const awardFingerprint = (award: Award) => sha256(Buffer.from(JSON.stringify(award)));

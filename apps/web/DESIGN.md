@@ -1,14 +1,19 @@
 # OrionX frontend design
 
-The interface follows the supplied BTU passport: orange, charcoal, paper surfaces, bold sans-serif headings, and the original colorful stamps. The UI/UX Pro Max skill informs accessibility, forms, navigation, and responsive behavior. The Taste skill informs the overview composition and presentation of the document artwork.
+The interface uses the **Electric Ice & Aurora** palette: crisp **White & Cool Ice** surfaces (`#FFFFFF` / `#F8FAFC`), **Electric Blue** primary controls (`#2563EB`), **Cyan** blockchain/verification accents (`#06B6D4`), **Pink** skill/identity highlights (`#EC4899`), and **Reddish/Coral** (`#E11D48`) alert and stamp accents.
 
-Design variance is 6, motion intensity is 3, and visual density is 4. The visual foundation is custom print-inspired CSS, rather than an imitation of an official design system. Existing Lucide icons are retained. The Manrope variable font is self-hosted as WOFF2 through `next/font/local`; its license is in `src/app/fonts/`.
+The layout uses a sticky glass **Top Navigation Bar** paired with a **12-Column Bento Grid** canvas. The Manrope variable font is self-hosted as WOFF2 through `next/font/local`; its license is in `src/app/fonts/`.
+
+## Centralized Authentication & Role-Adaptive Navigation
+
+OrionX provides a single unified **Sign in** experience (`/login` and topbar CTA):
+- Users authenticate once with Google OAuth (PKCE).
+- Server-side `resolveSession` determines whether the subject is bound as `admin` (including dual-role `admin` + `studentId` accounts), `UNIVERSITY_VERIFIED` `student`, or a `SELF_REGISTERED` private workspace.
+- Navigation tabs adapt automatically to the verified role, and dual-role administrators receive a one-click **Admin ⇄ Passport** switcher in the top header.
 
 ## Reference coverage
 
 All supplied reference images are represented in `public/images/btu/` as WebP assets. Page crops retain the supplied document design. The complete reference sheet is available from the passport preview.
-
-The 13 image files total 671,796 bytes. Next.js serves these compressed WebP files directly with `images.unoptimized`. The Vercel multi-service deployment serves `/images/btu/*` successfully, but its `/_next/image` route returned 404. Direct delivery avoids that unavailable route and does not use runtime image transformations. Keep dimensions, lazy loading, and the hero preload in the existing Image components.
 
 | Supplied reference                                           | Frontend asset or use                                                                                                                                                           |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -23,23 +28,7 @@ The 13 image files total 671,796 bytes. Next.js serves these compressed WebP fil
 | `Skills Stamps/Artboard 5 (1).png`                           | `ai-advanced.webp` in the skill collection, details, and stamp guide                                                                                                            |
 | `BTU_AI_Skills_Digital_Passport_Hackathon_Challenge_EN.docx` | Permanent passport identity, cumulative achievements, version history, private student access, and public document/issuer/version verification inform the information hierarchy |
 
-The reference explains that the three stamp types are independent learning formats, not a required sequence. The stamp guide preserves this distinction. Reference artwork is explicitly labeled as artwork; issuer and blockchain stamps never serve as live status indicators.
+## Administrator Console & Zero-Transcription Verification
 
-## Design tokens and behavior
-
-`src/app/globals.css` defines semantic colors, a consistent corner-radius scale, and navigation layering. Interactive controls use the orange accent; the original multicolor artwork is preserved. Dark mode follows the system preference. Reduced-motion preferences disable transforms and transitions.
-
-The overview offers category filters, skill search, empty-state recovery, and achievement details. The passport page offers four page previews, native modal enlargement, the five original cover stamps, and the full reference sheet. Dialogs support Escape and restore focus. Mobile navigation traps focus, dismisses with Escape or navigation, and locks background scrolling. A skip link leads to the main content.
-
-Verification preserves the existing public API contract. Client-side feedback covers malformed codes, non-PDF filenames, empty files, files exceeding 10 MB, pending requests, and unavailable services. Student and administrator access continues to use the existing authorization flow. No backend, database, deployment, or blockchain implementation was added or changed.
-
-## Validation
-
-- Production Next.js build and TypeScript checks.
-- Browser interaction checks for filtering, search, empty states, dialogs, all four preview pages, the cover artwork gallery, mobile navigation, and verification feedback.
-- Responsive checks at widths of 320, 375, 390, 768, 1024, and 1440 pixels.
-- Light and dark visual review of the five main pages.
-- Automated WCAG A/AA checks on the main pages in both themes; additional mobile checks with mocked student, administrator, and unbound-account responses.
-- Authorized-state and verification browser checks use test responses. They do not establish live authentication, issuance, or blockchain proof.
-
-The local production Lighthouse mobile run scored 98 for performance and 100 for accessibility, with LCP at 2.3 seconds, zero layout shift, and zero blocking time. These are local lab measurements, not field performance data.
+- **Admin Operations Console (`/admin`)**: Four bento views covering searchable/paginated Passports & Version Dossier Inspector (with Admin PDF download and QR sharing), People/Accounts/Workspaces & Role Management, In-App Google Sheets Award Entry, and Durable Jobs/Conflicts/Audit inspection.
+- **Public Verification (`/verify`)**: Supports automatic verification code discovery from uploaded PDFs (scanning embedded QR image streams and text streams), live camera QR scanning, uploaded screenshot QR decoding, and a 4-pillar proof scorecard that preserves full proof fields even on HTTP 422 tamper mismatches.

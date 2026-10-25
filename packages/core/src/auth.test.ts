@@ -384,7 +384,23 @@ describe("JWT verification and StudentIdentity authorization separation", () => 
     const identity = await authenticate(`Bearer ${token}`);
     expect(identity.role).toBe("admin");
     expect(identity.verification).toBe("ADMIN");
+    expect(identity.studentId).toBeUndefined();
     expect(() => requireAdmin(identity)).not.toThrow();
+
+    // Dual-role administrator (admin with linked studentId) preserves studentId
+    vi.spyOn(prisma.studentIdentity, "findUnique").mockResolvedValueOnce({
+      id: "id-admin-dual",
+      provider: issuer,
+      subject: adminSub,
+      role: "admin",
+      studentId: "stu-dual-1",
+      verifiedBy: "explicit-demo-fixture-seed",
+      verifiedAt: new Date(),
+    });
+    const dualIdentity = await authenticate(`Bearer ${token}`);
+    expect(dualIdentity.role).toBe("admin");
+    expect(dualIdentity.verification).toBe("ADMIN");
+    expect(dualIdentity.studentId).toBe("stu-dual-1");
   });
 
   it("rejects missing, expired, wrong-signature, wrong-issuer, and wrong-audience tokens", async () => {

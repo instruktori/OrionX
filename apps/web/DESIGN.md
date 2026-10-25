@@ -8,6 +8,8 @@ Design variance is 6, motion intensity is 3, and visual density is 4. The visual
 
 All supplied reference images are represented in `public/images/btu/` as WebP assets. Page crops retain the supplied document design. The complete reference sheet is available from the passport preview.
 
+The 13 image files total 671,796 bytes. Next.js serves these compressed WebP files directly with `images.unoptimized`. The Vercel multi-service deployment serves `/images/btu/*` successfully, but its `/_next/image` route returned 404. Direct delivery avoids that unavailable route and does not use runtime image transformations. Keep dimensions, lazy loading, and the hero preload in the existing Image components.
+
 | Supplied reference                                           | Frontend asset or use                                                                                                                                                           |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Passport.png`                                               | `passport-reference.webp`; Cover, About & stamps, Skill collection, and Skill details page previews                                                                             |

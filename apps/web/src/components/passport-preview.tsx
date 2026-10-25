@@ -56,8 +56,10 @@ export function PassportPreview() {
             <Image
               src={imagePath(`passport-${page.id}`)}
               alt={`BTU passport template: ${page.label}. Sample design artwork, not an issued credential.`}
-              width={906}
-              height={593}
+              width={1812}
+              height={1186}
+              quality={100}
+              unoptimized
               priority
             />
             <span className="preview-enlarge">
@@ -80,8 +82,10 @@ export function PassportPreview() {
               <Image
                 src={imagePath(t.image)}
                 alt={`${t.label} stamp`}
-                width={92}
-                height={76}
+                width={320}
+                height={260}
+                quality={100}
+                unoptimized
               />
               <div>
                 <h4>{t.label}</h4>
@@ -112,6 +116,8 @@ export function PassportPreview() {
                   alt={`${a.label}, supplied design artwork`}
                   width={a.width}
                   height={a.height}
+                  quality={100}
+                  unoptimized
                 />
               </div>
               <figcaption>{a.label}</figcaption>
@@ -135,8 +141,10 @@ export function PassportPreview() {
           className="dialog-image"
           src={imagePath(`passport-${page.id}`)}
           alt={`${page.label} of the supplied BTU template. Not an issued credential.`}
-          width={906}
-          height={593}
+          width={1812}
+          height={1186}
+          quality={100}
+          unoptimized
         />
         <p className="preview-caption">
           Design reference only. No credential has been issued.
@@ -151,8 +159,10 @@ export function PassportPreview() {
           className="dialog-image"
           src={imagePath("passport-reference")}
           alt="Complete supplied four-page BTU passport design reference"
-          width={2000}
-          height={1413}
+          width={3000}
+          height={2120}
+          quality={100}
+          unoptimized
         />
         <p className="preview-caption">
           Original design reference. The stamps shown are artwork only.

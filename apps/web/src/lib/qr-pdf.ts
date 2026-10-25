@@ -44,8 +44,9 @@ export function extractCodesFromText(text: string): string[] {
 
 export async function generateQrDataUrl(urlOrCode: string): Promise<string> {
   return QRCode.toDataURL(urlOrCode, {
-    width: 260,
+    width: 720,
     margin: 2,
+    errorCorrectionLevel: "M",
     color: {
       dark: "#0F172A",
       light: "#FFFFFF",

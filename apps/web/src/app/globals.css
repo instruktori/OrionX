@@ -498,12 +498,11 @@ p.lead {
 .hero-art {
   display: block;
   min-width: 0;
-  transform: rotate(-1.5deg);
-  transition: transform 0.22s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .hero-art:hover {
-  transform: rotate(0deg) scale(1.01);
+  transform: translateY(-2px);
 }
 
 .hero-art > img {
@@ -513,6 +512,8 @@ p.lead {
   border: 2px solid #ffffff;
   border-radius: 12px;
   box-shadow: 0 20px 40px rgba(15, 23, 42, 0.14);
+  image-rendering: -webkit-optimize-contrast;
+  backface-visibility: hidden;
 }
 
 .hero-art-caption {
@@ -926,9 +927,15 @@ p.lead {
 .skill-stamp {
   object-fit: contain;
   max-width: 100%;
-  height: 105px;
-  width: 165px;
-  mix-blend-mode: multiply;
+  height: 112px;
+  width: 176px;
+  background: #ffffff;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+  image-rendering: -webkit-optimize-contrast;
+  backface-visibility: hidden;
 }
 
 .skill-card-arrow {
@@ -1802,6 +1809,8 @@ button.action-link {
   border: 1px solid var(--line);
   border-radius: 10px;
   box-shadow: var(--shadow);
+  image-rendering: -webkit-optimize-contrast;
+  backface-visibility: hidden;
 }
 
 .preview-enlarge {
@@ -1855,6 +1864,8 @@ button.action-link {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 4px;
+  image-rendering: -webkit-optimize-contrast;
+  backface-visibility: hidden;
 }
 
 .guide-item h4 {
@@ -1927,6 +1938,8 @@ button.action-link {
   height: auto;
   max-height: 90px;
   object-fit: contain;
+  image-rendering: -webkit-optimize-contrast;
+  backface-visibility: hidden;
 }
 
 .artwork-grid figcaption {
@@ -1970,6 +1983,8 @@ button.action-link {
   display: block;
   width: 100%;
   height: auto;
+  image-rendering: -webkit-optimize-contrast;
+  backface-visibility: hidden;
 }
 
 .skill-detail {

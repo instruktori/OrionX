@@ -58,12 +58,13 @@ export default function Home() {
         >
           <Image
             src={imagePath("passport-cover")}
-            width={906}
-            height={593}
+            width={1812}
+            height={1186}
+            quality={100}
+            unoptimized
             alt="Original BTU AI Skills Digital Passport cover design with colorful stamps"
             priority
             fetchPriority="high"
-            sizes="(max-width: 760px) 90vw, 48vw"
           />
           <span className="hero-art-caption">
             The BTU passport design <MoveUpRight size={15} />

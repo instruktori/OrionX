@@ -85,8 +85,10 @@ export function SkillCollection() {
                 <Image
                   src={imagePath(type.image)}
                   alt=""
-                  width={180}
-                  height={130}
+                  width={540}
+                  height={390}
+                  quality={100}
+                  unoptimized
                   className="skill-stamp"
                 />
                 <ArrowUpRight size={19} className="skill-card-arrow" />
@@ -132,8 +134,10 @@ export function SkillCollection() {
                 skillTypes.find((t) => t.id === selected.category)!.image,
               )}
               alt={`${selected.category} stamp`}
-              width={200}
-              height={150}
+              width={600}
+              height={450}
+              quality={100}
+              unoptimized
               className="skill-stamp"
             />
             <span className="category-label">{selected.category}</span>

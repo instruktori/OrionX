@@ -1,312 +1,327 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-  LayoutDashboard,
-  ShieldCheck,
-  Settings2,
+  ArrowLeft,
+  ArrowUpRight,
+  BookOpen,
+  ChevronRight,
+  Command,
   FileBadge2,
-  Menu,
-  X,
-  Sparkles,
+  GraduationCap,
+  LayoutDashboard,
   LogOut,
-  LogIn,
-  ArrowLeftRight,
+  Menu,
+  Settings2,
+  ShieldCheck,
+  X,
 } from "lucide-react";
 import { useSession } from "@/lib/session";
 import { oauthCallbackTarget } from "@/lib/oauth-redirect";
+import { ThemeToggle } from "./theme-toggle";
 
-export function Shell({ children }: { children: React.ReactNode }) {
+export function Brand() {
+  return (
+    <Link className="brand" href="/" aria-label="OrionX home">
+      <span className="brand-mark">
+        <Command size={19} strokeWidth={2} />
+      </span>
+      <span className="brand-name">
+        orion<span>x</span>
+      </span>
+    </Link>
+  );
+}
+export function Shell({
+  children,
+  onExit,
+  exitBusy = false,
+}: {
+  children: React.ReactNode;
+  onExit?: () => void;
+  exitBusy?: boolean;
+}) {
   const path = usePathname();
   const router = useRouter();
+  const { session, loading, signOut } = useSession();
   const [open, setOpen] = useState(false);
-  const mobileDrawer = useRef<HTMLElement>(null);
-  const menuButton = useRef<HTMLButtonElement>(null);
-  const { session, signOut } = useSession();
-
-  const navItems = useMemo(() => {
-    const items = [{ href: "/", label: "Overview", icon: LayoutDashboard }];
-    if (session?.role === "admin") {
-      items.push({ href: "/admin", label: "Admin", icon: Settings2 });
-      if (session.studentId) {
-        items.push({ href: "/passport", label: "Passport", icon: FileBadge2 });
-      }
-    } else if (session?.role === "student") {
-      items.push({ href: "/passport", label: "Passport", icon: FileBadge2 });
-    }
-    items.push({ href: "/verify", label: "Verify", icon: ShieldCheck });
-    return items;
-  }, [session?.role, session?.studentId]);
-
+  const [signOutError, setSignOutError] = useState("");
+  const drawer = useRef<HTMLElement>(null);
+  const menu = useRef<HTMLButtonElement>(null);
+  const publicPage = ["/", "/login", "/auth/callback"].includes(path);
+  const exam = path.startsWith("/examinations/attempts/");
+  const nav = [
+    { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
+    { href: "/passport", label: "My passport", icon: FileBadge2 },
+    { href: "/examinations", label: "Assessments", icon: BookOpen },
+    { href: "/verify", label: "Verify a credential", icon: ShieldCheck },
+  ];
+  const active = (href: string) =>
+    path === href || (href !== "/" && path.startsWith(href + "/"));
+  const current = path.startsWith("/admin")
+    ? "Administration"
+    : nav.find((n) => active(n.href))?.label || "Workspace";
   useEffect(() => {
-    if (!open) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    mobileDrawer.current?.querySelector<HTMLButtonElement>(".mobile-close")?.focus();
-    const closeOnDesktop = (event: MediaQueryListEvent) => {
-      if (event.matches) setOpen(false);
-    };
-    const desktop = window.matchMedia("(min-width: 861px)");
-    desktop.addEventListener("change", closeOnDesktop);
-    const handleKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-      if (event.key !== "Tab") return;
-      const controls = mobileDrawer.current?.querySelectorAll<HTMLElement>(
-        "a[href], button:not([disabled])",
-      );
-      if (!controls?.length) return;
-      const first = controls[0];
-      const last = controls[controls.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener("keydown", handleKey);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      desktop.removeEventListener("change", closeOnDesktop);
-      document.removeEventListener("keydown", handleKey);
-      menuButton.current?.focus();
-    };
-  }, [open]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
     const callback = oauthCallbackTarget(path, window.location.search);
     if (callback) router.replace(callback);
   }, [path, router]);
-
-  const handleSignOut = async () => {
-    await signOut();
+  useEffect(() => {
     setOpen(false);
-    router.push("/login");
-    router.refresh();
-  };
-
-  const roleBadge = session
-    ? session.role === "admin"
-      ? session.studentId
-        ? "ADMIN+STUDENT"
-        : "ADMIN"
-      : session.verification === "UNIVERSITY_VERIFIED"
-        ? "VERIFIED"
-        : "STUDENT"
-    : null;
-
-  const isDualRole = session?.role === "admin" && Boolean(session?.studentId);
-  const shortIdentity = session?.email
-    ? session.email.split("@")[0]
-    : session
-      ? "Account"
-      : "";
-
+  }, [path]);
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    drawer.current?.querySelector<HTMLButtonElement>(".mobile-close")?.focus();
+    const handle = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+      if (e.key !== "Tab") return;
+      const controls = drawer.current?.querySelectorAll<HTMLElement>(
+        "a[href], button:not([disabled])",
+      );
+      if (!controls?.length) return;
+      const first = controls[0],
+        last = controls[controls.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    const desktop = window.matchMedia("(min-width: 1024px)");
+    const close = () => {
+      if (desktop.matches) setOpen(false);
+    };
+    desktop.addEventListener("change", close);
+    document.addEventListener("keydown", handle);
+    return () => {
+      document.body.style.overflow = previous;
+      document.removeEventListener("keydown", handle);
+      desktop.removeEventListener("change", close);
+      menu.current?.focus();
+    };
+  }, [open]);
+  async function logOut() {
+    try {
+      await signOut();
+      setOpen(false);
+      router.push("/login");
+      router.refresh();
+    } catch {
+      setSignOutError("Unable to sign out. Please try again.");
+    }
+  }
+  const initials = (session?.email?.slice(0, 2) || "OX").toUpperCase();
   return (
-    <div className="shell">
-      <header className="topbar">
-        <div className="topbar-inner">
-          <div className="top-left">
-            <button
-              ref={menuButton}
-              type="button"
-              className="mobile-menu"
-              aria-label={open ? "Close menu" : "Open menu"}
-              aria-expanded={open}
-              aria-controls="workspace-navigation"
-              onClick={() => setOpen(!open)}
-            >
-              {open ? <X size={18} /> : <Menu size={18} />}
-            </button>
-            <Link
-              className="brand"
-              href="/"
-              onClick={() => setOpen(false)}
-              aria-label="OrionX home"
-            >
-              <span className="brand-mark">
-                <Sparkles size={15} />
-              </span>
-              <span className="brand-name">
-                orion<span>x</span>
-              </span>
+    <div
+      className={`shell ${publicPage ? "public-shell" : "workspace-shell"} ${exam ? "exam-shell" : ""}`}
+    >
+      {publicPage ? (
+        <header className="public-header">
+          <Brand />
+          <nav aria-label="Main navigation">
+            <Link href="/#how-it-works">How it works</Link>
+            <Link href="/examinations">Assessments</Link>
+            <Link href="/verify">
+              Verify a credential <ArrowUpRight size={13} />
             </Link>
-            <span className="demo-chip" title="Solana Devnet simulated issuer environment">
-              <span className="status-dot" /> DEVNET
-            </span>
-
-            <nav className="top-nav" aria-label="Main navigation">
-              {navItems.map((item) => {
-                const active = path === item.href;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    aria-current={active ? "page" : undefined}
-                    className={active ? "top-nav-link active" : "top-nav-link"}
-                  >
-                    <item.icon size={14} />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-            </nav>
-          </div>
-
+          </nav>
           <div className="top-actions">
-            {session ? (
-              <div className="session-cluster">
-                <Link
-                  href={
-                    isDualRole
-                      ? path === "/admin"
-                        ? "/passport"
-                        : "/admin"
-                      : session.role === "admin"
-                        ? "/admin"
-                        : "/passport"
-                  }
-                  className="session-pill"
-                  title={
-                    isDualRole
-                      ? `${session.email || session.subject} — Click to switch between Admin and Passport`
-                      : session.email || session.subject
-                  }
-                >
-                  <span className={`role-dot ${session.role === "admin" ? "dot-blue" : "dot-pink"}`} />
-                  <span className="session-email">{shortIdentity}</span>
-                  <span className={`role-tag ${session.role === "admin" ? "tag-blue" : "tag-pink"}`}>
-                    {roleBadge}
-                  </span>
-                </Link>
+            <ThemeToggle />
+            <Link
+              className="button secondary btn-sm"
+              href={
+                session
+                  ? session.role === "admin"
+                    ? "/admin"
+                    : "/dashboard"
+                  : "/login"
+              }
+            >
+              {session ? "Open workspace" : "Sign in"}
+              <ChevronRight size={14} />
+            </Link>
+          </div>
+        </header>
+      ) : (
+        <>
+          {!exam && (
+            <aside
+              ref={drawer}
+              className={`workspace-sidebar ${open ? "is-open" : ""}`}
+              id="workspace-navigation"
+              aria-label="Workspace navigation"
+            >
+              <div className="sidebar-brand">
+                <Brand />
                 <button
+                  className="icon-button mobile-close"
                   type="button"
-                  className="top-auth-btn"
-                  onClick={handleSignOut}
-                  aria-label="Sign out"
-                  title="Sign out"
+                  aria-label="Close menu"
+                  onClick={() => setOpen(false)}
                 >
-                  <LogOut size={14} />
+                  <X size={18} />
                 </button>
               </div>
-            ) : (
-              <Link className="button btn-sm top-signin-cta" href="/login">
-                <LogIn size={14} />
-                <span>Sign in</span>
-              </Link>
-            )}
-          </div>
-        </div>
-      </header>
-
-      <aside
-        ref={mobileDrawer}
-        id="workspace-navigation"
-        className={open ? "sidebar sidebar-open" : "sidebar"}
-        aria-label="Mobile navigation"
-      >
-        <button
-          type="button"
-          className="mobile-close"
-          aria-label="Close menu"
-          onClick={() => setOpen(false)}
-        >
-          <X size={20} />
-        </button>
-        <Link
-          className="brand"
-          href="/"
-          onClick={() => setOpen(false)}
-          aria-label="OrionX home"
-        >
-          <span className="brand-mark">
-            <Sparkles size={18} />
-          </span>
-          <span className="brand-name">
-            orion<span>x</span>
-            <small>AI SKILLS PASSPORT</small>
-          </span>
-        </Link>
-        <div className="nav-caption">NAVIGATION</div>
-        <nav className="nav">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={path === item.href ? "page" : undefined}
-              className={path === item.href ? "active" : ""}
-              onClick={() => setOpen(false)}
-            >
-              <item.icon size={18} />
-              <span>{item.label}</span>
-            </Link>
-          ))}
-        </nav>
-        {isDualRole && (
-          <div className="sidefoot">
-            <ArrowLeftRight size={16} />
-            <b>Dual-role account</b>
-            <p>
-              Your Google account is authorized for Administration and linked to a personal Student Passport.
-            </p>
-          </div>
-        )}
-        <div className="sidebar-bottom">
-          <span className="avatar">
-            {session?.role === "admin"
-              ? "AD"
-              : session?.role === "student"
-                ? "ST"
-                : "OX"}
-          </span>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <b
-              style={{
-                display: "block",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {session?.email || "Guest Visitor"}
-            </b>
-            <small>
-              {session ? `${roleBadge} SESSION` : "Not signed in"}
-            </small>
-          </div>
-          {session ? (
+              <div className="university-switch">
+                <span className="university-icon">
+                  <GraduationCap size={19} />
+                </span>
+                <div>
+                  <strong>BTU</strong>
+                  <small>AI Skills Digital Passport</small>
+                </div>
+                <span className="workspace-label">Workspace</span>
+              </div>
+              <div className="nav-caption">WORKSPACE</div>
+              <nav className="workspace-nav">
+                {nav.map((n) => (
+                  <Link
+                    key={n.href}
+                    href={n.href}
+                    aria-current={active(n.href) ? "page" : undefined}
+                    className={active(n.href) ? "active" : ""}
+                  >
+                    <n.icon size={17} />
+                    <span>{n.label}</span>
+                    {active(n.href) && <span className="nav-active-dot" />}
+                  </Link>
+                ))}
+              </nav>
+              {session?.role === "admin" && (
+                <>
+                  <div className="nav-caption">UNIVERSITY</div>
+                  <nav className="workspace-nav">
+                    <Link
+                      href="/admin"
+                      className={path === "/admin" ? "active" : ""}
+                      aria-current={path === "/admin" ? "page" : undefined}
+                    >
+                      <Settings2 size={17} />
+                      Administration
+                    </Link>
+                    <Link
+                      href="/admin/assessments"
+                      className={path === "/admin/assessments" ? "active" : ""}
+                      aria-current={
+                        path === "/admin/assessments" ? "page" : undefined
+                      }
+                    >
+                      <BookOpen size={17} />
+                      Assessment studio
+                    </Link>
+                  </nav>
+                </>
+              )}
+              <div className="sidebar-bottom">
+                <div className="network-label">
+                  <span className="network-dot" />
+                  Solana Devnet<span className="mono">TEST NETWORK</span>
+                </div>
+                <div className="sidebar-account">
+                  <span className="avatar">{initials}</span>
+                  <div>
+                    <strong>
+                      {loading
+                        ? "Loading account…"
+                        : session?.email || "Your workspace"}
+                    </strong>
+                    <small>
+                      {session
+                        ? session.role === "admin"
+                          ? "Administrator"
+                          : session.verification === "UNIVERSITY_VERIFIED"
+                            ? "University-linked student"
+                            : "Personal account"
+                        : "Sign in to get started"}
+                    </small>
+                  </div>
+                  {session ? (
+                    <button
+                      type="button"
+                      className="icon-button"
+                      onClick={logOut}
+                      aria-label="Sign out"
+                    >
+                      <LogOut size={15} />
+                    </button>
+                  ) : (
+                    <Link href="/login" aria-label="Sign in">
+                      <ChevronRight size={18} />
+                    </Link>
+                  )}
+                </div>
+                {signOutError && (
+                  <p className="field-error" role="alert">
+                    {signOutError}
+                  </p>
+                )}
+              </div>
+            </aside>
+          )}
+          {open && (
             <button
               type="button"
-              className="icon-signout"
-              aria-label="Sign out"
-              title="Sign out"
-              onClick={handleSignOut}
-            >
-              <LogOut size={15} />
-            </button>
-          ) : (
-            <Link
-              href="/login"
-              className="button btn-sm"
+              className="mobile-backdrop"
+              aria-label="Close navigation"
               onClick={() => setOpen(false)}
-            >
-              Sign in
-            </Link>
+            />
           )}
-        </div>
-      </aside>
-
-      {open && (
-        <button
-          className="mobile-backdrop"
-          aria-label="Close navigation"
-          onClick={() => setOpen(false)}
-        />
+          <header className="workspace-topbar" inert={open}>
+            <div className="top-left">
+              {exam ? (
+                <>
+                  {onExit ? (
+                    <button
+                      type="button"
+                      className="back-link exit-button"
+                      onClick={onExit}
+                      disabled={exitBusy}
+                    >
+                      <ArrowLeft size={16} />
+                      Save & leave
+                    </button>
+                  ) : (
+                    <Link className="back-link" href="/examinations">
+                      <ArrowLeft size={16} />
+                      Assessments
+                    </Link>
+                  )}
+                  <span className="topbar-divider" />
+                  <span className="muted">Focused workspace</span>
+                </>
+              ) : (
+                <>
+                  <button
+                    ref={menu}
+                    type="button"
+                    className="icon-button mobile-menu"
+                    aria-label="Open menu"
+                    aria-expanded={open}
+                    aria-controls="workspace-navigation"
+                    onClick={() => setOpen(true)}
+                  >
+                    <Menu size={18} />
+                  </button>
+                  <span className="breadcrumb-org">Workspace</span>
+                  <ChevronRight size={13} className="muted" />
+                  <span>{current}</span>
+                </>
+              )}
+            </div>
+            <div className="top-actions">
+              <span className="topbar-note">
+                <ShieldCheck size={14} />
+                Private by default
+              </span>
+              <ThemeToggle />
+            </div>
+          </header>
+        </>
       )}
-
       <div className="main" inert={open}>
         <main id="main-content" tabIndex={-1} className="content">
           {children}

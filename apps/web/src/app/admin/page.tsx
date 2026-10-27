@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   FileBadge2,
+  BookOpen,
   Users,
   PlusCircle,
   Activity,
@@ -29,6 +30,7 @@ import {
 } from "lucide-react";
 import { Shell } from "@/components/shell";
 import { QrShareModal } from "@/components/qr-share-modal";
+import { Dialog, Button } from "@/components/ui";
 import { api, API, useSession } from "@/lib/session";
 
 type OverviewStats = {
@@ -216,7 +218,11 @@ type AccountsPayload = {
     program: string;
     educationLevel: string;
     status: string;
-    passport: { id: string; publicId: string; latestFinalizedVersion: number } | null;
+    passport: {
+      id: string;
+      publicId: string;
+      latestFinalizedVersion: number;
+    } | null;
     identities: Array<{
       id: string;
       subject: string;
@@ -294,6 +300,14 @@ export default function Admin() {
   const [progress, setProgress] = useState("");
   const [error, setError] = useState("");
   const [bannerSuccess, setBannerSuccess] = useState("");
+  const [confirmation, setConfirmation] = useState<{
+    title: string;
+    message: string;
+    details: { label: string; value: string }[];
+    label: string;
+    action: () => Promise<void>;
+  } | null>(null);
+  const [confirming, setConfirming] = useState(false);
   const stopProcessing = useRef(false);
   const [run, setRun] = useState<{
     id: string;
@@ -570,8 +584,7 @@ export default function Admin() {
     return () => clearInterval(timer);
   }, [run?.id, run?.state, refreshAll]);
 
-  const handleBindIdentity = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const performBindIdentity = async () => {
     setAccountActionPending(true);
     setError("");
     setBannerSuccess("");
@@ -600,15 +613,16 @@ export default function Admin() {
       await Promise.all([loadAccounts(), loadOverview(), loadPassports()]);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Unable to update identity binding",
+        err instanceof Error
+          ? err.message
+          : "Unable to update identity binding",
       );
     } finally {
       setAccountActionPending(false);
     }
   };
 
-  const handleLinkWorkspace = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const performLinkWorkspace = async () => {
     setAccountActionPending(true);
     setError("");
     setBannerSuccess("");
@@ -631,15 +645,13 @@ export default function Admin() {
       setLinkStudentRef("");
       await Promise.all([loadAccounts(), loadOverview(), loadPassports()]);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Unable to link workspace",
-      );
+      setError(err instanceof Error ? err.message : "Unable to link workspace");
     } finally {
       setAccountActionPending(false);
     }
   };
 
-  const handleUnlinkSubject = async (subject: string) => {
+  const performUnlinkSubject = async (subject: string) => {
     setAccountActionPending(true);
     setError("");
     setBannerSuccess("");
@@ -651,15 +663,13 @@ export default function Admin() {
       setBannerSuccess(`Removed binding for subject ${subject}.`);
       await Promise.all([loadAccounts(), loadOverview(), loadPassports()]);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Unable to remove binding",
-      );
+      setError(err instanceof Error ? err.message : "Unable to remove binding");
     } finally {
       setAccountActionPending(false);
     }
   };
 
-  const handleAddAward = async (andProcess: boolean) => {
+  const performAddAward = async (andProcess: boolean) => {
     setSubmittingAward(true);
     setError("");
     setBannerSuccess("");
@@ -696,6 +706,83 @@ export default function Admin() {
     }
   };
 
+  const handleBindIdentity = (event: React.FormEvent) => {
+    event.preventDefault();
+    setConfirmation({
+      title: "Change account access?",
+      message:
+        "This changes which university records and operations this account can access. Review the identity and role before continuing.",
+      details: [
+        { label: "Account subject", value: bindSubject.trim() },
+        {
+          label: "Role",
+          value: bindRole === "admin" ? "Administrator" : "Verified student",
+        },
+        {
+          label: "Student record",
+          value:
+            bindStudentRef.trim() ||
+            (bindPreserveStudent
+              ? "Preserve existing link"
+              : "No student link"),
+        },
+      ],
+      label: "Confirm access change",
+      action: performBindIdentity,
+    });
+  };
+  const handleLinkWorkspace = (event: React.FormEvent) => {
+    event.preventDefault();
+    setConfirmation({
+      title: "Link this student record?",
+      message:
+        "The workspace owner will gain access to this student's private passport and eligible assessments. Check both identifiers carefully.",
+      details: [
+        { label: "Workspace", value: linkWorkspaceId.trim() },
+        { label: "Student record", value: linkStudentRef.trim() },
+      ],
+      label: "Confirm student link",
+      action: performLinkWorkspace,
+    });
+  };
+  const handleUnlinkSubject = (subject: string) => {
+    setConfirmation({
+      title: "Remove account access?",
+      message:
+        "This removes the account's current role and student link. Issued credentials and student records are preserved.",
+      details: [{ label: "Account subject", value: subject }],
+      label: "Remove binding",
+      action: () => performUnlinkSubject(subject),
+    });
+  };
+  const handleAddAward = (andProcess: boolean) => {
+    setConfirmation({
+      title: andProcess
+        ? "Record and process this achievement?"
+        : "Record this achievement?",
+      message: andProcess
+        ? "This writes the achievement to the configured source and runs the existing authorized issuance process."
+        : "This writes the achievement to the configured source. Issuance follows the existing synchronization process.",
+      details: [
+        { label: "Student", value: awardStudentId },
+        { label: "Skill", value: awardSkillId },
+        { label: "Earned date", value: awardDate },
+      ],
+      label: andProcess ? "Record & process" : "Record achievement",
+      action: () => performAddAward(andProcess),
+    });
+  };
+  const confirmOperation = async () => {
+    if (!confirmation || confirming) return;
+    setConfirming(true);
+    try {
+      await confirmation.action();
+      setConfirmation(null);
+    } finally {
+      setConfirming(false);
+    }
+  };
+
   const handleRetryJob = async (jobId: string) => {
     setRetryingJobId(jobId);
     setError("");
@@ -726,18 +813,25 @@ export default function Admin() {
     <Shell>
       <div className="page-heading">
         <div>
-          <div className="eyebrow">UNIVERSITY OPERATIONS CONSOLE</div>
-          <h1>Passport Administration</h1>
+          <div className="eyebrow">UNIVERSITY WORKSPACE</div>
+          <h1>Administration</h1>
           <p className="lead">
-            Manage student passports, Google account bindings, source award
-            entry, and durable Solana Devnet issuance jobs.
+            Manage student records, recognize achievements, and oversee
+            credential issuance.
           </p>
         </div>
-        {session?.studentId && (
-          <Link className="button secondary" href="/passport">
-            <FileBadge2 size={16} /> View My Personal Passport
-          </Link>
-        )}
+        <div className="page-actions">
+          {session?.role === "admin" && (
+            <Link className="button secondary" href="/admin/assessments">
+              <BookOpen size={16} /> Assessment studio
+            </Link>
+          )}
+          {session?.studentId && (
+            <Link className="button secondary" href="/passport">
+              <FileBadge2 size={16} /> View My Personal Passport
+            </Link>
+          )}
+        </div>
       </div>
 
       {loading ? (
@@ -853,14 +947,19 @@ export default function Admin() {
           </div>
 
           {/* Synchronize & Manual Stage Processor Bento Bar */}
-          <section className="card sync-command-card" style={{ marginBottom: 24 }}>
+          <section
+            className="card sync-command-card"
+            style={{ marginBottom: 24 }}
+          >
             <div
               className="section-head"
               style={{ marginTop: 0, marginBottom: 12, flexWrap: "wrap" }}
             >
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <h2 style={{ margin: 0 }}>Synchronize Source & Process Queue</h2>
+                  <h2 style={{ margin: 0 }}>
+                    Synchronize Source & Process Queue
+                  </h2>
                   {run && (
                     <span
                       className={`pill ${
@@ -939,11 +1038,7 @@ export default function Admin() {
             </div>
 
             {progress && (
-              <div
-                role="status"
-                aria-live="polite"
-                className="progress-banner"
-              >
+              <div role="status" aria-live="polite" className="progress-banner">
                 <Sparkles size={15} />
                 <span>{progress}</span>
               </div>
@@ -951,7 +1046,9 @@ export default function Admin() {
 
             {run && run.totals && Object.keys(run.totals).length > 0 && (
               <div role="status" className="sync-totals-strip">
-                <strong>Latest Sync Run ({run.state.replaceAll("_", " ")}):</strong>
+                <strong>
+                  Latest Sync Run ({run.state.replaceAll("_", " ")}):
+                </strong>
                 <span>
                   {Object.entries(run.totals)
                     .map(([k, v]) => `${k}: ${v}`)
@@ -961,7 +1058,11 @@ export default function Admin() {
             )}
 
             {bannerSuccess && (
-              <p role="status" className="notice notice-cyan" style={{ marginBottom: 0 }}>
+              <p
+                role="status"
+                className="notice notice-cyan"
+                style={{ marginBottom: 0 }}
+              >
                 <CheckCircle2
                   size={15}
                   style={{ verticalAlign: "middle", marginRight: 6 }}
@@ -971,7 +1072,11 @@ export default function Admin() {
             )}
 
             {error && (
-              <p role="alert" className="notice notice-crimson" style={{ marginBottom: 0 }}>
+              <p
+                role="alert"
+                className="notice notice-crimson"
+                style={{ marginBottom: 0 }}
+              >
                 <AlertTriangle
                   size={15}
                   style={{ verticalAlign: "middle", marginRight: 6 }}
@@ -982,23 +1087,33 @@ export default function Admin() {
           </section>
 
           {/* 4-Tab Bento Navigation */}
-          <div className="admin-tabs" role="tablist" aria-label="Administration sections">
+          <div
+            className="admin-tabs"
+            role="tablist"
+            aria-label="Administration sections"
+          >
             <button
               type="button"
               role="tab"
               aria-selected={activeTab === "passports"}
-              className={activeTab === "passports" ? "admin-tab active" : "admin-tab"}
+              className={
+                activeTab === "passports" ? "admin-tab active" : "admin-tab"
+              }
               onClick={() => setActiveTab("passports")}
             >
               <FileBadge2 size={16} />
               <span>Passports & Versions</span>
-              <span className="tab-count">{overview?.passportsTotal ?? records.length}</span>
+              <span className="tab-count">
+                {overview?.passportsTotal ?? records.length}
+              </span>
             </button>
             <button
               type="button"
               role="tab"
               aria-selected={activeTab === "accounts"}
-              className={activeTab === "accounts" ? "admin-tab active" : "admin-tab"}
+              className={
+                activeTab === "accounts" ? "admin-tab active" : "admin-tab"
+              }
               onClick={() => setActiveTab("accounts")}
             >
               <Users size={16} />
@@ -1013,7 +1128,9 @@ export default function Admin() {
               type="button"
               role="tab"
               aria-selected={activeTab === "source"}
-              className={activeTab === "source" ? "admin-tab active" : "admin-tab"}
+              className={
+                activeTab === "source" ? "admin-tab active" : "admin-tab"
+              }
               onClick={() => setActiveTab("source")}
             >
               <PlusCircle size={16} />
@@ -1023,7 +1140,9 @@ export default function Admin() {
               type="button"
               role="tab"
               aria-selected={activeTab === "jobs"}
-              className={activeTab === "jobs" ? "admin-tab active" : "admin-tab"}
+              className={
+                activeTab === "jobs" ? "admin-tab active" : "admin-tab"
+              }
               onClick={() => setActiveTab("jobs")}
             >
               <Activity size={16} />
@@ -1039,7 +1158,10 @@ export default function Admin() {
           {/* TAB 1: PASSPORTS & VERSION INSPECTOR */}
           {activeTab === "passports" && (
             <section className="card">
-              <div className="section-head" style={{ marginTop: 0, flexWrap: "wrap" }}>
+              <div
+                className="section-head"
+                style={{ marginTop: 0, flexWrap: "wrap" }}
+              >
                 <div>
                   <h2>Student Passports Directory</h2>
                   <p className="muted">
@@ -1053,7 +1175,10 @@ export default function Admin() {
               </div>
 
               <div className="admin-toolbar">
-                <div className="search-field" style={{ flex: 1, maxWidth: 420 }}>
+                <div
+                  className="search-field"
+                  style={{ flex: 1, maxWidth: 420 }}
+                >
                   <Search size={16} />
                   <label htmlFor="student-search" className="sr-only">
                     Search student records
@@ -1083,7 +1208,11 @@ export default function Admin() {
                   )}
                 </div>
 
-                <div className="filter-group" role="group" aria-label="Filter by issuance status">
+                <div
+                  className="filter-group"
+                  role="group"
+                  aria-label="Filter by issuance status"
+                >
                   {[
                     { id: "ALL", label: "All Records" },
                     { id: "ISSUED", label: "Finalized" },
@@ -1317,7 +1446,10 @@ export default function Admin() {
                   </div>
                   <form onSubmit={handleBindIdentity} className="form-stack">
                     <div>
-                      <label htmlFor="bind-subject-input" className="field-label">
+                      <label
+                        htmlFor="bind-subject-input"
+                        className="field-label"
+                      >
                         Immutable Google / Provider Subject ID (UUID)
                       </label>
                       <input
@@ -1331,7 +1463,10 @@ export default function Admin() {
                     </div>
                     <div className="columns" style={{ gap: 12 }}>
                       <div>
-                        <label htmlFor="bind-role-select" className="field-label">
+                        <label
+                          htmlFor="bind-role-select"
+                          className="field-label"
+                        >
                           Application Role
                         </label>
                         <select
@@ -1352,7 +1487,9 @@ export default function Admin() {
                           className="field-label"
                         >
                           Student Record{" "}
-                          {bindRole === "admin" ? "(Optional Dual-Role)" : "(Required)"}
+                          {bindRole === "admin"
+                            ? "(Optional Dual-Role)"
+                            : "(Required)"}
                         </label>
                         <input
                           id="bind-student-input"
@@ -1409,7 +1546,10 @@ export default function Admin() {
 
               {/* Unified Search across Workspaces & Bindings */}
               <section className="card">
-                <div className="section-head" style={{ marginTop: 0, flexWrap: "wrap" }}>
+                <div
+                  className="section-head"
+                  style={{ marginTop: 0, flexWrap: "wrap" }}
+                >
                   <div>
                     <h2>Self-Registered Workspaces & Active Role Bindings</h2>
                     <p className="muted">
@@ -1552,7 +1692,11 @@ export default function Admin() {
                             </span>
                           </td>
                           <td>
-                            <b>{idRow.workspace?.email || idRow.student?.email || "—"}</b>
+                            <b>
+                              {idRow.workspace?.email ||
+                                idRow.student?.email ||
+                                "—"}
+                            </b>
                             {idRow.workspace && (
                               <div className="muted mono">
                                 {idRow.workspace.workspaceId}
@@ -1567,7 +1711,11 @@ export default function Admin() {
                                   {idRow.student.firstName}{" "}
                                   {idRow.student.lastName}
                                 </b>{" "}
-                                (<code className="mono">{idRow.student.externalId}</code>)
+                                (
+                                <code className="mono">
+                                  {idRow.student.externalId}
+                                </code>
+                                )
                                 {idRow.student.passport && (
                                   <div className="muted mono">
                                     Passport: {idRow.student.passport.publicId}{" "}
@@ -1585,7 +1733,9 @@ export default function Admin() {
                             )}
                           </td>
                           <td className="mono">
-                            {new Date(idRow.verifiedAt).toISOString().slice(0, 10)}
+                            {new Date(idRow.verifiedAt)
+                              .toISOString()
+                              .slice(0, 10)}
                           </td>
                           <td>
                             <div className="page-actions">
@@ -1755,7 +1905,8 @@ export default function Admin() {
                     <span className="mini-kicker">TARGET STUDENT PASSPORT</span>
                     <b>
                       {selectedStudentObj.firstName}{" "}
-                      {selectedStudentObj.lastName} ({selectedStudentObj.externalId})
+                      {selectedStudentObj.lastName} (
+                      {selectedStudentObj.externalId})
                     </b>
                     <span className="muted">
                       Permanent ID:{" "}
@@ -1828,7 +1979,11 @@ export default function Admin() {
                       retry eligible jobs.
                     </p>
                   </div>
-                  <div className="filter-group" role="group" aria-label="Filter jobs">
+                  <div
+                    className="filter-group"
+                    role="group"
+                    aria-label="Filter jobs"
+                  >
                     {[
                       { id: "ALL", label: "All Jobs" },
                       { id: "ACTIVE", label: "Active / Queued" },
@@ -1977,7 +2132,12 @@ export default function Admin() {
                           <tr key={c.id}>
                             <td className="mono">{c.studentId || "—"}</td>
                             <td className="mono">{c.recordId || "—"}</td>
-                            <td style={{ color: "var(--crimson)", fontWeight: 600 }}>
+                            <td
+                              style={{
+                                color: "var(--crimson)",
+                                fontWeight: 600,
+                              }}
+                            >
                               {c.reason}
                             </td>
                             <td className="mono">
@@ -2030,7 +2190,10 @@ export default function Admin() {
                       {auditEvents.map((ev) => (
                         <tr key={ev.id}>
                           <td className="mono">
-                            {new Date(ev.createdAt).toISOString().replace("T", " ").slice(0, 19)}
+                            {new Date(ev.createdAt)
+                              .toISOString()
+                              .replace("T", " ")
+                              .slice(0, 19)}
                           </td>
                           <td>
                             <span className="pill pill-blue">{ev.action}</span>
@@ -2129,10 +2292,7 @@ export default function Admin() {
                           }}
                         >
                           {selectedPassport.student.identities.map((id) => (
-                            <span
-                              key={id.id}
-                              className="pill pill-cyan mono"
-                            >
+                            <span key={id.id} className="pill pill-cyan mono">
                               {id.role.toUpperCase()}: {id.subject}
                             </span>
                           ))}
@@ -2150,8 +2310,7 @@ export default function Admin() {
                     </h3>
                     {selectedPassport.versions.map((ver) => {
                       const isLatest =
-                        ver.number ===
-                        selectedPassport.latestFinalizedVersion;
+                        ver.number === selectedPassport.latestFinalizedVersion;
                       const isFinalized = Boolean(
                         ver.finalizedSlot && ver.storageKey,
                       );
@@ -2275,6 +2434,39 @@ export default function Admin() {
           )}
         </>
       )}
+      <Dialog
+        open={!!confirmation}
+        title={confirmation?.title || "Confirm operation"}
+        onClose={() => {
+          if (!confirming) setConfirmation(null);
+        }}
+      >
+        {confirmation && (
+          <>
+            <p>{confirmation.message}</p>
+            <dl className="exam-facts">
+              {confirmation.details.map((detail) => (
+                <div key={detail.label}>
+                  <dt>{detail.label}</dt>
+                  <dd className="mono">{detail.value}</dd>
+                </div>
+              ))}
+            </dl>
+            <div className="page-actions">
+              <Button
+                secondary
+                onClick={() => setConfirmation(null)}
+                disabled={confirming}
+              >
+                Cancel
+              </Button>
+              <Button onClick={() => void confirmOperation()} busy={confirming}>
+                {confirmation.label}
+              </Button>
+            </div>
+          </>
+        )}
+      </Dialog>
     </Shell>
   );
 }

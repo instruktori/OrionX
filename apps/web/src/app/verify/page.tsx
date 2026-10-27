@@ -28,6 +28,8 @@ import {
 
 type Result = {
   message: string;
+  errorCode?: string;
+  unavailable?: boolean;
   registration?: string;
   integrity?: string;
   issuerTrust?: string;
@@ -119,6 +121,8 @@ export default function Verify() {
         }
         // Preserve structured proof fields on BOTH 200 and non-200 (e.g. HTTP 422 MISMATCH or 404 UNKNOWN_CODE)!
         setResult({
+          errorCode: data.errorCode || data.error?.code,
+          unavailable: response.status >= 500,
           message:
             data.message ||
             data.error?.message ||
@@ -139,6 +143,7 @@ export default function Verify() {
         });
       } catch {
         setResult({
+          unavailable: true,
           message:
             "The verification service is unavailable. No proof has been established. Please try again later.",
         });
@@ -331,18 +336,20 @@ export default function Verify() {
   };
 
   const isTampered = result?.integrity === "MISMATCH";
-  const isMatched = result?.integrity === "MATCH";
   const isRegistered = result?.registration === "REGISTERED";
+  const isMatched = isRegistered && result?.integrity === "MATCH";
+  const isUnavailable =
+    result?.unavailable || result?.registration === "UNAVAILABLE";
 
   return (
     <Shell>
       <div className="page-heading">
         <div>
-          <div className="eyebrow">PUBLIC ON-CHAIN & BYTE VERIFICATION</div>
-          <h1>Verify a Digital Passport</h1>
+          <div className="eyebrow">INDEPENDENT CREDENTIAL VERIFICATION</div>
+          <h1>Trust, with proof.</h1>
           <p className="lead">
-            Drop an issued PDF for instant zero-transcription byte verification,
-            scan a passport QR code, or look up a version code directly.
+            Check a passport’s registration and issuer, or upload its PDF to
+            verify document integrity. No account required.
           </p>
         </div>
         <div className="page-actions">
@@ -632,11 +639,13 @@ export default function Verify() {
             className={`result-panel ${
               isTampered
                 ? "result-panel-crimson"
-                : isMatched
-                  ? "result-panel-cyan"
-                  : isRegistered
-                    ? "result-panel-blue"
-                    : "result-panel-crimson"
+                : isUnavailable
+                  ? "result-panel-blue"
+                  : isMatched
+                    ? "result-panel-cyan"
+                    : isRegistered
+                      ? "result-panel-blue"
+                      : "result-panel-crimson"
             }`}
           >
             <div
@@ -652,13 +661,17 @@ export default function Verify() {
                   <AlertCircle size={22} color="var(--primary)" />
                 )}
                 <strong style={{ fontSize: 16 }}>
-                  {isTampered
-                    ? "Document Integrity Mismatch (Tampered or Modified PDF)"
-                    : isMatched
-                      ? "Authentic Registered Document — Exact Byte Match"
-                      : isRegistered
-                        ? "Registered On-Chain Record Found"
-                        : "Verification Unsuccessful"}
+                  {isUnavailable
+                    ? "Verification is temporarily unavailable"
+                    : isTampered
+                      ? "This document doesn’t match its registered proof"
+                      : isMatched
+                        ? "Document matches its registered proof"
+                        : isRegistered
+                          ? "Registered record found"
+                          : result.errorCode === "UNKNOWN_CODE"
+                            ? "No credential found for this code"
+                            : "Verification could not be completed"}
                 </strong>
               </div>
               {result.version != null && (
@@ -668,7 +681,13 @@ export default function Verify() {
               )}
             </div>
 
-            <p style={{ fontSize: 14, color: "var(--ink)", margin: "6px 0 16px" }}>
+            <p
+              style={{
+                fontSize: 14,
+                color: "var(--ink)",
+                margin: "6px 0 16px",
+              }}
+            >
               {result.message}
             </p>
 
@@ -779,7 +798,9 @@ export default function Verify() {
             )}
 
             {/* Technical Chain Evidence Accordion */}
-            {(result.pdfSha256 || result.versionPda || result.chainEvidence) && (
+            {(result.pdfSha256 ||
+              result.versionPda ||
+              result.chainEvidence) && (
               <details style={{ marginTop: 16 }}>
                 <summary
                   style={{
@@ -833,26 +854,26 @@ export default function Verify() {
       </div>
 
       <section className="verification-explainer">
-        <h2>How OrionX Verification Works</h2>
+        <h2>Understand what’s being checked</h2>
         <div className="verification-checks">
           {[
             {
               icon: Fingerprint,
-              title: "Exact-Byte PDF Integrity",
+              title: "Document integrity",
               description:
-                "Compares the uploaded PDF with its registered SHA-256 fingerprint on Solana. Even a 1-bit edit triggers an immediate MISMATCH.",
+                "The PDF’s fingerprint is compared with its registered proof. A code lookup checks registration; upload the PDF to check that its contents match.",
             },
             {
               icon: History,
-              title: "Cumulative Version Lineage",
+              title: "Version history",
               description:
-                "Verifies whether a passport is the LATEST version or an authentic historical version that has since been SUPERSEDED.",
+                "See whether a credential is the latest cumulative version or a historical record. A newer version doesn’t erase the history of an earlier one.",
             },
             {
               icon: ShieldCheck,
-              title: "Independent Issuer Trust",
+              title: "Issuer authority",
               description:
-                "Separates on-chain registration from institutional authority so demo credentials are never confused with official university issuance.",
+                "Blockchain registration and university authority are separate checks. A demo issuer is identified explicitly and doesn’t establish official university authorization.",
             },
           ].map((x) => (
             <div key={x.title} className="explainer-card">

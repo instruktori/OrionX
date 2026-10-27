@@ -1,34 +1,32 @@
-# OrionX frontend design
+# OrionX — Ink / Signal
 
-The interface uses the **Electric Ice & Aurora** palette: crisp **White & Cool Ice** surfaces (`#FFFFFF` / `#F8FAFC`), **Electric Blue** primary controls (`#2563EB`), **Cyan** blockchain/verification accents (`#06B6D4`), **Pink** skill/identity highlights (`#EC4899`), and **Reddish/Coral** (`#E11D48`) alert and stamp accents.
+OrionX uses a restrained neutral foundation, a blue interaction accent, and separate semantic colors for recorded progress, warnings, and errors. The self-hosted Manrope variable font is retained. There are no external font requests or new production dependencies.
 
-The layout uses a sticky glass **Top Navigation Bar** paired with a **12-Column Bento Grid** canvas. The Manrope variable font is self-hosted as WOFF2 through `next/font/local`; its license is in `src/app/fonts/`.
+## Foundations
 
-## Centralized Authentication & Role-Adaptive Navigation
+`src/app/globals.css` owns paired light/dark tokens for backgrounds, surfaces, text, borders, actions, statuses, radius, spacing, and navigation. Dark is the initial theme; the theme control persists the user's choice locally and the root bootstrap applies it before paint. Interactive controls share visible focus, hover, press, busy, and disabled states. Motion uses CSS, respects reduced motion, and does not delay interaction.
 
-OrionX provides a single unified **Sign in** experience (`/login` and topbar CTA):
-- Users authenticate once with Google OAuth (PKCE).
-- Server-side `resolveSession` determines whether the subject is bound as `admin` (including dual-role `admin` + `studentId` accounts), `UNIVERSITY_VERIFIED` `student`, or a `SELF_REGISTERED` private workspace.
-- Navigation tabs adapt automatically to the verified role, and dual-role administrators receive a one-click **Admin ⇄ Passport** switcher in the top header.
+`components/ui.tsx` provides page headings, status badges, buttons, skeletons, error/empty states, and a native modal dialog. Existing tables, upload tools, QR sharing, and artwork dialogs use the same tokens. Native radio/checkbox inputs retain their keyboard behavior. Technical identifiers use monospace and numeric metrics use tabular figures.
 
-## Reference coverage
+## Information architecture
 
-All supplied reference images are represented in `public/images/btu/` as WebP assets. Page crops retain the supplied document design. The complete reference sheet is available from the passport preview.
+- `/`: public product explanation and illustrative passport anatomy. No fictional student records or simulated progress metrics.
+- `/login`: existing Google PKCE sign-in, with a concise explanation of student and authorized staff access.
+- `/dashboard`: private student overview sourced from passport and assessment APIs; explicit onboarding and empty states.
+- `/passport`: actual identity, finalized skills, cumulative versions, private PDF downloads, QR/link sharing, and independent verification. Original BTU artwork is preserved in an optional, explicitly labeled reference section.
+- `/examinations`: published assessment discovery, filtering, search, active attempts, and history.
+- `/examinations/[id]`: objectives, question formats, prerequisites, timing, passing threshold, and attempt rules before starting.
+- `/examinations/attempts/[id]`: focused assessment with server-backed progress, question navigation, flags, save/resume, confirmation, and results.
+- `/verify`: existing PDF/QR/camera/code tools, with registration, document integrity, currency, and issuer authority kept distinct.
+- `/admin`: existing student/account/source/issuance/audit operations, using the shared application shell and visual system.
+- `/admin/assessments`: authorized draft creation/editing, publishing, archiving, and assessment metadata.
 
-| Supplied reference                                           | Frontend asset or use                                                                                                                                                           |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Passport.png`                                               | `passport-reference.webp`; Cover, About & stamps, Skill collection, and Skill details page previews                                                                             |
-| `First Page Stamps/1_1@3x.png`                               | `latest-skillset.webp` in the cover artwork gallery                                                                                                                             |
-| `First Page Stamps/2_1@3x.png`                               | `blockchain-verified.webp` in the cover artwork gallery                                                                                                                         |
-| `First Page Stamps/3_1@3x.png`                               | `digital-passport.webp` in the cover artwork gallery                                                                                                                            |
-| `First Page Stamps/4_1@3x.png`                               | `international-skills.webp` in the cover artwork gallery                                                                                                                        |
-| `First Page Stamps/5_1@3x.png`                               | `issued-by-btu.webp` in the cover artwork gallery                                                                                                                               |
-| `Skills Stamps/Artboard 3 (2).png`                           | `ai-skill.webp` in the skill collection, details, and stamp guide                                                                                                               |
-| `Skills Stamps/Artboard 4 (1).png`                           | `ai-applied.webp` in the skill collection, details, and stamp guide                                                                                                             |
-| `Skills Stamps/Artboard 5 (1).png`                           | `ai-advanced.webp` in the skill collection, details, and stamp guide                                                                                                            |
-| `BTU_AI_Skills_Digital_Passport_Hackathon_Challenge_EN.docx` | Permanent passport identity, cumulative achievements, version history, private student access, and public document/issuer/version verification inform the information hierarchy |
+The workspace uses a desktop sidebar and a mobile drawer with focus containment, Escape handling, and focus restoration. Assessments use a focused layout and an explicit save-before-leaving action. Forms and data tables stay within the viewport; wide operational tables scroll within their labeled region.
 
-## Administrator Console & Zero-Transcription Verification
+## Trust and data
 
-- **Admin Operations Console (`/admin`)**: Four bento views covering searchable/paginated Passports & Version Dossier Inspector (with Admin PDF download and QR sharing), People/Accounts/Workspaces & Role Management, In-App Google Sheets Award Entry, and Durable Jobs/Conflicts/Audit inspection.
-- **Public Verification (`/verify`)**: Supports automatic verification code discovery from uploaded PDFs (scanning embedded QR image streams and text streams), live camera QR scanning, uploaded screenshot QR decoding, and a 4-pillar proof scorecard that preserves full proof fields even on HTTP 422 tamper mismatches.
+A private workspace is not an issued credential. Assessment completion is not a badge. A chain registration is not university issuer attestation. Code lookup alone does not prove PDF integrity. Historical versions are distinguished from the latest finalized version.
+
+The shared session provider avoids duplicate authentication requests. The OAuth callback refreshes that provider after the server sets HttpOnly cookies. Authorization, credential issuance, file integrity checks, and assessment scoring remain server-owned.
+
+See `docs/ASSESSMENTS.md` for the additive database migration, assessment contracts, integrity rules, and validation procedure.

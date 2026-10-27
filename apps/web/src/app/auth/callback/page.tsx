@@ -4,10 +4,11 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ShieldCheck, AlertTriangle, ArrowLeft } from "lucide-react";
 import { Shell } from "@/components/shell";
-import { api } from "@/lib/session";
+import { api, useSession } from "@/lib/session";
 
 function CallbackHandler() {
   const router = useRouter();
+  const { refresh } = useSession();
   const searchParams = useSearchParams();
   const handled = useRef(false);
   const [error, setError] = useState("");
@@ -50,7 +51,10 @@ function CallbackHandler() {
       method: "POST",
       body: JSON.stringify({ code, state }),
     })
-      .then((result) => {
+      .then(async (result) => {
+        // The root provider survives client navigation. Refresh it after the
+        // callback sets HttpOnly cookies, before opening the private workspace.
+        await refresh();
         const destination =
           typeof result?.redirectTo === "string" &&
           result.redirectTo.startsWith("/")

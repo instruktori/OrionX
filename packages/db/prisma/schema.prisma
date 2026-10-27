@@ -29,18 +29,19 @@ enum TrustMode {
 }
 
 model Student {
-  id             String            @id @default(cuid())
-  externalId     String            @unique
-  email          String            @unique
-  firstName      String
-  lastName       String
-  program        String
-  educationLevel String
-  status         String
-  passport       Passport?
-  awards         Award[]
-  identities     StudentIdentity[]
-  createdAt      DateTime          @default(now())
+  id                 String              @id @default(cuid())
+  externalId         String              @unique
+  email              String              @unique
+  firstName          String
+  lastName           String
+  program            String
+  educationLevel     String
+  status             String
+  passport           Passport?
+  awards             Award[]
+  identities         StudentIdentity[]
+  assessmentAttempts AssessmentAttempt[]
+  createdAt          DateTime            @default(now())
 }
 
 model Passport {
@@ -75,33 +76,33 @@ model Award {
 }
 
 model Version {
-  id            String           @id @default(cuid())
-  passportId    String
-  passport      Passport         @relation(fields: [passportId], references: [id])
-  number        Int
-  codeHash      String           @unique
-  code          String           @unique
-  intentDigest  String
-  snapshot      Json
-  pdfSha256     String?
-  storageKey    String?
-  stagingKey    String           @unique
-  pageCount     Int?
-  byteLength    Int?
-  trustMode     TrustMode        @default(DEMO)
-  state         JobState         @default(DISCOVERED)
-  txSignature   String?
-  versionPda    String?
-  finalizedSlot BigInt?
-  chainCluster String?
-  chainProgramId String?
+  id               String           @id @default(cuid())
+  passportId       String
+  passport         Passport         @relation(fields: [passportId], references: [id])
+  number           Int
+  codeHash         String           @unique
+  code             String           @unique
+  intentDigest     String
+  snapshot         Json
+  pdfSha256        String?
+  storageKey       String?
+  stagingKey       String           @unique
+  pageCount        Int?
+  byteLength       Int?
+  trustMode        TrustMode        @default(DEMO)
+  state            JobState         @default(DISCOVERED)
+  txSignature      String?
+  versionPda       String?
+  finalizedSlot    BigInt?
+  chainCluster     String?
+  chainProgramId   String?
   chainGenesisHash String?
-  finalizedAt   DateTime?
-  awards        VersionAward[]
-  attempts      ChainAttempt[]
-  writebacks    SheetWriteback[]
-  createdAt     DateTime         @default(now())
-  jobs          Job[]
+  finalizedAt      DateTime?
+  awards           VersionAward[]
+  attempts         ChainAttempt[]
+  writebacks       SheetWriteback[]
+  createdAt        DateTime         @default(now())
+  jobs             Job[]
 
   @@unique([passportId, number])
   @@unique([passportId, intentDigest])
@@ -266,4 +267,46 @@ model SheetWriteback {
 
   @@unique([recordId, versionId])
   @@index([state])
+}
+
+/// Private assessment content. Only the authenticated server can access answer keys.
+model Assessment {
+  id              String              @id @default(cuid())
+  title           String
+  description     String
+  objectives      Json
+  skills          Json
+  difficulty      String
+  durationMinutes Int?
+  passingPercent  Int
+  maxAttempts     Int
+  questions       Json
+  publishedAt     DateTime?
+  archivedAt      DateTime?
+  createdBy       String
+  createdAt       DateTime            @default(now())
+  attempts        AssessmentAttempt[]
+}
+
+/// A frozen assessment snapshot keeps grading consistent after publication.
+model AssessmentAttempt {
+  id           String     @id @default(cuid())
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id])
+  studentId    String
+  student      Student    @relation(fields: [studentId], references: [id])
+  number       Int
+  content      Json
+  answers      Json
+  flagged      Json
+  revision     Int        @default(0)
+  startedAt    DateTime   @default(now())
+  expiresAt    DateTime?
+  submittedAt  DateTime?
+  scorePercent Int?
+  passed       Boolean?
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([assessmentId, studentId, number])
+  @@index([studentId, startedAt])
 }

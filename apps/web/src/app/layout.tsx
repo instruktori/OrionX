@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { SessionProvider } from "@/lib/session";
 
 const manrope = localFont({
   src: "./fonts/Manrope.woff2",
@@ -18,12 +19,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="dark" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem('orionx-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}`,
+          }}
+        />
+      </head>
       <body className={manrope.variable}>
         <a className="skip-link" href="#main-content">
           Skip to main content
         </a>
-        {children}
+        <SessionProvider>{children}</SessionProvider>
       </body>
     </html>
   );

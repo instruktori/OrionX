@@ -30,6 +30,7 @@ import {supabaseAuthServiceConfig} from "@orionx/core/src/config";
 import {createJobProcessor} from "@orionx/core/src/processor";
 import {z} from "zod";
 import multer from "multer";
+import * as assessments from "./assessments";
 
 const cookie = (req: Request, key: string) =>
   (req.headers.cookie || "")
@@ -126,6 +127,82 @@ class Errors implements ExceptionFilter {
 
 @Controller("api/v1")
 class ApiController {
+  @Get("assessments")
+  async assessmentCatalog(@Req() req: Request, @Res() res: Response) {
+    const user = await identity(req);
+    res.setHeader("Cache-Control", "private, no-store");
+    res.json(await assessments.catalog(user));
+  }
+
+  @Get("assessments/:id")
+  async assessmentOverview(@Req() req: Request, @Param("id") id: string, @Res() res: Response) {
+    const user = await identity(req);
+    res.setHeader("Cache-Control", "private, no-store");
+    res.json(await assessments.assessmentDetail(id, user));
+  }
+
+  @Post("assessments/:id/attempts")
+  @HttpCode(200)
+  async beginAssessment(@Req() req: Request, @Param("id") id: string) {
+    return assessments.beginAttempt(id, await identity(req));
+  }
+
+  @Get("assessment-attempts/:id")
+  async assessmentAttempt(@Req() req: Request, @Param("id") id: string, @Res() res: Response) {
+    const user = await identity(req);
+    res.setHeader("Cache-Control", "private, no-store");
+    res.json(await assessments.readAttempt(id, user));
+  }
+
+  @Post("assessment-attempts/:id/save")
+  @HttpCode(200)
+  async saveAssessment(@Req() req: Request, @Param("id") id: string, @Body() body: unknown) {
+    return assessments.saveAttempt(id, await identity(req), body);
+  }
+
+  @Post("assessment-attempts/:id/submit")
+  @HttpCode(200)
+  async submitAssessment(@Req() req: Request, @Param("id") id: string, @Body() body: unknown) {
+    return assessments.saveAttempt(id, await identity(req), body, true);
+  }
+
+  @Get("admin/assessments")
+  async adminAssessments(@Req() req: Request, @Res() res: Response) {
+    await admin(req);
+    res.setHeader("Cache-Control", "private, no-store");
+    res.json(await assessments.listAdminAssessments());
+  }
+
+  @Post("admin/assessments")
+  @HttpCode(200)
+  async createAssessment(@Req() req: Request, @Body() body: unknown) {
+    return assessments.createAssessment(body, await admin(req));
+  }
+
+  @Get("admin/assessments/:id")
+  async editAssessment(@Req() req: Request, @Param("id") id: string, @Res() res: Response) {
+    await admin(req);
+    res.setHeader("Cache-Control", "private, no-store");
+    res.json(await assessments.readAdminAssessment(id));
+  }
+
+  @Post("admin/assessments/:id/update")
+  @HttpCode(200)
+  async updateAssessment(@Req() req: Request, @Param("id") id: string, @Body() body: unknown) {
+    return assessments.updateAssessment(id, body, await admin(req));
+  }
+
+  @Post("admin/assessments/:id/publish")
+  @HttpCode(200)
+  async publishAssessment(@Req() req: Request, @Param("id") id: string) {
+    return assessments.publishAssessment(id, await admin(req));
+  }
+
+  @Post("admin/assessments/:id/archive")
+  @HttpCode(200)
+  async archiveAssessment(@Req() req: Request, @Param("id") id: string) {
+    return assessments.archiveAssessment(id, await admin(req));
+  }
   @Get("health/live")
   live() {
     return {status: "ok", service: "orionx-api"};

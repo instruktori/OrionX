@@ -12,6 +12,7 @@ import {
   Settings2,
 } from "lucide-react";
 import { Shell } from "@/components/shell";
+import { PassportIdentity } from "@/components/passport-identity";
 import { startGoogleSignIn, useSession } from "@/lib/session";
 
 function GoogleMark() {
@@ -51,7 +52,14 @@ function LoginContent() {
   const [connecting, setConnecting] = useState(false);
 
   const queryError = searchParams.get("error");
-  const nextPath = searchParams.get("next") || "/passport";
+  const rawNext = searchParams.get("next");
+  const nextPath =
+    rawNext &&
+    rawNext.startsWith("/") &&
+    !rawNext.startsWith("//") &&
+    !/[\\\r\n]/.test(rawNext)
+      ? rawNext
+      : "/passport";
   const authCode = searchParams.get("code");
 
   useEffect(() => {
@@ -63,15 +71,24 @@ function LoginContent() {
 
   useEffect(() => {
     if (!sessionLoading && session?.authorized && session.role && !queryError) {
-      const target =
-        searchParams.get("next") ||
-        (session.role === "admin" ? "/admin" : "/passport");
+      const target = rawNext
+        ? nextPath
+        : session.role === "admin"
+          ? "/admin"
+          : "/dashboard";
       const timer = setTimeout(() => {
         router.replace(target);
       }, 350);
       return () => clearTimeout(timer);
     }
-  }, [sessionLoading, session?.authorized, session?.role, queryError, router, searchParams]);
+  }, [
+    sessionLoading,
+    session?.authorized,
+    session?.role,
+    queryError,
+    router,
+    searchParams,
+  ]);
 
   const activeError = error || queryError || "";
 
@@ -95,13 +112,12 @@ function LoginContent() {
       <section className="card auth-card">
         <div className="auth-badge">
           <Sparkles size={15} />
-          <span>UNIFIED SINGLE SIGN-ON</span>
+          <span>YOUR PRIVATE WORKSPACE</span>
         </div>
         <h2>Welcome to OrionX</h2>
         <p className="muted" style={{ lineHeight: 1.7, marginBottom: 22 }}>
-          Sign in once with your Google account. OrionX automatically detects
-          your role—routing students directly to their private AI Skills
-          Passport and authorized staff to the Administrator Console.
+          Your skills, assessments, and achievements, together in one place.
+          Continue with your Google account to get started.
         </p>
 
         {activeError && (
@@ -120,9 +136,19 @@ function LoginContent() {
           </p>
         ) : session?.authorized && session.role ? (
           <div className="result-panel" style={{ marginTop: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 10,
+                flexWrap: "wrap",
+              }}
+            >
               <strong>{session.email || session.subject}</strong>
-              <span className={`pill ${session.role === "admin" ? "pill-blue" : "pill-pink"}`}>
+              <span
+                className={`pill ${session.role === "admin" ? "pill-blue" : "pill-pink"}`}
+              >
                 {session.role === "admin"
                   ? session.studentId
                     ? "ADMINISTRATOR · DUAL ROLE"
@@ -140,7 +166,8 @@ function LoginContent() {
                 className="button"
                 href={session.role === "admin" ? "/admin" : "/passport"}
               >
-                Open {session.role === "admin" ? "Admin Console" : "My Passport"}{" "}
+                Open{" "}
+                {session.role === "admin" ? "Admin Console" : "My Passport"}{" "}
                 <ArrowRight size={15} />
               </Link>
               {session.role === "admin" && session.studentId && (
@@ -183,11 +210,10 @@ function LoginContent() {
               style={{ flexShrink: 0, marginTop: 2 }}
             />
             <div>
-              <strong>Students & Self-Registered Learners</strong>
+              <strong>A place for your progress</strong>
               <p>
-                Opens your personal AI Skills Passport workspace immediately,
-                with private PDF downloads and version history once linked by
-                your university.
+                Open your personal workspace. Your university-issued skills and
+                downloadable passport appear once your student record is linked.
               </p>
             </div>
           </div>
@@ -198,11 +224,11 @@ function LoginContent() {
               style={{ flexShrink: 0, marginTop: 2 }}
             />
             <div>
-              <strong>University Administrators</strong>
+              <strong>A workspace for your university</strong>
               <p>
-                Accounts bound to the administrator role automatically enter the
-                Operations Console for source synchronization, job processing,
-                and account management.
+                Authorized staff can manage student records, publish
+                assessments, and oversee credential issuance with the same
+                sign-in.
               </p>
             </div>
           </div>
@@ -213,10 +239,10 @@ function LoginContent() {
               style={{ flexShrink: 0, marginTop: 2 }}
             />
             <div>
-              <strong>Server-Enforced Role Security</strong>
+              <strong>Private from the start</strong>
               <p>
-                Roles are determined strictly by immutable server-side identity
-                bindings—never by login form toggles or client-side claims.
+                Your records stay in your private account. Anyone can check a
+                shared credential using the public verifier, without signing in.
               </p>
             </div>
           </div>
@@ -229,28 +255,30 @@ function LoginContent() {
 export default function Login() {
   return (
     <Shell>
-      <div className="page-heading">
-        <div>
-          <div className="eyebrow">CENTRALIZED AUTHENTICATION</div>
-          <h1>Sign in to OrionX</h1>
-          <p className="lead">
-            One unified sign-in for students and administrators. Public
-            verification requires no account.
+      <div className="auth-scene">
+        <section className="auth-story">
+          <div className="eyebrow">YOUR NEXT CHAPTER</div>
+          <h1>
+            Build your skills.
+            <br />
+            Keep your progress.
+          </h1>
+          <p>
+            A permanent home for what you learn, the achievements you earn, and
+            the proof behind them.
           </p>
-        </div>
-        <Link className="button secondary" href="/verify">
-          <ShieldCheck size={16} /> Public Verifier
-        </Link>
+          <PassportIdentity />
+        </section>
+        <Suspense
+          fallback={
+            <section className="card" style={{ maxWidth: 560 }}>
+              <p role="status">Loading sign-in…</p>
+            </section>
+          }
+        >
+          <LoginContent />
+        </Suspense>
       </div>
-      <Suspense
-        fallback={
-          <section className="card" style={{ maxWidth: 560 }}>
-            <p role="status">Loading sign-in…</p>
-          </section>
-        }
-      >
-        <LoginContent />
-      </Suspense>
     </Shell>
   );
 }

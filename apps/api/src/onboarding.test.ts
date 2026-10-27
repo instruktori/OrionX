@@ -291,3 +291,48 @@ describe("self-service student onboarding over HTTP", () => {
     expect(ok.cookies).toMatch(/orionx_refresh=;.*Max-Age=0/);
   });
 });
+
+describe("retired module routes", () => {
+  it("returns 404 for every former student/admin endpoint before authentication or database access", async () => {
+    mockUnboundUser();
+    const identityLookup = vi.spyOn(prisma.studentIdentity, "findUnique");
+    const workspaceLookup = vi.spyOn(prisma.studentWorkspace, "findUnique");
+    const {createApp} = await import("./server");
+    // A separate app keeps the route matrix independent of the shared rate-limit bucket.
+    const app = await createApp();
+    await app.listen(0, "127.0.0.1");
+    const origin = `http://127.0.0.1:${(app.getHttpServer().address() as AddressInfo).port}`;
+    const endpoints = [
+      ["GET", "/assessments"],
+      ["GET", "/assessments/former-id"],
+      ["POST", "/assessments/former-id/attempts"],
+      ["GET", "/assessment-attempts/former-id"],
+      ["POST", "/assessment-attempts/former-id/save"],
+      ["POST", "/assessment-attempts/former-id/submit"],
+      ["GET", "/admin/assessments"],
+      ["POST", "/admin/assessments"],
+      ["GET", "/admin/assessments/former-id"],
+      ["POST", "/admin/assessments/former-id/update"],
+      ["POST", "/admin/assessments/former-id/publish"],
+      ["POST", "/admin/assessments/former-id/archive"],
+    ] as const;
+    try {
+      for (const bearer of [undefined, await token(NEW_SUB), await token(NEW_SUB, {app_metadata: {role: "admin"}})]) {
+        for (const [method, path] of endpoints) {
+          const response = await fetch(origin + "/api/v1" + path, {
+            method,
+            headers: {"Content-Type": "application/json", ...(bearer ? {Authorization: `Bearer ${bearer}`} : {})},
+            ...(method === "POST" ? {body: "{}"} : {}),
+          });
+          expect({method, path, status: response.status}).toEqual({method, path, status: 404});
+          expect((await response.json()).error.code).toBe("NOT_FOUND");
+        }
+      }
+      expect(identityLookup).not.toHaveBeenCalled();
+      expect(workspaceLookup).not.toHaveBeenCalled();
+      expect((await fetch(origin + "/api/v1/health/live")).status).toBe(200);
+    } finally {
+      await app.close();
+    }
+  });
+});

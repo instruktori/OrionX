@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   FileBadge2,
-  BookOpen,
   Users,
   PlusCircle,
   Activity,
@@ -736,7 +735,7 @@ export default function Admin() {
     setConfirmation({
       title: "Link this student record?",
       message:
-        "The workspace owner will gain access to this student's private passport and eligible assessments. Check both identifiers carefully.",
+        "The workspace owner will gain access to this student's private passport. Check both identifiers carefully.",
       details: [
         { label: "Workspace", value: linkWorkspaceId.trim() },
         { label: "Student record", value: linkStudentRef.trim() },
@@ -821,11 +820,6 @@ export default function Admin() {
           </p>
         </div>
         <div className="page-actions">
-          {session?.role === "admin" && (
-            <Link className="button secondary" href="/admin/assessments">
-              <BookOpen size={16} /> Assessment studio
-            </Link>
-          )}
           {session?.studentId && (
             <Link className="button secondary" href="/passport">
               <FileBadge2 size={16} /> View My Personal Passport
@@ -2444,7 +2438,7 @@ export default function Admin() {
         {confirmation && (
           <>
             <p>{confirmation.message}</p>
-            <dl className="exam-facts">
+            <dl className="detail-list">
               {confirmation.details.map((detail) => (
                 <div key={detail.label}>
                   <dt>{detail.label}</dt>

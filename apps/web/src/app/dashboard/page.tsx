@@ -6,7 +6,6 @@ import {
   Award,
   BookOpen,
   Check,
-  ChevronRight,
   Clock3,
   FileBadge2,
   GraduationCap,
@@ -25,7 +24,6 @@ import {
 import { useSession } from "@/lib/session";
 import { useResource } from "@/lib/use-resource";
 import { type Passport, type PassportVersion, dateLabel } from "@/lib/passport";
-import type { Catalog } from "@/lib/assessments";
 
 export default function Dashboard() {
   const { session, loading } = useSession();
@@ -36,7 +34,6 @@ export default function Dashboard() {
     "/me/passport/versions",
     eligible,
   );
-  const exams = useResource<Catalog>("/assessments", !!session);
   const p = passport.data;
   const awards = versions.data?.[0]?.awards || [];
   const name = p?.student?.firstName || session?.email?.split("@")[0];
@@ -58,7 +55,7 @@ export default function Dashboard() {
         <EmptyState
           icon={LockKeyhole}
           title="Your progress starts here"
-          description="Sign in to see your personal learning record, available assessments, and university-issued credentials."
+          description="Sign in to see your personal learning record and university-issued credentials."
           href="/login?next=/dashboard"
           action="Sign in to your workspace"
         />
@@ -66,7 +63,7 @@ export default function Dashboard() {
         <EmptyState
           icon={GraduationCap}
           title="Your university workspace is ready"
-          description="Manage student records, credential issuance, and assessments from your administration workspace."
+          description="Manage student records, skills, badges, and credential issuance from your administration workspace."
           href="/admin"
           action="Open administration"
         />
@@ -96,12 +93,6 @@ export default function Dashboard() {
                   value: p.counts.versions,
                   icon: Layers3,
                   hint: "Your cumulative history",
-                },
-                {
-                  label: "Assessments completed",
-                  value: exams.data?.completedCount ?? "—",
-                  icon: Check,
-                  hint: "Submitted attempts",
                 },
               ].map((m) => (
                 <div key={m.label} className="dashboard-metric">
@@ -167,14 +158,14 @@ export default function Dashboard() {
                         <BookOpen size={23} />
                       </span>
                       <div>
-                        <Badge tone="blue">Continue learning</Badge>
-                        <h3>Put your AI knowledge into practice</h3>
+                        <Badge tone="blue">Your passport</Badge>
+                        <h3>Keep your achievements together</h3>
                         <p>
-                          Explore published assessments and review the skills
-                          they cover.
+                          View your recorded skills, download issued versions,
+                          and share a credential verification link.
                         </p>
-                        <Link className="action-link" href="/examinations">
-                          Browse assessments
+                        <Link className="action-link" href="/passport">
+                          View your passport
                           <ArrowRight size={15} />
                         </Link>
                       </div>
@@ -226,49 +217,6 @@ export default function Dashboard() {
                       <p>
                         Skills appear here when your university issues a
                         finalized passport version.
-                      </p>
-                    </div>
-                  )}
-                </section>
-                <section className="workspace-section">
-                  <div className="section-head">
-                    <h2>Available assessments</h2>
-                    <Link className="action-link" href="/examinations">
-                      Explore all
-                      <ArrowUpRight size={14} />
-                    </Link>
-                  </div>
-                  {exams.error ? (
-                    <ErrorState message={exams.error} retry={exams.reload} />
-                  ) : exams.loading ? (
-                    <Skeleton rows={1} />
-                  ) : exams.data?.assessments.length ? (
-                    <div className="assessment-compact-list">
-                      {exams.data.assessments.slice(0, 3).map((a) => (
-                        <Link key={a.id} href={`/examinations/${a.id}`}>
-                          <span className="action-icon">
-                            <BookOpen size={19} />
-                          </span>
-                          <div>
-                            <strong>{a.title}</strong>
-                            <small>
-                              {a.questionCount} questions ·{" "}
-                              {a.durationMinutes
-                                ? `${a.durationMinutes} min`
-                                : "Untimed"}{" "}
-                              · {a.difficulty}
-                            </small>
-                          </div>
-                          <ChevronRight size={17} />
-                        </Link>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="inline-empty compact">
-                      <BookOpen size={23} />
-                      <p>
-                        Your university hasn’t published an assessment yet. New
-                        assessments will appear here.
                       </p>
                     </div>
                   )}

@@ -138,19 +138,19 @@ export default function Home() {
       </section>
       <section className="landing-learning">
         <div>
-          <div className="eyebrow">MORE THAN A SINGLE RESULT</div>
+          <div className="eyebrow">ONE RECORD. EVERY LEARNING FORMAT.</div>
           <h2>
             Build capability.
             <br />
             Make progress visible.
           </h2>
           <p>
-            Take university-published assessments in a focused workspace. Review
-            your results and keep your next step in view. Credentials are issued
-            separately through the university’s authorized process.
+            Workshops, practical projects, and academic courses each have a
+            place in your passport. Your university records eligible skills and
+            badges, adding every achievement to the same permanent identity.
           </p>
-          <Link className="action-link" href="/examinations">
-            Explore assessments
+          <Link className="action-link" href="/passport">
+            Explore your passport
             <ArrowUpRight size={16} />
           </Link>
         </div>

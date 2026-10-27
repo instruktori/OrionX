@@ -2,7 +2,6 @@
 import Link from "next/link";
 import { useState } from "react";
 import {
-  ArrowRight,
   Award as AwardIcon,
   BookOpen,
   ChevronRight,
@@ -284,9 +283,7 @@ export default function PassportPage() {
                 <EmptyState
                   icon={AwardIcon}
                   title="Your first achievement belongs here"
-                  description="Eligible skills and badges appear when your university issues a finalized passport. In the meantime, explore available assessments."
-                  href="/examinations"
-                  action="Explore assessments"
+                  description="Eligible skills and badges appear here when your university issues a finalized passport."
                 />
               )}
             </section>

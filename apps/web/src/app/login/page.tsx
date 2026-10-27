@@ -3,7 +3,6 @@ import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  ShieldCheck,
   LockKeyhole,
   LogOut,
   ArrowRight,
@@ -120,7 +119,7 @@ function LoginContent() {
         </div>
         <h2>Welcome to OrionX</h2>
         <p className="muted" style={{ lineHeight: 1.7, marginBottom: 22 }}>
-          Your skills, assessments, and achievements, together in one place.
+          Your skills, credentials, and achievements, together in one place.
           Continue with your Google account to get started.
         </p>
 
@@ -230,9 +229,8 @@ function LoginContent() {
             <div>
               <strong>A workspace for your university</strong>
               <p>
-                Authorized staff can manage student records, publish
-                assessments, and oversee credential issuance with the same
-                sign-in.
+                Authorized staff can manage student records, record skills and
+                badges, and oversee credential issuance with the same sign-in.
               </p>
             </div>
           </div>

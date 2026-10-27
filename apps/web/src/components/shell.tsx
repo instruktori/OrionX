@@ -3,9 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
-  ArrowLeft,
   ArrowUpRight,
-  BookOpen,
   ChevronRight,
   FileBadge2,
   GraduationCap,
@@ -28,15 +26,7 @@ export function Brand() {
     </Link>
   );
 }
-export function Shell({
-  children,
-  onExit,
-  exitBusy = false,
-}: {
-  children: React.ReactNode;
-  onExit?: () => void;
-  exitBusy?: boolean;
-}) {
+export function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const router = useRouter();
   const { session, loading, signOut } = useSession();
@@ -45,11 +35,9 @@ export function Shell({
   const drawer = useRef<HTMLElement>(null);
   const menu = useRef<HTMLButtonElement>(null);
   const publicPage = ["/", "/login", "/auth/callback"].includes(path);
-  const exam = path.startsWith("/examinations/attempts/");
   const nav = [
     { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
     { href: "/passport", label: "My passport", icon: FileBadge2 },
-    { href: "/examinations", label: "Assessments", icon: BookOpen },
     { href: "/verify", label: "Verify a credential", icon: ShieldCheck },
   ];
   const active = (href: string) =>
@@ -111,15 +99,12 @@ export function Shell({
   }
   const initials = (session?.email?.slice(0, 2) || "OX").toUpperCase();
   return (
-    <div
-      className={`shell ${publicPage ? "public-shell" : "workspace-shell"} ${exam ? "exam-shell" : ""}`}
-    >
+    <div className={`shell ${publicPage ? "public-shell" : "workspace-shell"}`}>
       {publicPage ? (
         <header className="public-header">
           <Brand />
           <nav aria-label="Main navigation">
             <Link href="/#how-it-works">How it works</Link>
-            <Link href="/examinations">Assessments</Link>
             <Link href="/verify">
               Verify a credential <ArrowUpRight size={13} />
             </Link>
@@ -143,120 +128,108 @@ export function Shell({
         </header>
       ) : (
         <>
-          {!exam && (
-            <aside
-              ref={drawer}
-              className={`workspace-sidebar ${open ? "is-open" : ""}`}
-              id="workspace-navigation"
-              aria-label="Workspace navigation"
-            >
-              <div className="sidebar-brand">
-                <Brand />
-                <button
-                  className="icon-button mobile-close"
-                  type="button"
-                  aria-label="Close menu"
-                  onClick={() => setOpen(false)}
+          <aside
+            ref={drawer}
+            className={`workspace-sidebar ${open ? "is-open" : ""}`}
+            id="workspace-navigation"
+            aria-label="Workspace navigation"
+          >
+            <div className="sidebar-brand">
+              <Brand />
+              <button
+                className="icon-button mobile-close"
+                type="button"
+                aria-label="Close menu"
+                onClick={() => setOpen(false)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="university-switch">
+              <span className="university-icon">
+                <GraduationCap size={19} />
+              </span>
+              <div>
+                <strong>BTU</strong>
+                <small>AI Skills Digital Passport</small>
+              </div>
+              <span className="workspace-label">Workspace</span>
+            </div>
+            <div className="nav-caption">WORKSPACE</div>
+            <nav className="workspace-nav">
+              {nav.map((n) => (
+                <Link
+                  key={n.href}
+                  href={n.href}
+                  aria-current={active(n.href) ? "page" : undefined}
+                  className={active(n.href) ? "active" : ""}
                 >
-                  <X size={18} />
-                </button>
-              </div>
-              <div className="university-switch">
-                <span className="university-icon">
-                  <GraduationCap size={19} />
-                </span>
-                <div>
-                  <strong>BTU</strong>
-                  <small>AI Skills Digital Passport</small>
-                </div>
-                <span className="workspace-label">Workspace</span>
-              </div>
-              <div className="nav-caption">WORKSPACE</div>
-              <nav className="workspace-nav">
-                {nav.map((n) => (
+                  <n.icon size={17} />
+                  <span>{n.label}</span>
+                  {active(n.href) && <span className="nav-active-dot" />}
+                </Link>
+              ))}
+            </nav>
+            {session?.role === "admin" && (
+              <>
+                <div className="nav-caption">UNIVERSITY</div>
+                <nav className="workspace-nav">
                   <Link
-                    key={n.href}
-                    href={n.href}
-                    aria-current={active(n.href) ? "page" : undefined}
-                    className={active(n.href) ? "active" : ""}
+                    href="/admin"
+                    className={path === "/admin" ? "active" : ""}
+                    aria-current={path === "/admin" ? "page" : undefined}
                   >
-                    <n.icon size={17} />
-                    <span>{n.label}</span>
-                    {active(n.href) && <span className="nav-active-dot" />}
+                    <Settings2 size={17} />
+                    Administration
                   </Link>
-                ))}
-              </nav>
-              {session?.role === "admin" && (
-                <>
-                  <div className="nav-caption">UNIVERSITY</div>
-                  <nav className="workspace-nav">
-                    <Link
-                      href="/admin"
-                      className={path === "/admin" ? "active" : ""}
-                      aria-current={path === "/admin" ? "page" : undefined}
-                    >
-                      <Settings2 size={17} />
-                      Administration
-                    </Link>
-                    <Link
-                      href="/admin/assessments"
-                      className={path === "/admin/assessments" ? "active" : ""}
-                      aria-current={
-                        path === "/admin/assessments" ? "page" : undefined
-                      }
-                    >
-                      <BookOpen size={17} />
-                      Assessment studio
-                    </Link>
-                  </nav>
-                </>
-              )}
-              <div className="sidebar-bottom">
-                <div className="network-label">
-                  <span className="network-dot" />
-                  Solana Devnet<span className="mono">TEST NETWORK</span>
+                </nav>
+              </>
+            )}
+            <div className="sidebar-bottom">
+              <div className="network-label">
+                <span className="network-dot" />
+                Solana Devnet<span className="mono">TEST NETWORK</span>
+              </div>
+              <div className="sidebar-account">
+                <span className="avatar">{initials}</span>
+                <div>
+                  <strong>
+                    {loading
+                      ? "Loading account…"
+                      : session?.email || "Your workspace"}
+                  </strong>
+                  <small>
+                    {session
+                      ? session.role === "admin"
+                        ? "Administrator"
+                        : session.verification === "UNIVERSITY_VERIFIED"
+                          ? "University-linked student"
+                          : "Personal account"
+                      : "Sign in to get started"}
+                  </small>
                 </div>
-                <div className="sidebar-account">
-                  <span className="avatar">{initials}</span>
-                  <div>
-                    <strong>
-                      {loading
-                        ? "Loading account…"
-                        : session?.email || "Your workspace"}
-                    </strong>
-                    <small>
-                      {session
-                        ? session.role === "admin"
-                          ? "Administrator"
-                          : session.verification === "UNIVERSITY_VERIFIED"
-                            ? "University-linked student"
-                            : "Personal account"
-                        : "Sign in to get started"}
-                    </small>
-                  </div>
-                  {session ? (
-                    <button
-                      type="button"
-                      className="icon-button"
-                      onClick={logOut}
-                      aria-label="Sign out"
-                    >
-                      <LogOut size={15} />
-                    </button>
-                  ) : (
-                    <Link href="/login" aria-label="Sign in">
-                      <ChevronRight size={18} />
-                    </Link>
-                  )}
-                </div>
-                {signOutError && (
-                  <p className="field-error" role="alert">
-                    {signOutError}
-                  </p>
+                {session ? (
+                  <button
+                    type="button"
+                    className="icon-button"
+                    onClick={logOut}
+                    aria-label="Sign out"
+                  >
+                    <LogOut size={15} />
+                  </button>
+                ) : (
+                  <Link href="/login" aria-label="Sign in">
+                    <ChevronRight size={18} />
+                  </Link>
                 )}
               </div>
-            </aside>
-          )}
+              {signOutError && (
+                <p className="field-error" role="alert">
+                  {signOutError}
+                </p>
+              )}
+            </div>
+          </aside>
           {open && (
             <button
               type="button"
@@ -267,45 +240,20 @@ export function Shell({
           )}
           <header className="workspace-topbar" inert={open}>
             <div className="top-left">
-              {exam ? (
-                <>
-                  {onExit ? (
-                    <button
-                      type="button"
-                      className="back-link exit-button"
-                      onClick={onExit}
-                      disabled={exitBusy}
-                    >
-                      <ArrowLeft size={16} />
-                      Save & leave
-                    </button>
-                  ) : (
-                    <Link className="back-link" href="/examinations">
-                      <ArrowLeft size={16} />
-                      Assessments
-                    </Link>
-                  )}
-                  <span className="topbar-divider" />
-                  <span className="muted">Focused workspace</span>
-                </>
-              ) : (
-                <>
-                  <button
-                    ref={menu}
-                    type="button"
-                    className="icon-button mobile-menu"
-                    aria-label="Open menu"
-                    aria-expanded={open}
-                    aria-controls="workspace-navigation"
-                    onClick={() => setOpen(true)}
-                  >
-                    <Menu size={18} />
-                  </button>
-                  <span className="breadcrumb-org">Workspace</span>
-                  <ChevronRight size={13} className="muted" />
-                  <span>{current}</span>
-                </>
-              )}
+              <button
+                ref={menu}
+                type="button"
+                className="icon-button mobile-menu"
+                aria-label="Open menu"
+                aria-expanded={open}
+                aria-controls="workspace-navigation"
+                onClick={() => setOpen(true)}
+              >
+                <Menu size={18} />
+              </button>
+              <span className="breadcrumb-org">Workspace</span>
+              <ChevronRight size={13} className="muted" />
+              <span>{current}</span>
             </div>
             <div className="top-actions">
               <span className="topbar-note">

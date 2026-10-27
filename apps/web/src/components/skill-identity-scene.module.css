@@ -1,0 +1,702 @@
+.scene {
+  --cycle: 12s;
+  --signal: #8aa8ff;
+  --scene-line: #8098c132;
+  --node-surface: #1b1e25;
+  --node-edge: #a9bcf026;
+  --node-shadow: 0 12px 30px #00000029, inset 0 1px 0 #ffffff09;
+  --core-surface: #202936;
+  --core-mark: #c4d6ff;
+  position: relative;
+  width: 100%;
+  margin: 0;
+  isolation: isolate;
+  container-type: inline-size;
+}
+:global([data-theme="light"]) .scene {
+  --signal: #4067dc;
+  --scene-line: #6379ab38;
+  --node-surface: #ffffff;
+  --node-edge: #6a7d9e30;
+  --node-shadow: 0 12px 30px #2739620c, inset 0 1px 0 #ffffff;
+  --core-surface: #f3f6ff;
+  --core-mark: #365bd7;
+}
+.caption {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--subtle);
+  font-size: 10px;
+  letter-spacing: 0.025em;
+}
+.motionControl {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 72px;
+  min-height: 36px;
+  padding: 6px 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.motionControl[hidden] {
+  display: none;
+}
+.motionControl:hover {
+  background: var(--hover);
+  border-color: var(--line);
+  color: var(--ink);
+}
+.canvas {
+  position: relative;
+  aspect-ratio: 560 / 424;
+  width: 100%;
+}
+.grid {
+  position: absolute;
+  inset: 0 -4%;
+  background-image:
+    linear-gradient(var(--scene-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--scene-line) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.34;
+  mask-image: radial-gradient(ellipse at 52% 48%, #000 12%, transparent 69%);
+  pointer-events: none;
+}
+.atmosphere {
+  position: absolute;
+  inset: 7% 0 3%;
+  background:
+    radial-gradient(ellipse at 52% 45%, #608dff17, transparent 57%),
+    radial-gradient(ellipse at 76% 65%, #5ed5ce08, transparent 42%);
+  pointer-events: none;
+}
+.connections {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.orbit,
+.orbitInner {
+  stroke: var(--scene-line);
+  stroke-width: 0.7;
+}
+.orbit {
+  stroke-dasharray: 2 7;
+  opacity: 0.7;
+}
+.orbitInner {
+  opacity: 0.3;
+}
+.orbitPoint {
+  fill: var(--signal);
+  opacity: 0.5;
+}
+.crosshair {
+  stroke: var(--subtle);
+  stroke-width: 0.75;
+  opacity: 0.4;
+}
+.track {
+  stroke: var(--scene-line);
+  stroke-width: 1.2;
+}
+.signal {
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 0.19 0.81;
+  stroke-dashoffset: 1.2;
+  opacity: 0;
+  animation: transmit var(--cycle) linear infinite;
+}
+.routeApplied .signal {
+  animation-delay: 2.4s;
+}
+.routeAdvanced .signal {
+  animation-delay: 4.8s;
+}
+.junction {
+  fill: var(--node-surface);
+  stroke: var(--scene-line);
+  stroke-width: 1;
+}
+.outputSignal {
+  animation: recognize var(--cycle) linear infinite;
+}
+.skillNode {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--node-edge);
+  border-radius: 12px;
+  background: var(--node-surface);
+  box-shadow: var(--node-shadow);
+  padding: 21px 10px 10px;
+  color: var(--muted);
+  transition:
+    transform 0.35s cubic-bezier(0.2, 0.75, 0.25, 1),
+    border-color 0.25s,
+    opacity 0.25s,
+    box-shadow 0.25s;
+  -webkit-user-select: none;
+  user-select: none;
+  z-index: 2;
+}
+.skillNode:hover,
+.skillNode[aria-pressed="true"] {
+  border-color: var(--primary);
+  box-shadow:
+    var(--node-shadow),
+    0 0 0 3px var(--primary-soft);
+}
+.skillNode:focus-visible {
+  outline-offset: 5px;
+}
+.skill {
+  left: 7%;
+  top: 10%;
+  width: 22%;
+  height: 32%;
+  transform: rotate(-7deg);
+}
+.applied {
+  left: 67%;
+  top: 14%;
+  width: 29%;
+  height: 24%;
+  transform: rotate(6deg);
+}
+.advanced {
+  left: 6%;
+  top: 55%;
+  width: 23%;
+  height: 34%;
+  transform: rotate(-5deg);
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .skillNode:hover {
+    transform: translateY(-5px) rotate(0);
+  }
+}
+.nodeIndex {
+  position: absolute;
+  top: 7px;
+  left: 9px;
+  color: var(--subtle);
+  font:
+    8px/1.2 "SFMono-Regular",
+    Consolas,
+    monospace;
+  letter-spacing: 0.08em;
+}
+.artwork {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+}
+.artwork img {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  display: block;
+  width: 70%;
+  height: 100%;
+  max-height: 75px;
+  object-fit: contain;
+}
+.applied .artwork img {
+  width: 95%;
+  max-height: 42px;
+}
+.advanced .artwork img {
+  width: 67%;
+  max-height: 78px;
+}
+.nodeLabel {
+  margin-top: 9px;
+  font-size: clamp(8px, 0.75vw, 10px);
+  line-height: 1.25;
+  white-space: nowrap;
+}
+.labelShort {
+  display: none;
+}
+.inspectIcon {
+  position: absolute;
+  top: 6px;
+  right: 7px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.skillNode:hover .inspectIcon,
+.skillNode:focus-visible .inspectIcon,
+.skillNode[aria-pressed="true"] .inspectIcon {
+  opacity: 0.8;
+}
+.identity {
+  position: absolute;
+  left: 51%;
+  top: 45%;
+  width: 17%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  z-index: 1;
+}
+.identityHalo {
+  position: absolute;
+  inset: -24%;
+  border: 1px solid #7394ff22;
+  border-radius: 31%;
+  transform: rotate(12deg);
+  background: radial-gradient(ellipse at center, #729dff0c, transparent 75%);
+  animation: resonate var(--cycle) ease-in-out infinite;
+}
+.identityCore {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border: 1px solid #8eaaff52;
+  border-radius: 23%;
+  background:
+    linear-gradient(145deg, #7394ff16, transparent 65%), var(--core-surface);
+  box-shadow:
+    0 0 32px #7394ff12,
+    inset 0 1px 0 #ffffff14,
+    0 15px 35px #00000016;
+}
+.identityMark {
+  color: var(--core-mark);
+  width: 66%;
+  height: 66%;
+}
+.identityCore > span {
+  font:
+    7px/1.5 "SFMono-Regular",
+    Consolas,
+    monospace;
+  letter-spacing: 0.13em;
+  color: var(--core-mark);
+}
+.identityLabel,
+.identitySub {
+  position: absolute;
+  left: 50%;
+  width: max-content;
+  text-align: center;
+  transform: translateX(-50%);
+}
+.identityLabel {
+  top: calc(100% + 25px);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.025em;
+}
+.identitySub {
+  top: calc(100% + 45px);
+  font-size: 9px;
+  color: var(--subtle);
+}
+.recognition {
+  position: absolute;
+  left: 71%;
+  top: 65%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+}
+.recognitionIcon {
+  display: grid;
+  place-items: center;
+  width: 35px;
+  height: 35px;
+  border: 1px solid var(--node-edge);
+  border-radius: 50%;
+  background: var(--node-surface);
+  color: var(--cyan-ink);
+  flex-shrink: 0;
+}
+.recognition strong {
+  display: block;
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.recognition small {
+  display: block;
+  font-size: 8px;
+  color: var(--subtle);
+}
+.recognitionDot {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  left: 29px;
+  top: 27px;
+  background: var(--cyan);
+  border-radius: 50%;
+  box-shadow: 0 0 8px #68c9a533;
+  animation: confirm var(--cycle) ease-in-out infinite;
+}
+.canvasNote {
+  position: absolute;
+  left: 38%;
+  bottom: 5%;
+  color: var(--subtle);
+  font:
+    8px/1.4 "SFMono-Regular",
+    Consolas,
+    monospace;
+  letter-spacing: 0.09em;
+  opacity: 0.7;
+}
+.description {
+  padding: 0 0 0 10px;
+}
+.detail {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 62px;
+  padding: 17px 0 12px;
+  border-top: 1px solid var(--line);
+}
+.detail strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 550;
+  line-height: 1.6;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.detail p {
+  font-size: 10px;
+  line-height: 1.7;
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+.detailMark {
+  display: flex;
+  gap: 3px;
+  padding-top: 6px;
+}
+.detailMark i {
+  width: 4px;
+  height: 4px;
+  background: #ff3c40;
+  border-radius: 1px;
+}
+.detailMark i:nth-child(2) {
+  background: #8147ff;
+}
+.detailMark i:nth-child(3) {
+  background: #648bff;
+}
+.disclaimer {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 5px 12px;
+  margin: 8px 0 0;
+  color: var(--subtle);
+  font-size: 9px;
+}
+.disclaimer > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.scene[data-motion="paused"] .canvas *,
+.scene[data-motion="paused"] .canvas *::before,
+.scene[data-motion="paused"] .canvas *::after {
+  animation-play-state: paused;
+}
+.scene[data-focus="skill"] .skillNode:not(.skill) .artwork,
+.scene[data-focus="applied"] .skillNode:not(.applied) .artwork,
+.scene[data-focus="advanced"] .skillNode:not(.advanced) .artwork {
+  opacity: 0.48;
+}
+.scene[data-focus="skill"] .routeSkill .track,
+.scene[data-focus="applied"] .routeApplied .track,
+.scene[data-focus="advanced"] .routeAdvanced .track {
+  stroke: var(--primary);
+  stroke-width: 1.8;
+}
+@keyframes transmit {
+  0%,
+  5% {
+    stroke-dashoffset: 1.2;
+    opacity: 0;
+  }
+  7% {
+    opacity: 0.9;
+  }
+  23% {
+    stroke-dashoffset: -0.2;
+    opacity: 0.9;
+  }
+  26%,
+  100% {
+    stroke-dashoffset: -0.2;
+    opacity: 0;
+  }
+}
+@keyframes recognize {
+  0%,
+  66% {
+    stroke-dashoffset: 1.2;
+    opacity: 0;
+  }
+  68% {
+    opacity: 1;
+  }
+  82% {
+    stroke-dashoffset: -0.2;
+    opacity: 1;
+  }
+  86%,
+  100% {
+    stroke-dashoffset: -0.2;
+    opacity: 0;
+  }
+}
+@keyframes resonate {
+  0%,
+  20%,
+  40%,
+  60%,
+  100% {
+    transform: rotate(12deg) scale(1);
+    opacity: 0.55;
+  }
+  26%,
+  46%,
+  66% {
+    transform: rotate(12deg) scale(1.07);
+    opacity: 1;
+  }
+  82%,
+  91% {
+    transform: rotate(12deg) scale(1.12);
+    opacity: 0.9;
+  }
+}
+@keyframes confirm {
+  0%,
+  78% {
+    opacity: 0.25;
+    transform: scale(0.8);
+  }
+  84%,
+  94% {
+    opacity: 1;
+    transform: scale(1.25);
+  }
+  100% {
+    opacity: 0.25;
+    transform: scale(0.8);
+  }
+}
+@media (max-width: 1023px) and (min-width: 768px) {
+  .nodeLabel {
+    font-size: 8px;
+  }
+  .recognition {
+    gap: 5px;
+    left: 70%;
+  }
+  .recognition strong {
+    max-width: 70px;
+    font-size: 8px;
+  }
+  .recognitionIcon {
+    width: 28px;
+    height: 28px;
+  }
+  .recognitionDot {
+    left: 22px;
+    top: 23px;
+  }
+  .identityLabel {
+    font-size: 10px;
+    top: calc(100% + 22px);
+  }
+  .identitySub {
+    display: none;
+  }
+  .canvasNote {
+    font-size: 6px;
+  }
+}
+@media (max-width: 767px) {
+  .caption {
+    font-size: 9px;
+    min-height: 44px;
+  }
+  .motionControl {
+    min-height: 44px;
+  }
+  .canvas {
+    margin: 0 0 5px;
+  }
+  .nodeLabel {
+    font-size: 9px;
+  }
+  .identityLabel {
+    font-size: 11px;
+    top: calc(100% + 23px);
+  }
+  .identitySub {
+    font-size: 8px;
+    top: calc(100% + 42px);
+  }
+  .recognition {
+    left: 71%;
+    gap: 5px;
+  }
+  .recognition strong {
+    max-width: 74px;
+    line-height: 1.3;
+  }
+  .recognitionIcon {
+    width: 29px;
+    height: 29px;
+  }
+  .recognitionDot {
+    left: 24px;
+    top: 23px;
+  }
+  .description {
+    padding-left: 0;
+  }
+}
+@media (max-width: 400px) {
+  .skillNode {
+    padding: 19px 6px 8px;
+    border-radius: 9px;
+  }
+  .nodeLabel {
+    font-size: 8px;
+    margin-top: 6px;
+    width: 100%;
+    white-space: normal;
+    text-align: center;
+  }
+  .identityCore > span {
+    font-size: 5px;
+  }
+  .identityLabel {
+    font-size: 10px;
+  }
+  .identitySub {
+    display: none;
+  }
+  .recognition {
+    left: 72%;
+    gap: 4px;
+  }
+  .recognition strong {
+    font-size: 8px;
+    max-width: 58px;
+  }
+  .recognition small {
+    font-size: 7px;
+  }
+  .recognitionIcon {
+    width: 25px;
+    height: 25px;
+  }
+  .recognitionIcon svg {
+    width: 16px;
+  }
+  .recognitionDot {
+    left: 20px;
+    top: 21px;
+  }
+  .canvasNote {
+    left: 36%;
+    font-size: 6px;
+  }
+  .disclaimer {
+    font-size: 8px;
+  }
+}
+@container (max-width: 380px) {
+  .canvas {
+    aspect-ratio: 560 / 500;
+  }
+  .skillNode {
+    padding-top: 16px;
+  }
+  .applied {
+    top: 12%;
+    height: 28%;
+  }
+  .labelFull {
+    display: none;
+  }
+  .labelShort {
+    display: inline;
+  }
+  .nodeLabel {
+    font-size: 9px;
+    white-space: nowrap;
+    margin-top: 6px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene .canvas *,
+  .scene .canvas *::before,
+  .scene .canvas *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .signal {
+    display: none;
+  }
+  .identityHalo {
+    opacity: 0.7;
+  }
+  .recognitionDot {
+    opacity: 1;
+  }
+}
+@media (forced-colors: active) {
+  .skillNode,
+  .identityCore,
+  .recognitionIcon {
+    border-color: CanvasText;
+  }
+  .track,
+  .orbit {
+    stroke: CanvasText;
+  }
+  .identityMark {
+    color: CanvasText;
+  }
+  .skillNode[aria-pressed="true"] {
+    outline: 2px solid Highlight;
+  }
+}

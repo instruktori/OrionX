@@ -11,7 +11,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Shell } from "@/components/shell";
-import { PassportIdentity } from "@/components/passport-identity";
+import { SkillIdentityScene } from "@/components/skill-identity-scene";
 import { BrandLogo } from "@/components/brand-logo";
 
 export default function Home() {
@@ -49,25 +49,7 @@ export default function Home() {
           </div>
         </div>
         <div className="landing-product">
-          <div className="product-caption">
-            <span className="mono">01 / YOUR DIGITAL IDENTITY</span>
-            <span>
-              Designed to grow with you
-              <ArrowUpRight size={13} />
-            </span>
-          </div>
-          <PassportIdentity />
-          <div className="product-record">
-            <span className="record-connector" />
-            <div>
-              <Layers3 size={16} />
-              <span>One passport. A cumulative history.</span>
-            </div>
-            <span className="mono">∞</span>
-          </div>
-          <div className="showcase-label">
-            Passport interface · illustrative, no credential issued
-          </div>
+          <SkillIdentityScene />
         </div>
       </section>
       <div className="landing-principles">

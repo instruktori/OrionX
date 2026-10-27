@@ -2120,13 +2120,16 @@ label.field-label,
 /* Authentication */
 .auth-scene {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-areas: "story sign-in";
   gap: 100px;
   align-items: center;
   min-height: calc(100dvh - 150px);
   padding: 50px 20px 90px;
 }
 .auth-story {
+  grid-area: story;
+  min-width: 0;
   max-width: 450px;
 }
 .auth-story h1 {
@@ -2160,11 +2163,20 @@ label.field-label,
 }
 .auth-bento-grid,
 .auth-layout {
+  min-width: 0;
   max-width: 460px;
   width: 100%;
 }
+.auth-bento-grid {
+  grid-area: sign-in;
+}
 .auth-card {
   padding: 34px;
+  overflow-wrap: anywhere;
+}
+.auth-logo {
+  height: 36px;
+  max-width: 100%;
 }
 .auth-card h2 {
   font-size: 25px;
@@ -2185,7 +2197,8 @@ label.field-label,
 }
 .google-button {
   width: 100%;
-  min-height: 46px;
+  min-height: 48px;
+  padding: 12px 16px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2195,7 +2208,8 @@ label.field-label,
   background: var(--surface-raised);
   color: var(--ink);
   font-weight: 550;
-  font-size: 12px;
+  font-size: 14px;
+  line-height: 1.5;
 }
 .google-button:hover:not(:disabled) {
   background: var(--hover);
@@ -2915,14 +2929,44 @@ label.field-label,
     grid-template-columns: minmax(0, 1fr) 260px;
   }
   .auth-scene {
-    gap: 40px;
-    padding: 40px 0;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "sign-in"
+      "story";
+    justify-items: center;
+    gap: 32px;
+    min-height: 0;
+    padding: 32px 0 48px;
+  }
+  .auth-bento-grid,
+  .auth-story {
+    max-width: 560px;
+    width: 100%;
   }
   .auth-story h1 {
-    font-size: 39px;
+    font-size: 36px;
+  }
+  .auth-story .passport-identity {
+    display: none;
   }
   .auth-card {
-    padding: 27px;
+    padding: 28px;
+  }
+  .auth-card > .muted,
+  .auth-card .google-button {
+    font-size: 16px;
+  }
+  .auth-card .step strong,
+  .auth-card .step p {
+    font-size: 14px;
+  }
+  .public-shell:has(.auth-scene) .public-header .theme-toggle {
+    width: 44px;
+    height: 44px;
+  }
+  .public-shell:has(.auth-scene) .public-header nav a,
+  .public-shell:has(.auth-scene) .public-header .top-actions > .button {
+    min-height: 44px;
   }
   .verification-grid {
     grid-template-columns: 1fr 1fr;
@@ -3218,30 +3262,30 @@ label.field-label,
     padding: 22px;
   }
   .auth-scene {
-    grid-template-columns: 1fr;
-    gap: 20px;
-    min-height: 0;
-    padding: 25px 0 50px;
-  }
-  .auth-story {
-    max-width: 500px;
+    gap: 24px;
+    padding: 20px 0 40px;
   }
   .auth-story h1 {
-    font-size: 36px;
+    font-size: clamp(27px, 7.5vw, 34px);
     margin: 16px 0;
   }
-  .auth-story .passport-identity {
-    display: none;
-  }
   .auth-story > p {
-    font-size: 12px;
+    font-size: 14px;
     max-width: 48ch;
   }
-  .auth-bento-grid {
-    max-width: none;
-  }
   .auth-card {
-    padding: 27px 24px;
+    padding: 24px 20px;
+  }
+  .auth-card .page-actions > .button {
+    width: 100%;
+    min-height: 44px;
+  }
+  .public-shell:has(.auth-scene) .public-header {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 62px;
+    padding-top: 8px;
+    padding-bottom: 8px;
   }
   .access-card {
     align-items: flex-start;

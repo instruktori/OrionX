@@ -111,7 +111,7 @@ function LoginContent() {
     <div className="auth-bento-grid">
       <section className="card auth-card">
         <div style={{ marginBottom: 16 }}>
-          <BrandLogo width={140} height={36} priority />
+          <BrandLogo className="auth-logo" width={140} height={36} priority />
         </div>
         <div className="auth-badge">
           <Sparkles size={15} />
@@ -258,6 +258,17 @@ export default function Login() {
   return (
     <Shell>
       <div className="auth-scene">
+        <Suspense
+          fallback={
+            <div className="auth-bento-grid">
+              <section className="card auth-card">
+                <p role="status">Loading sign-in…</p>
+              </section>
+            </div>
+          }
+        >
+          <LoginContent />
+        </Suspense>
         <section className="auth-story">
           <div className="eyebrow">YOUR NEXT CHAPTER</div>
           <h1>
@@ -271,15 +282,6 @@ export default function Login() {
           </p>
           <PassportIdentity />
         </section>
-        <Suspense
-          fallback={
-            <section className="card" style={{ maxWidth: 560 }}>
-              <p role="status">Loading sign-in…</p>
-            </section>
-          }
-        >
-          <LoginContent />
-        </Suspense>
       </div>
     </Shell>
   );

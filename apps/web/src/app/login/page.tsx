@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Shell } from "@/components/shell";
 import { PassportIdentity } from "@/components/passport-identity";
+import { BrandLogo } from "@/components/brand-logo";
 import { startGoogleSignIn, useSession } from "@/lib/session";
 
 function GoogleMark() {
@@ -110,6 +111,9 @@ function LoginContent() {
   return (
     <div className="auth-bento-grid">
       <section className="card auth-card">
+        <div style={{ marginBottom: 16 }}>
+          <BrandLogo width={140} height={36} priority />
+        </div>
         <div className="auth-badge">
           <Sparkles size={15} />
           <span>YOUR PRIVATE WORKSPACE</span>

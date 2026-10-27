@@ -1,0 +1,234 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="54 40 536 536" width="100%" height="100%">
+  <defs>
+    <filter id="o-ring-smooth" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="20" />
+    </filter>
+    <filter id="o-bevel-soft" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="2.2" />
+    </filter>
+    <linearGradient id="o-rim-top" x1="62" y1="205" x2="583" y2="205" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3c6eb5" />
+      <stop offset="14%" stop-color="#6ca0e0" />
+      <stop offset="28%" stop-color="#345ea0" />
+      <stop offset="52%" stop-color="#1f4482" />
+      <stop offset="76%" stop-color="#1f5cc4" />
+      <stop offset="92%" stop-color="#2e74de" />
+      <stop offset="100%" stop-color="#1a4fae" />
+    </linearGradient>
+    <linearGradient id="o-rim-bot" x1="62" y1="410" x2="583" y2="410" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#184291" />
+      <stop offset="14%" stop-color="#3880e6" />
+      <stop offset="28%" stop-color="#4e97f5" />
+      <stop offset="44%" stop-color="#1c57ba" />
+      <stop offset="62%" stop-color="#0d2966" />
+      <stop offset="80%" stop-color="#0b2052" />
+      <stop offset="93%" stop-color="#153c87" />
+      <stop offset="100%" stop-color="#184aa3" />
+    </linearGradient>
+    <linearGradient id="o-core-base" x1="280" y1="115" x2="535" y2="445" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#182946" />
+      <stop offset="22%" stop-color="#091326" />
+      <stop offset="50%" stop-color="#050c1a" />
+      <stop offset="76%" stop-color="#0f1b31" />
+      <stop offset="100%" stop-color="#283650" />
+    </linearGradient>
+    <radialGradient id="o-ul-sheen" cx="195" cy="308" r="230" fx="185" fy="308" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="18%" stop-color="#edf6ff" />
+      <stop offset="38%" stop-color="#b4cae3" />
+      <stop offset="60%" stop-color="#697c96" />
+      <stop offset="82%" stop-color="#283852" />
+      <stop offset="100%" stop-color="#0b1528" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="o-ll-azure" cx="190" cy="308" r="275" fx="180" fy="308" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="14%" stop-color="#def0ff" />
+      <stop offset="32%" stop-color="#85c5ff" />
+      <stop offset="54%" stop-color="#3b8df0" />
+      <stop offset="76%" stop-color="#1858bd" />
+      <stop offset="92%" stop-color="#0d3178" />
+      <stop offset="100%" stop-color="#091e4d" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="o-br-chrome" cx="475" cy="395" r="175" fx="485" fy="390" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#e3eaf3" />
+      <stop offset="25%" stop-color="#c2ccd9" />
+      <stop offset="52%" stop-color="#7f8c9f" />
+      <stop offset="78%" stop-color="#314059" />
+      <stop offset="100%" stop-color="#0d172b" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="o-right-inner-bevel" x1="430" y1="175" x2="425" y2="455" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0a1428" stop-opacity="0" />
+      <stop offset="35%" stop-color="#142038" stop-opacity="0.3" />
+      <stop offset="55%" stop-color="#586478" />
+      <stop offset="76%" stop-color="#b8c2d2" />
+      <stop offset="92%" stop-color="#758399" />
+      <stop offset="100%" stop-color="#223e73" />
+    </linearGradient>
+    <linearGradient id="o-left-crescent-top" x1="215" y1="308" x2="295" y2="178" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="30%" stop-color="#f2f8ff" />
+      <stop offset="65%" stop-color="#9cb2cc" />
+      <stop offset="100%" stop-color="#2b3b54" stop-opacity="0" />
+    </linearGradient>
+    <linearGradient id="o-left-crescent-bot" x1="215" y1="308" x2="295" y2="438" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="22%" stop-color="#daf0ff" />
+      <stop offset="55%" stop-color="#75bcff" />
+      <stop offset="85%" stop-color="#2673de" />
+      <stop offset="100%" stop-color="#124396" stop-opacity="0" />
+    </linearGradient>
+    <linearGradient id="star-tl" x1="345" y1="308" x2="372" y2="172" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="38%" stop-color="#eff7ff" />
+      <stop offset="74%" stop-color="#a1cbf9" />
+      <stop offset="100%" stop-color="#4c8ae0" />
+    </linearGradient>
+    <linearGradient id="star-bl" x1="335" y1="308" x2="372" y2="442" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#8ccaff" />
+      <stop offset="22%" stop-color="#559ef5" />
+      <stop offset="58%" stop-color="#2970d6" />
+      <stop offset="100%" stop-color="#14459c" />
+    </linearGradient>
+    <linearGradient id="star-tr" x1="372" y1="308" x2="460" y2="245" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#78baff" />
+      <stop offset="26%" stop-color="#3b83e6" />
+      <stop offset="65%" stop-color="#1e58b8" />
+      <stop offset="100%" stop-color="#123b88" />
+    </linearGradient>
+    <linearGradient id="star-br" x1="372" y1="308" x2="440" y2="375" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#081b4b" />
+      <stop offset="38%" stop-color="#0e2d73" />
+      <stop offset="76%" stop-color="#164499" />
+      <stop offset="100%" stop-color="#1f59b8" />
+    </linearGradient>
+    <clipPath id="o-master-clip" clipPathUnits="userSpaceOnUse">
+      <path fill-rule="evenodd" d="M 379,104
+               A 204,204 0 0,1 583,308
+               A 204,204 0 0,1 379,512
+               A 204,204 0 0,1 187.3,377.8
+               C 172,334 138,313 62,308
+               C 138,303 172,282 187.3,238.2
+               A 204,204 0 0,1 379,104 Z
+               M 370.5,169
+               A 142,139 0 0,0 231,290
+               C 231,303 252,306 282,306
+               C 350,305 369,285 370.5,169 Z
+               M 231,326
+               A 142,139 0 0,0 370.5,447
+               C 369,331 350,311 282,310
+               C 252,310 231,313 231,326 Z
+               M 373.5,169
+               C 375,285 394,305.5 494,308
+               C 394,310.5 375,331 373.5,447
+               A 139,139 0 0,0 513,308
+               A 139,139 0 0,0 373.5,169 Z" />
+    </clipPath>
+    <clipPath id="o-ring-core-clip" clipPathUnits="userSpaceOnUse">
+      <path fill-rule="evenodd" d="M 379,117
+               A 191,191 0 0,1 570,308
+               A 191,191 0 0,1 379,499
+               A 191,191 0 0,1 198,376
+               C 183,332 148,311 62,308
+               C 148,305 183,284 198,240
+               A 191,191 0 0,1 379,117 Z
+               M 372,169
+               A 142,139 0 0,0 231,290
+               L 231,326
+               A 142,139 0 0,0 372,447
+               A 139,139 0 0,0 513,308
+               A 139,139 0 0,0 372,169 Z" />
+    </clipPath>
+    <clipPath id="o-upper-horizon" clipPathUnits="userSpaceOnUse">
+      <path d="M 50,90 L 595,90 L 595,308 L 50,308 Z" />
+    </clipPath>
+    <clipPath id="o-lower-horizon" clipPathUnits="userSpaceOnUse">
+      <path d="M 50,308 L 595,308 L 595,525 L 50,525 Z" />
+    </clipPath>
+  </defs>
+  <g clip-path="url(#o-master-clip)">
+    <path clip-path="url(#o-upper-horizon)" fill-rule="evenodd" d="M 50,95 L 590,95 L 590,308 L 50,308 Z
+             M 372,169
+             A 142,139 0 0,0 231,290
+             L 231,326
+             A 142,139 0 0,0 372,447
+             A 139,139 0 0,0 513,308
+             A 139,139 0 0,0 372,169 Z" fill="url(#o-rim-top)" />
+    <path clip-path="url(#o-lower-horizon)" fill-rule="evenodd" d="M 50,308 L 590,308 L 590,520 L 50,520 Z
+             M 372,169
+             A 142,139 0 0,0 231,290
+             L 231,326
+             A 142,139 0 0,0 372,447
+             A 139,139 0 0,0 513,308
+             A 139,139 0 0,0 372,169 Z" fill="url(#o-rim-bot)" />
+    <g clip-path="url(#o-ring-core-clip)">
+      <path fill-rule="evenodd" d="M 50,95 L 590,95 L 590,520 L 50,520 Z
+               M 372,169
+               A 142,139 0 0,0 231,290
+               L 231,326
+               A 142,139 0 0,0 372,447
+               A 139,139 0 0,0 513,308
+               A 139,139 0 0,0 372,169 Z" fill="url(#o-core-base)" />
+      <g clip-path="url(#o-upper-horizon)">
+        <circle cx="210" cy="308" r="235" fill="url(#o-ul-sheen)" filter="url(#o-ring-smooth)" />
+      </g>
+      <g clip-path="url(#o-lower-horizon)">
+        <circle cx="210" cy="308" r="275" fill="url(#o-ll-azure)" filter="url(#o-ring-smooth)" />
+      </g>
+      <ellipse cx="470" cy="395" rx="175" ry="155" fill="url(#o-br-chrome)" filter="url(#o-ring-smooth)" />
+      <path fill-rule="evenodd" d="M 372,158
+               A 151,150 0 0,1 524,308
+               A 151,150 0 0,1 372,458
+               L 372,447
+               A 139,139 0 0,0 513,308
+               A 139,139 0 0,0 372,169 Z" fill="url(#o-right-inner-bevel)" filter="url(#o-bevel-soft)" />
+      <g clip-path="url(#o-upper-horizon)">
+        <path fill-rule="evenodd" d="M 212,308
+                 A 160,152 0 0,1 372,156
+                 L 372,169
+                 A 142,139 0 0,0 231,290
+                 L 231,308 Z" fill="url(#o-left-crescent-top)" filter="url(#o-bevel-soft)" />
+      </g>
+      <g clip-path="url(#o-lower-horizon)">
+        <path fill-rule="evenodd" d="M 212,308
+                 L 231,308
+                 L 231,326
+                 A 142,139 0 0,0 372,447
+                 L 372,460
+                 A 160,152 0 0,1 212,308 Z" fill="url(#o-left-crescent-bot)" filter="url(#o-bevel-soft)" />
+      </g>
+    </g>
+    <path d="M 372,308
+             L 222,308
+             C 222,296 227,290 231,290
+             C 231,303 252,306 282,306
+             C 350,305 369,285 370.5,169
+             L 372,169 Z" fill="url(#star-tl)" />
+    <path d="M 372,308
+             L 222,308
+             C 222,320 227,326 231,326
+             C 231,313 252,310 282,310
+             C 350,311 369,331 370.5,447
+             L 372,447 Z" fill="url(#star-bl)" />
+    <path d="M 372,308
+             L 372,169
+             L 373.5,169
+             C 375,285 394,305.5 494,308 Z" fill="url(#star-tr)" />
+    <path d="M 372,308
+             L 494,308
+             C 394,310.5 375,331 373.5,447
+             L 372,447 Z" fill="url(#star-br)" />
+    <path d="M 62,307.3 L 372,307.3 L 372,308.4 L 62,308.4 Z" fill="#ffffff" fill-opacity="0.92" />
+    <path d="M 62,308.4 L 372,308.4 L 372,309.7 L 62,309.7 Z" fill="#1b56b8" fill-opacity="0.7" />
+  </g>
+  <path d="M 370.5,169
+           A 142,139 0 0,0 231,290
+           C 231,303 252,306 282,306
+           C 350,305 369,285 370.5,169 Z" fill="none" stroke="#4580d6" stroke-width="1.0" stroke-opacity="0.65" />
+  <path d="M 231,326
+           A 142,139 0 0,0 370.5,447
+           C 369,331 350,311 282,310
+           C 252,310 231,313 231,326 Z" fill="none" stroke="#1b52ab" stroke-width="1.0" stroke-opacity="0.7" />
+  <path d="M 373.5,169
+           C 375,285 394,305.5 494,308
+           C 394,310.5 375,331 373.5,447" fill="none" stroke="#143d8a" stroke-width="1.1" stroke-opacity="0.8" />
+</svg>

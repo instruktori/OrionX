@@ -1,0 +1,690 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="54 96 1716 424" width="100%" height="100%">
+  <defs>
+    <!-- ==================== SMOOTH BLENDING FILTERS ==================== -->
+    <!-- High-radius blur for seamless circumferential color transitions inside the O ring -->
+    <filter id="o-ring-smooth" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="20" />
+    </filter>
+
+    <!-- Subtle edge softening for internal bevel transitions -->
+    <filter id="o-bevel-soft" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="2.2" />
+    </filter>
+
+    <!-- ==================== "O" GRADIENTS ==================== -->
+    <!-- Outer Chamfer Rim: Upper Half -->
+    <linearGradient id="o-rim-top" x1="62" y1="205" x2="583" y2="205" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3c6eb5" />
+      <stop offset="14%" stop-color="#6ca0e0" />
+      <stop offset="28%" stop-color="#345ea0" />
+      <stop offset="52%" stop-color="#1f4482" />
+      <stop offset="76%" stop-color="#1f5cc4" />
+      <stop offset="92%" stop-color="#2e74de" />
+      <stop offset="100%" stop-color="#1a4fae" />
+    </linearGradient>
+
+    <!-- Outer Chamfer Rim: Lower Half -->
+    <linearGradient id="o-rim-bot" x1="62" y1="410" x2="583" y2="410" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#184291" />
+      <stop offset="14%" stop-color="#3880e6" />
+      <stop offset="28%" stop-color="#4e97f5" />
+      <stop offset="44%" stop-color="#1c57ba" />
+      <stop offset="62%" stop-color="#0d2966" />
+      <stop offset="80%" stop-color="#0b2052" />
+      <stop offset="93%" stop-color="#153c87" />
+      <stop offset="100%" stop-color="#184aa3" />
+    </linearGradient>
+
+    <!-- Ring Core Base: Deep Midnight Navy to Slate -->
+    <linearGradient id="o-core-base" x1="280" y1="115" x2="535" y2="445" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#182946" />
+      <stop offset="22%" stop-color="#091326" />
+      <stop offset="50%" stop-color="#050c1a" />
+      <stop offset="76%" stop-color="#0f1b31" />
+      <stop offset="100%" stop-color="#283650" />
+    </linearGradient>
+
+    <!-- Upper-Left Smooth White-to-Silver-Slate Transition (9:00 to 12:00) -->
+    <radialGradient id="o-ul-sheen" cx="195" cy="308" r="230" fx="185" fy="308" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="18%" stop-color="#edf6ff" />
+      <stop offset="38%" stop-color="#b4cae3" />
+      <stop offset="60%" stop-color="#697c96" />
+      <stop offset="82%" stop-color="#283852" />
+      <stop offset="100%" stop-color="#0b1528" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Lower-Left Smooth White-to-Azure-to-Royal Transition (9:00 to 6:00) -->
+    <radialGradient id="o-ll-azure" cx="190" cy="308" r="275" fx="180" fy="308" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="14%" stop-color="#def0ff" />
+      <stop offset="32%" stop-color="#85c5ff" />
+      <stop offset="54%" stop-color="#3b8df0" />
+      <stop offset="76%" stop-color="#1858bd" />
+      <stop offset="92%" stop-color="#0d3178" />
+      <stop offset="100%" stop-color="#091e4d" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Bottom-Right Smooth Brushed Silver/Chrome Reflection (3:00 to 6:00) -->
+    <radialGradient id="o-br-chrome" cx="475" cy="395" r="175" fx="485" fy="390" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#e3eaf3" />
+      <stop offset="25%" stop-color="#c2ccd9" />
+      <stop offset="52%" stop-color="#7f8c9f" />
+      <stop offset="78%" stop-color="#314059" />
+      <stop offset="100%" stop-color="#0d172b" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Continuous Right Inner Cutout Bevel (12:00 to 6:00) -->
+    <linearGradient id="o-right-inner-bevel" x1="430" y1="175" x2="425" y2="455" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0a1428" stop-opacity="0" />
+      <stop offset="35%" stop-color="#142038" stop-opacity="0.3" />
+      <stop offset="55%" stop-color="#586478" />
+      <stop offset="76%" stop-color="#b8c2d2" />
+      <stop offset="92%" stop-color="#758399" />
+      <stop offset="100%" stop-color="#223e73" />
+    </linearGradient>
+
+    <!-- Continuous Left Inner Crescent Highlight (Upper: 9:00 to 11:30) -->
+    <linearGradient id="o-left-crescent-top" x1="215" y1="308" x2="295" y2="178" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="30%" stop-color="#f2f8ff" />
+      <stop offset="65%" stop-color="#9cb2cc" />
+      <stop offset="100%" stop-color="#2b3b54" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Continuous Left Inner Crescent Highlight (Lower: 9:00 to 6:30) -->
+    <linearGradient id="o-left-crescent-bot" x1="215" y1="308" x2="295" y2="438" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="22%" stop-color="#daf0ff" />
+      <stop offset="55%" stop-color="#75bcff" />
+      <stop offset="85%" stop-color="#2673de" />
+      <stop offset="100%" stop-color="#124396" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Star Quadrant 1: Top-Left -->
+    <linearGradient id="star-tl" x1="345" y1="308" x2="372" y2="172" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="38%" stop-color="#eff7ff" />
+      <stop offset="74%" stop-color="#a1cbf9" />
+      <stop offset="100%" stop-color="#4c8ae0" />
+    </linearGradient>
+
+    <!-- Star Quadrant 2: Bottom-Left -->
+    <linearGradient id="star-bl" x1="335" y1="308" x2="372" y2="442" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#8ccaff" />
+      <stop offset="22%" stop-color="#559ef5" />
+      <stop offset="58%" stop-color="#2970d6" />
+      <stop offset="100%" stop-color="#14459c" />
+    </linearGradient>
+
+    <!-- Star Quadrant 3: Top-Right -->
+    <linearGradient id="star-tr" x1="372" y1="308" x2="460" y2="245" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#78baff" />
+      <stop offset="26%" stop-color="#3b83e6" />
+      <stop offset="65%" stop-color="#1e58b8" />
+      <stop offset="100%" stop-color="#123b88" />
+    </linearGradient>
+
+    <!-- Star Quadrant 4: Bottom-Right -->
+    <linearGradient id="star-br" x1="372" y1="308" x2="440" y2="375" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#081b4b" />
+      <stop offset="38%" stop-color="#0e2d73" />
+      <stop offset="76%" stop-color="#164499" />
+      <stop offset="100%" stop-color="#1f59b8" />
+    </linearGradient>
+
+    <!-- ==================== "r i o n" LIGHTER 2.5D GRADIENTS ==================== -->
+    <!-- Outer 2.5D Chamfer Rim (Bright Silvery-White Top-Left to Deep Slate Bottom-Right) -->
+    <linearGradient id="rion-outer-bevel" x1="0%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#d0dceb" />
+      <stop offset="18%" stop-color="#96a8c0" />
+      <stop offset="48%" stop-color="#4d5f78" />
+      <stop offset="78%" stop-color="#223047" />
+      <stop offset="100%" stop-color="#0f1829" />
+    </linearGradient>
+
+    <!-- Inner Highlight Rim (Subtle Specular Edge) -->
+    <linearGradient id="rion-inner-rim" x1="0%" y1="0%" x2="70%" y2="100%">
+      <stop offset="0%" stop-color="#e4eef9" />
+      <stop offset="25%" stop-color="#9eb0c8" />
+      <stop offset="55%" stop-color="#485a73" />
+      <stop offset="100%" stop-color="#18253a" />
+    </linearGradient>
+
+    <!-- Sculpted Satin Face for "r" -->
+    <linearGradient id="r-face" x1="620" y1="247" x2="685" y2="481" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#8295b0" />
+      <stop offset="16%" stop-color="#60738e" />
+      <stop offset="42%" stop-color="#3f516b" />
+      <stop offset="72%" stop-color="#26354d" />
+      <stop offset="100%" stop-color="#182438" />
+    </linearGradient>
+
+    <!-- Sculpted Satin Face for "i" Stem -->
+    <linearGradient id="i-face" x1="765" y1="250" x2="805" y2="481" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7c8fa8" />
+      <stop offset="18%" stop-color="#5b6e88" />
+      <stop offset="45%" stop-color="#3c4e68" />
+      <stop offset="75%" stop-color="#25344b" />
+      <stop offset="100%" stop-color="#172336" />
+    </linearGradient>
+
+    <!-- "i" Dot Outer Chamfer Bevel -->
+    <linearGradient id="idot-rim" x1="755" y1="160" x2="812" y2="220" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#dce7f5" />
+      <stop offset="30%" stop-color="#8fa2bc" />
+      <stop offset="65%" stop-color="#3d4f68" />
+      <stop offset="100%" stop-color="#121d30" />
+    </linearGradient>
+
+    <!-- "i" Dot 2.5D Convex Satin Sphere -->
+    <radialGradient id="idot-face" cx="770" cy="173" r="48" fx="766" fy="170" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#b0c2d9" />
+      <stop offset="22%" stop-color="#7b8fa9" />
+      <stop offset="50%" stop-color="#485a74" />
+      <stop offset="78%" stop-color="#26354d" />
+      <stop offset="100%" stop-color="#162236" />
+    </radialGradient>
+
+    <!-- Sculpted Satin Face for "o" -->
+    <linearGradient id="o-low-face" x1="880" y1="248" x2="1015" y2="485" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#8396b0" />
+      <stop offset="18%" stop-color="#60738e" />
+      <stop offset="45%" stop-color="#3e506a" />
+      <stop offset="74%" stop-color="#26354d" />
+      <stop offset="100%" stop-color="#172336" />
+    </linearGradient>
+
+    <!-- Inverted 2.5D Inner Counter Bevel for "o" (Shadow Top-Left, Light Bottom-Right) -->
+    <linearGradient id="o-low-counter-bevel" x1="890" y1="302" x2="1008" y2="432" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#121c2e" />
+      <stop offset="38%" stop-color="#2c3b52" />
+      <stop offset="72%" stop-color="#697c96" />
+      <stop offset="100%" stop-color="#b4c5dc" />
+    </linearGradient>
+
+    <!-- Sculpted Satin Face for "n" -->
+    <linearGradient id="n-face" x1="1130" y1="246" x2="1270" y2="481" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#8396b0" />
+      <stop offset="18%" stop-color="#60738e" />
+      <stop offset="45%" stop-color="#3e506a" />
+      <stop offset="75%" stop-color="#25344c" />
+      <stop offset="100%" stop-color="#172336" />
+    </linearGradient>
+
+    <!-- ==================== "X" GRADIENTS ==================== -->
+    <linearGradient id="x-tr-main" x1="1500" y1="305" x2="1670" y2="166" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#040f2d" />
+      <stop offset="14%" stop-color="#082363" />
+      <stop offset="30%" stop-color="#0f4db5" />
+      <stop offset="52%" stop-color="#1d7eef" />
+      <stop offset="76%" stop-color="#5cc2ff" />
+      <stop offset="93%" stop-color="#a8ebff" />
+      <stop offset="100%" stop-color="#ddf8ff" />
+    </linearGradient>
+
+    <linearGradient id="x-tr-bevel-r" x1="1540" y1="336" x2="1690" y2="166" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#071f54" />
+      <stop offset="35%" stop-color="#185ec7" />
+      <stop offset="75%" stop-color="#5ab8fa" />
+      <stop offset="100%" stop-color="#9ee4ff" />
+    </linearGradient>
+
+    <linearGradient id="x-tr-bevel-tl" x1="1475" y1="268" x2="1685" y2="166" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#09225c" />
+      <stop offset="35%" stop-color="#2977de" />
+      <stop offset="70%" stop-color="#8bd8ff" />
+      <stop offset="100%" stop-color="#bbf0ff" />
+    </linearGradient>
+
+    <linearGradient id="x-bl-main" x1="1445" y1="365" x2="1275" y2="490" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#030a21" />
+      <stop offset="14%" stop-color="#071d52" />
+      <stop offset="30%" stop-color="#0d46a8" />
+      <stop offset="54%" stop-color="#1e75e8" />
+      <stop offset="78%" stop-color="#52b0ff" />
+      <stop offset="94%" stop-color="#a2e2ff" />
+      <stop offset="100%" stop-color="#d6f4ff" />
+    </linearGradient>
+
+    <linearGradient id="x-bl-bevel-l" x1="1408" y1="332" x2="1261" y2="490" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#091f52" />
+      <stop offset="35%" stop-color="#2c6ec2" />
+      <stop offset="75%" stop-color="#6db7f2" />
+      <stop offset="100%" stop-color="#9ad6fa" />
+    </linearGradient>
+
+    <linearGradient id="x-bl-bevel-b" x1="1475" y1="404" x2="1261" y2="490" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#071e52" />
+      <stop offset="40%" stop-color="#1e65c9" />
+      <stop offset="80%" stop-color="#5daef0" />
+      <stop offset="100%" stop-color="#8bcbfa" />
+    </linearGradient>
+
+    <linearGradient id="x-front-upper" x1="1310" y1="175" x2="1645" y2="465" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#9ed6ff" />
+      <stop offset="14%" stop-color="#5ca7f7" />
+      <stop offset="32%" stop-color="#2a72de" />
+      <stop offset="55%" stop-color="#3688f2" />
+      <stop offset="78%" stop-color="#1d60c9" />
+      <stop offset="93%" stop-color="#1345a1" />
+      <stop offset="100%" stop-color="#0c2f78" />
+    </linearGradient>
+
+    <linearGradient id="x-front-groove" x1="1263" y1="175" x2="1685" y2="490" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#163e8f" />
+      <stop offset="18%" stop-color="#081d52" />
+      <stop offset="45%" stop-color="#0a286e" />
+      <stop offset="70%" stop-color="#1449ab" />
+      <stop offset="90%" stop-color="#0b2c75" />
+      <stop offset="100%" stop-color="#071c4f" />
+    </linearGradient>
+
+    <linearGradient id="x-front-lower" x1="1263" y1="175" x2="1665" y2="490" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0b2259" />
+      <stop offset="18%" stop-color="#091f54" />
+      <stop offset="34%" stop-color="#103688" />
+      <stop offset="44%" stop-color="#2c82eb" />
+      <stop offset="52%" stop-color="#8ae0ff" />
+      <stop offset="58%" stop-color="#bbf0ff" />
+      <stop offset="66%" stop-color="#58b8ff" />
+      <stop offset="78%" stop-color="#4aaeff" />
+      <stop offset="88%" stop-color="#6cc4ff" />
+      <stop offset="95%" stop-color="#2473de" />
+      <stop offset="100%" stop-color="#0d3b91" />
+    </linearGradient>
+
+    <linearGradient id="x-front-bevel-ll" x1="1263" y1="175" x2="1685" y2="490" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1d448f" />
+      <stop offset="28%" stop-color="#153c8a" />
+      <stop offset="44%" stop-color="#5ab4fa" />
+      <stop offset="54%" stop-color="#d8f6ff" />
+      <stop offset="65%" stop-color="#76c8ff" />
+      <stop offset="85%" stop-color="#5cacf2" />
+      <stop offset="100%" stop-color="#1854b5" />
+    </linearGradient>
+
+    <linearGradient id="x-front-bevel-tr" x1="1263" y1="175" x2="1685" y2="490" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#c4e6ff" />
+      <stop offset="18%" stop-color="#7ec0fa" />
+      <stop offset="45%" stop-color="#3d8ef0" />
+      <stop offset="75%" stop-color="#266cd1" />
+      <stop offset="100%" stop-color="#123d8f" />
+    </linearGradient>
+
+    <!-- ==================== HOLLOW CLIP PATHS FOR "O" ==================== -->
+    <!-- Master Silhouette + Transparent Interior Cutouts (Counter-Clockwise) -->
+    <clipPath id="o-master-clip" clipPathUnits="userSpaceOnUse">
+      <path fill-rule="evenodd" d="M 379,104
+               A 204,204 0 0,1 583,308
+               A 204,204 0 0,1 379,512
+               A 204,204 0 0,1 187.3,377.8
+               C 172,334 138,313 62,308
+               C 138,303 172,282 187.3,238.2
+               A 204,204 0 0,1 379,104 Z
+               M 370.5,169
+               A 142,139 0 0,0 231,290
+               C 231,303 252,306 282,306
+               C 350,305 369,285 370.5,169 Z
+               M 231,326
+               A 142,139 0 0,0 370.5,447
+               C 369,331 350,311 282,310
+               C 252,310 231,313 231,326 Z
+               M 373.5,169
+               C 375,285 394,305.5 494,308
+               C 394,310.5 375,331 373.5,447
+               A 139,139 0 0,0 513,308
+               A 139,139 0 0,0 373.5,169 Z" />
+    </clipPath>
+
+    <!-- Inner Ring Surface Clip (Inset 12px from outer perimeter, excluding star holes) -->
+    <clipPath id="o-ring-core-clip" clipPathUnits="userSpaceOnUse">
+      <path fill-rule="evenodd" d="M 379,117
+               A 191,191 0 0,1 570,308
+               A 191,191 0 0,1 379,499
+               A 191,191 0 0,1 198,376
+               C 183,332 148,311 62,308
+               C 148,305 183,284 198,240
+               A 191,191 0 0,1 379,117 Z
+               M 372,169
+               A 142,139 0 0,0 231,290
+               L 231,326
+               A 142,139 0 0,0 372,447
+               A 139,139 0 0,0 513,308
+               A 139,139 0 0,0 372,169 Z" />
+    </clipPath>
+
+    <!-- Left-Side Horizon Split Clips (Crisp at y=308 on left, open on right) -->
+    <clipPath id="o-upper-horizon" clipPathUnits="userSpaceOnUse">
+      <path d="M 50,90 L 595,90 L 595,308 L 50,308 Z" />
+    </clipPath>
+    <clipPath id="o-lower-horizon" clipPathUnits="userSpaceOnUse">
+      <path d="M 50,308 L 595,308 L 595,525 L 50,525 Z" />
+    </clipPath>
+  </defs>
+
+  <!-- ================================================================= -->
+  <!-- 1. THE SIGNATURE "O" (SEAMLESS RING BLENDING + TRANSPARENT HOLE)  -->
+  <!-- ================================================================= -->
+  <g clip-path="url(#o-master-clip)">
+
+    <!-- A. Continuous Outer Chamfer Rim (Split cleanly at y=308 on the left) -->
+    <path clip-path="url(#o-upper-horizon)" fill-rule="evenodd" d="M 50,95 L 590,95 L 590,308 L 50,308 Z
+             M 372,169
+             A 142,139 0 0,0 231,290
+             L 231,326
+             A 142,139 0 0,0 372,447
+             A 139,139 0 0,0 513,308
+             A 139,139 0 0,0 372,169 Z" fill="url(#o-rim-top)" />
+
+    <path clip-path="url(#o-lower-horizon)" fill-rule="evenodd" d="M 50,308 L 590,308 L 590,520 L 50,520 Z
+             M 372,169
+             A 142,139 0 0,0 231,290
+             L 231,326
+             A 142,139 0 0,0 372,447
+             A 139,139 0 0,0 513,308
+             A 139,139 0 0,0 372,169 Z" fill="url(#o-rim-bot)" />
+
+    <!-- B. Seamless Inner Ring Body (No Polygon Seams) -->
+    <g clip-path="url(#o-ring-core-clip)">
+      <!-- Base Midnight Navy Core -->
+      <path fill-rule="evenodd" d="M 50,95 L 590,95 L 590,520 L 50,520 Z
+               M 372,169
+               A 142,139 0 0,0 231,290
+               L 231,326
+               A 142,139 0 0,0 372,447
+               A 139,139 0 0,0 513,308
+               A 139,139 0 0,0 372,169 Z" fill="url(#o-core-base)" />
+
+      <!-- Upper-Left White-to-Slate Metallic Sheen (Strictly <= 308, radial fade) -->
+      <g clip-path="url(#o-upper-horizon)">
+        <circle cx="210" cy="308" r="235" fill="url(#o-ul-sheen)" filter="url(#o-ring-smooth)" />
+      </g>
+
+      <!-- Lower-Left White-to-Azure-to-Royal Band (Strictly >= 308, radial fade) -->
+      <g clip-path="url(#o-lower-horizon)">
+        <circle cx="210" cy="308" r="275" fill="url(#o-ll-azure)" filter="url(#o-ring-smooth)" />
+      </g>
+
+      <!-- Bottom-Right Brushed Silver/Chrome Band (Smoothly blends 3:00 to 6:00) -->
+      <ellipse cx="470" cy="395" rx="175" ry="155" fill="url(#o-br-chrome)" filter="url(#o-ring-smooth)" />
+
+      <!-- Continuous Right Inner Cutout Chamfer (12:00 to 6:00, zero hard ends) -->
+      <path fill-rule="evenodd" d="M 372,158
+               A 151,150 0 0,1 524,308
+               A 151,150 0 0,1 372,458
+               L 372,447
+               A 139,139 0 0,0 513,308
+               A 139,139 0 0,0 372,169 Z" fill="url(#o-right-inner-bevel)" filter="url(#o-bevel-soft)" />
+
+      <!-- Continuous Left Inner Crescent Bevel (Upper: 9:00 to 11:30) -->
+      <g clip-path="url(#o-upper-horizon)">
+        <path fill-rule="evenodd" d="M 212,308
+                 A 160,152 0 0,1 372,156
+                 L 372,169
+                 A 142,139 0 0,0 231,290
+                 L 231,308 Z" fill="url(#o-left-crescent-top)" filter="url(#o-bevel-soft)" />
+      </g>
+
+      <!-- Continuous Left Inner Crescent Bevel (Lower: 9:00 to 6:30) -->
+      <g clip-path="url(#o-lower-horizon)">
+        <path fill-rule="evenodd" d="M 212,308
+                 L 231,308
+                 L 231,326
+                 A 142,139 0 0,0 372,447
+                 L 372,460
+                 A 160,152 0 0,1 212,308 Z" fill="url(#o-left-crescent-bot)" filter="url(#o-bevel-soft)" />
+      </g>
+    </g>
+
+    <!-- C. Four-Point Celestial Star (Seamlessly Joined to Left Crescent at x=224) -->
+    <!-- Top-Left Star Quadrant -->
+    <path d="M 372,308
+             L 222,308
+             C 222,296 227,290 231,290
+             C 231,303 252,306 282,306
+             C 350,305 369,285 370.5,169
+             L 372,169 Z" fill="url(#star-tl)" />
+
+    <!-- Bottom-Left Star Quadrant -->
+    <path d="M 372,308
+             L 222,308
+             C 222,320 227,326 231,326
+             C 231,313 252,310 282,310
+             C 350,311 369,331 370.5,447
+             L 372,447 Z" fill="url(#star-bl)" />
+
+    <!-- Top-Right Star Quadrant -->
+    <path d="M 372,308
+             L 372,169
+             L 373.5,169
+             C 375,285 394,305.5 494,308 Z" fill="url(#star-tr)" />
+
+    <!-- Bottom-Right Star Quadrant -->
+    <path d="M 372,308
+             L 494,308
+             C 394,310.5 375,331 373.5,447
+             L 372,447 Z" fill="url(#star-br)" />
+
+    <!-- Crisp Horizontal Midline Facet Ridge (From Left Tip x=62 to Star Center x=372) -->
+    <path d="M 62,307.3 L 372,307.3 L 372,308.4 L 62,308.4 Z" fill="#ffffff" fill-opacity="0.92" />
+    <path d="M 62,308.4 L 372,308.4 L 372,309.7 L 62,309.7 Z" fill="#1b56b8" fill-opacity="0.7" />
+  </g>
+
+  <!-- Subtle Crisp Contour Definition Around the Transparent Inner Cutouts -->
+  <path d="M 370.5,169
+           A 142,139 0 0,0 231,290
+           C 231,303 252,306 282,306
+           C 350,305 369,285 370.5,169 Z" fill="none" stroke="#4580d6" stroke-width="1.0" stroke-opacity="0.65" />
+  <path d="M 231,326
+           A 142,139 0 0,0 370.5,447
+           C 369,331 350,311 282,310
+           C 252,310 231,313 231,326 Z" fill="none" stroke="#1b52ab" stroke-width="1.0" stroke-opacity="0.7" />
+  <path d="M 373.5,169
+           C 375,285 394,305.5 494,308
+           C 394,310.5 375,331 373.5,447" fill="none" stroke="#143d8a" stroke-width="1.1" stroke-opacity="0.8" />
+
+  <!-- ================================================================= -->
+  <!-- 2. LOWERCASE WORDMARK: "r", "i", "o", "n" (LIGHTER 2.5D SATIN)    -->
+  <!-- ================================================================= -->
+
+  <!-- Letter "r" -->
+  <g id="letter-r">
+    <!-- Outer 2.5D Chamfer Rim -->
+    <path d="M 597,481
+             L 597,362
+             C 597,285 645,247 718,247
+             L 736,247
+             L 736,301
+             L 720,301
+             C 674,301 656,324 656,368
+             L 656,481 Z" fill="url(#rion-outer-bevel)" />
+    <!-- Intermediate Specular Rim Step -->
+    <path d="M 600.5,477.5
+             L 600.5,362
+             C 600.5,287.5 646,250.5 718,250.5
+             L 732.5,250.5
+             L 732.5,297.5
+             L 720,297.5
+             C 672,297.5 652.5,322 652.5,368
+             L 652.5,477.5 Z" fill="url(#rion-inner-rim)" />
+    <!-- Luminous Satin Inner Face -->
+    <path d="M 602.5,475.5
+             L 602.5,362
+             C 602.5,289.5 647.5,252.5 718,252.5
+             L 730.5,252.5
+             L 730.5,295.5
+             L 720,295.5
+             C 670.5,295.5 650.5,320.5 650.5,368
+             L 650.5,475.5 Z" fill="url(#r-face)" />
+  </g>
+
+  <!-- Letter "i" -->
+  <g id="letter-i">
+    <!-- Stem Outer 2.5D Chamfer Rim -->
+    <path d="M 753,250 L 813,250 L 813,481 L 753,481 Z" fill="url(#rion-outer-bevel)" />
+    <!-- Stem Intermediate Specular Rim Step -->
+    <path d="M 756.5,253.5 L 809.5,253.5 L 809.5,477.5 L 756.5,477.5 Z" fill="url(#rion-inner-rim)" />
+    <!-- Stem Luminous Satin Inner Face -->
+    <path d="M 758.5,255.5 L 807.5,255.5 L 807.5,475.5 L 758.5,475.5 Z" fill="url(#i-face)" />
+
+    <!-- Dot of "i" (2.5D Beveled Disc + Convex Satin Dome) -->
+    <circle cx="783" cy="191" r="33.5" fill="url(#idot-rim)" />
+    <circle cx="783.4" cy="191.4" r="29.8" fill="url(#idot-face)" />
+  </g>
+
+  <!-- Letter "o" (Hollow Counter-Clockwise Inner Cutout + Inverted Inner Bevel) -->
+  <g id="letter-o">
+    <!-- Outer 2.5D Chamfer Base -->
+    <path fill-rule="evenodd" d="M 948.5,246
+             A 119.5,121.5 0 1,1 948.5,489
+             A 119.5,121.5 0 1,1 948.5,246 Z
+             M 948.5,304
+             A 59.5,63.5 0 1,0 948.5,431
+             A 59.5,63.5 0 1,0 948.5,304 Z" fill="url(#rion-outer-bevel)" />
+    <!-- Intermediate Specular Rim Step -->
+    <path fill-rule="evenodd" d="M 948.5,249.5
+             A 116,118 0 1,1 948.5,485.5
+             A 116,118 0 1,1 948.5,249.5 Z
+             M 948.5,300.5
+             A 63,67 0 1,0 948.5,434.5
+             A 63,67 0 1,0 948.5,300.5 Z" fill="url(#rion-inner-rim)" />
+    <!-- Inner Counter Bevel Ring (Shadow Top-Left, Highlight Bottom-Right) -->
+    <path fill-rule="evenodd" d="M 948.5,298.5
+             A 65,69 0 1,1 948.5,436.5
+             A 65,69 0 1,1 948.5,298.5 Z
+             M 948.5,304
+             A 59.5,63.5 0 1,0 948.5,431
+             A 59.5,63.5 0 1,0 948.5,304 Z" fill="url(#o-low-counter-bevel)" />
+    <!-- Main Luminous Satin Ring Face -->
+    <path fill-rule="evenodd" d="M 948.5,251.5
+             A 114,116 0 1,1 948.5,483.5
+             A 114,116 0 1,1 948.5,251.5 Z
+             M 948.5,298.5
+             A 65,69 0 1,0 948.5,436.5
+             A 65,69 0 1,0 948.5,298.5 Z" fill="url(#o-low-face)" />
+  </g>
+
+  <!-- Letter "n" -->
+  <g id="letter-n">
+    <!-- Outer 2.5D Chamfer Base -->
+    <path d="M 1084,481
+             L 1084,356
+             C 1084,286 1130,246 1196.5,246
+             C 1263,246 1309,286 1309,356
+             L 1309,481
+             L 1249,481
+             L 1249,360
+             C 1249,322 1228,304 1196.5,304
+             C 1165,304 1143,322 1143,360
+             L 1143,481 Z" fill="url(#rion-outer-bevel)" />
+    <!-- Intermediate Specular Rim Step -->
+    <path d="M 1087.5,477.5
+             L 1087.5,356
+             C 1087.5,288.5 1131.5,249.5 1196.5,249.5
+             C 1261.5,249.5 1305.5,288.5 1305.5,356
+             L 1305.5,477.5
+             L 1252.5,477.5
+             L 1252.5,360
+             C 1252.5,320 1229.5,300.5 1196.5,300.5
+             C 1163.5,300.5 1139.5,320 1139.5,360
+             L 1139.5,477.5 Z" fill="url(#rion-inner-rim)" />
+    <!-- Luminous Satin Inner Face -->
+    <path d="M 1089.5,475.5
+             L 1089.5,356
+             C 1089.5,290.5 1132.5,251.5 1196.5,251.5
+             C 1260.5,251.5 1303.5,290.5 1303.5,356
+             L 1303.5,475.5
+             L 1254.5,475.5
+             L 1254.5,360
+             C 1254.5,318.5 1230.5,298.5 1196.5,298.5
+             C 1162.5,298.5 1137.5,318.5 1137.5,360
+             L 1137.5,475.5 Z" fill="url(#n-face)" />
+  </g>
+
+  <!-- ================================================================= -->
+  <!-- 3. THE CUSTOM INTERWOVEN RIBBON "X" (SPACED CLEANLY FROM "n")     -->
+  <!-- ================================================================= -->
+  <g id="letter-X" transform="translate(72, 0)">
+    <!-- A. REAR DIAGONAL RIBBON (/ : Bottom-Left to Top-Right) -->
+    <g id="x-rear-tr">
+      <path d="M 1475,268
+               L 1545,190
+               C 1562,172 1580,166 1605,166
+               L 1690,166
+               L 1545,340 Z" fill="url(#x-tr-main)" />
+      <path d="M 1690,166
+               L 1545,340
+               L 1538,333
+               L 1679,166 Z" fill="url(#x-tr-bevel-r)" />
+      <path d="M 1475,268
+               L 1545,190
+               C 1562,172 1580,166 1605,166
+               L 1690,166
+               L 1682,170
+               L 1605,170
+               C 1582,170 1565,176 1549,193
+               L 1479,272 Z" fill="url(#x-tr-bevel-tl)" />
+    </g>
+
+    <g id="x-rear-bl">
+      <path d="M 1406,330
+               L 1475,404
+               L 1412,468
+               C 1395,484 1376,490 1352,490
+               L 1261,490 Z" fill="url(#x-bl-main)" />
+      <path d="M 1406,330
+               L 1261,490
+               L 1271,490
+               L 1412,336 Z" fill="url(#x-bl-bevel-l)" />
+      <path d="M 1475,404
+               L 1412,468
+               C 1395,484 1376,490 1352,490
+               L 1261,490
+               L 1269,485.5
+               L 1352,485.5
+               C 1374,485.5 1392,480 1408,464
+               L 1470,399 Z" fill="url(#x-bl-bevel-b)" />
+    </g>
+
+    <!-- B. FRONT DIAGONAL RIBBON (\ : Top-Left to Bottom-Right) -->
+    <g id="x-front-tl-br">
+      <path d="M 1263,175
+               L 1368,175
+               C 1390,175 1408,183 1424,201
+               L 1685,490
+               C 1530,365 1390,245 1263,175 Z" fill="url(#x-front-upper)" />
+
+      <path d="M 1263,175
+               C 1380,258 1518,375 1685,490
+               L 1590,490
+               C 1566,490 1548,483 1532,466
+               L 1263,175 Z" fill="url(#x-front-lower)" />
+
+      <path d="M 1263,175
+               C 1390,245 1530,365 1685,490
+               C 1518,375 1380,258 1263,175 Z" fill="url(#x-front-groove)" />
+
+      <path d="M 1263,175
+               C 1390,245 1530,365 1685,490" fill="none" stroke="#85c8ff" stroke-width="1.6" stroke-opacity="0.75" />
+
+      <path d="M 1263,175
+               L 1368,175
+               C 1390,175 1408,183 1424,201
+               L 1685,490
+               L 1676,485
+               L 1420,204
+               C 1405,187 1388,179.5 1368,179.5
+               L 1274,179.5 Z" fill="url(#x-front-bevel-tr)" />
+
+      <path d="M 1263,175
+               L 1532,466
+               C 1548,483 1566,490 1590,490
+               L 1685,490
+               L 1675,485.5
+               L 1590,485.5
+               C 1568,485.5 1551,479 1536,462
+               L 1272,180 Z" fill="url(#x-front-bevel-ll)" />
+    </g>
+  </g>
+</svg>

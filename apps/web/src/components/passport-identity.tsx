@@ -1,4 +1,5 @@
-import { Command, Fingerprint, GraduationCap } from "lucide-react";
+import { Fingerprint, GraduationCap } from "lucide-react";
+import { BrandLogo } from "./brand-logo";
 export function PassportIdentity({
   name,
   program,
@@ -13,9 +14,8 @@ export function PassportIdentity({
   return (
     <div className="passport-identity">
       <div className="passport-identity-top">
-        <span>
-          <Command size={19} />
-          ORIONX
+        <span className="passport-identity-brand">
+          <BrandLogo className="passport-brand-logo" width={115} height={30} />
         </span>
         <span className="mono">
           {issued ? "DIGITAL PASSPORT" : "PASSPORT PREVIEW"}

@@ -4,7 +4,6 @@ import {
   ArrowRight,
   ArrowUpRight,
   BookOpen,
-  Command,
   FileCheck2,
   Fingerprint,
   GraduationCap,
@@ -13,6 +12,7 @@ import {
 } from "lucide-react";
 import { Shell } from "@/components/shell";
 import { PassportIdentity } from "@/components/passport-identity";
+import { BrandLogo } from "@/components/brand-logo";
 
 export default function Home() {
   return (
@@ -188,9 +188,7 @@ export default function Home() {
         </div>
       </section>
       <section className="landing-cta">
-        <span className="brand-mark">
-          <Command size={23} />
-        </span>
+        <BrandLogo className="cta-brand-logo" width={198} height={52} />
         <h2>The next chapter is yours.</h2>
         <p>Start with your private workspace. Grow your record over time.</p>
         <Link className="button" href="/login?next=/dashboard">

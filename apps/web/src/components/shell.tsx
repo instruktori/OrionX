@@ -7,7 +7,6 @@ import {
   ArrowUpRight,
   BookOpen,
   ChevronRight,
-  Command,
   FileBadge2,
   GraduationCap,
   LayoutDashboard,
@@ -20,16 +19,12 @@ import {
 import { useSession } from "@/lib/session";
 import { oauthCallbackTarget } from "@/lib/oauth-redirect";
 import { ThemeToggle } from "./theme-toggle";
+import { BrandLogo } from "./brand-logo";
 
 export function Brand() {
   return (
     <Link className="brand" href="/" aria-label="OrionX home">
-      <span className="brand-mark">
-        <Command size={19} strokeWidth={2} />
-      </span>
-      <span className="brand-name">
-        orion<span>x</span>
-      </span>
+      <BrandLogo className="brand-logo" priority width={138} height={36} />
     </Link>
   );
 }

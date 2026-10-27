@@ -30,6 +30,7 @@ import {supabaseAuthServiceConfig} from "@orionx/core/src/config";
 import {createJobProcessor} from "@orionx/core/src/processor";
 import {z} from "zod";
 import multer from "multer";
+import {publicPassport} from "./public-passport";
 
 const cookie = (req: Request, key: string) =>
   (req.headers.cookie || "")
@@ -973,6 +974,24 @@ class ApiController {
   const bytes = await artifactStore().get(version.storageKey);
   if (sha256(bytes) !== version.pdfSha256) throw new DomainError("ARTIFACT_CORRUPTED", "Stored document failed integrity validation", 503);
   res.setHeader("Cache-Control", "private, no-store"); res.setHeader("Content-Type", "application/pdf"); res.setHeader("Content-Disposition", 'attachment; filename="passport-v' + version.number + '.pdf"'); res.send(Buffer.from(bytes));
+ }
+ @Get("verify/:code/original") async original(@Param("code") code: string, @Res() res: Response) {
+  const {result} = await publicPassport(code);
+  res.setHeader("Cache-Control", "no-store");
+  const status = result.integrity === "MISMATCH" ? 422 : result.registration === "REGISTERED" ? 200 : result.errorCode === "UNKNOWN_CODE" ? 404 : 503;
+  res.status(status).json(result);
+ }
+ @Get("verify/:code/document") async publicDocument(@Param("code") code: string, @Query("download") download: string | undefined, @Res() res: Response) {
+  const {bytes, result} = await publicPassport(code);
+  res.setHeader("Cache-Control", "no-store");
+  if (!bytes) {
+   const status = result.integrity === "MISMATCH" ? 422 : result.errorCode === "UNKNOWN_CODE" || result.original.errorCode === "ORIGINAL_NOT_FOUND" ? 404 : 503;
+   res.status(status).json(result); return;
+  }
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Content-Disposition", `${download === "1" ? "attachment" : "inline"}; filename="passport-v${result.version}.pdf"`);
+  res.send(Buffer.from(bytes));
  }
  @Get("verify/:code") async verify(@Param("code") code: string, @Res() res: Response) {
   try { decodeCode(code); } catch { throw new DomainError("INVALID_CODE", "Malformed verification code", 400); }

@@ -258,7 +258,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <div className="top-actions">
               <span className="topbar-note">
                 <ShieldCheck size={14} />
-                Private by default
+                {path === "/verify" ? "Public verification" : "Private by default"}
               </span>
               <ThemeToggle />
             </div>

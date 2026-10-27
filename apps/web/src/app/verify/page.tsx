@@ -18,6 +18,10 @@ import {
   AlertTriangle,
   Sparkles,
   ExternalLink,
+  Download,
+  ScanLine,
+  ChevronDown,
+  SlidersHorizontal,
 } from "lucide-react";
 import {
   discoverCodesFromPdfFile,
@@ -41,6 +45,8 @@ type Result = {
   programId?: string;
   verifiedCode?: string;
   chainEvidence?: Record<string, string | number>;
+  documentSource?: "stored-original";
+  original?: {available: boolean; viewUrl?: string; downloadUrl?: string; error?: string};
 };
 
 const API = (process.env.NEXT_PUBLIC_API_ORIGIN || "").replace(/\/+$/, "");
@@ -58,10 +64,25 @@ export default function Verify() {
     pdfCode: string;
   } | null>(null);
   const [result, setResult] = useState<Result | null>(null);
-  const [pending, setPending] = useState<"code" | "file" | null>(null);
+  const [pending, setPending] = useState<"code" | "file" | "original" | null>(null);
+  const [method, setMethod] = useState("original");
 
   // Camera & image QR scanner state
   const [cameraActive, setCameraActive] = useState(false);
+  const [cameraStarting, setCameraStarting] = useState(false);
+  const [scanFrames, setScanFrames] = useState(0);
+  const [scanCorners, setScanCorners] = useState<{x: number; y: number}[]>([]);
+  const [scanDetected, setScanDetected] = useState(false);
+  const [videoRatio, setVideoRatio] = useState(4 / 3);
+  const cameraSessionRef = useRef(0);
+  const detectionTimerRef = useRef<number | null>(null);
+  const requestRef = useRef(0);
+  const verificationAbortRef = useRef<AbortController | null>(null);
+  const resultRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (result) resultRef.current?.scrollIntoView({block: "start", behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth"});
+  }, [result]);
   const [cameraError, setCameraError] = useState("");
   const [scanStatus, setScanStatus] = useState("");
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -75,6 +96,9 @@ export default function Verify() {
   const codeError = touched && !valid;
 
   const stopCamera = useCallback(() => {
+    cameraSessionRef.current++;
+    if (detectionTimerRef.current) window.clearTimeout(detectionTimerRef.current);
+    setCameraStarting(false);
     if (scanTimerRef.current) {
       window.clearInterval(scanTimerRef.current);
       scanTimerRef.current = null;
@@ -87,18 +111,22 @@ export default function Verify() {
   }, []);
 
   useEffect(() => {
-    return () => stopCamera();
+    return () => { stopCamera(); verificationAbortRef.current?.abort(); };
   }, [stopCamera]);
 
   const runVerification = useCallback(
-    async (targetCode: string, pdfFile: File | null, withFile: boolean) => {
+    async (targetCode: string, pdfFile: File | null, withFile: boolean, original = false) => {
       const cleanCode = targetCode.trim().toUpperCase();
       if (withFile && (!pdfFile || fileError)) return;
       if (!withFile && !/^D1-[A-Z2-7]{32}$/.test(cleanCode)) {
         setTouched(true);
         return;
       }
-      setPending(withFile ? "file" : "code");
+      const requestId = ++requestRef.current;
+      verificationAbortRef.current?.abort();
+      const controller = new AbortController();
+      verificationAbortRef.current = controller;
+      setPending(withFile ? "file" : original ? "original" : "code");
       setResult(null);
       try {
         let response: Response;
@@ -109,13 +137,16 @@ export default function Verify() {
           response = await fetch(API + "/api/v1/verify/file", {
             method: "POST",
             body: form,
+            signal: controller.signal,
           });
         } else {
           response = await fetch(
-            API + "/api/v1/verify/" + encodeURIComponent(cleanCode),
+            API + "/api/v1/verify/" + encodeURIComponent(cleanCode) + (original ? "/original" : ""),
+            {signal: controller.signal},
           );
         }
         const data = await response.json().catch(() => ({}));
+        if (requestId !== requestRef.current) return;
         if (data.verifiedCode && !code) {
           setCode(data.verifiedCode);
         }
@@ -140,15 +171,21 @@ export default function Verify() {
           programId: data.programId,
           verifiedCode: data.verifiedCode || cleanCode,
           chainEvidence: data.chainEvidence,
+          documentSource: data.documentSource,
+          original: data.original,
         });
       } catch {
+        if (controller.signal.aborted || requestId !== requestRef.current) return;
         setResult({
           unavailable: true,
           message:
             "The verification service is unavailable. No proof has been established. Please try again later.",
         });
       } finally {
-        setPending(null);
+        if (requestId === requestRef.current) {
+          setPending(null);
+          if (original) setScanStatus(current => current ? "Passport lookup complete. See the verification result below." : "");
+        }
       }
     },
     [code, fileError],
@@ -160,7 +197,7 @@ export default function Verify() {
       const clean = value.trim().toUpperCase();
       setCode(clean);
       if (/^D1-[A-Z2-7]{32}$/.test(clean)) {
-        void runVerification(clean, null, false);
+        void runVerification(clean, null, false, true);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -244,67 +281,119 @@ export default function Verify() {
   };
 
   const startCameraScan = async () => {
+    if (cameraStarting || cameraActive || pending) return;
+    stopCamera();
+    const session = cameraSessionRef.current;
+    setCameraStarting(true);
     setCameraError("");
-    setScanStatus("Requesting camera access…");
-    if (
-      typeof navigator === "undefined" ||
-      !navigator.mediaDevices?.getUserMedia
-    ) {
-      setCameraError(
-        "Camera access is not supported in this browser. Upload a QR screenshot or PDF instead.",
-      );
+    setScanFrames(0);
+    setScanCorners([]);
+    setScanDetected(false);
+    setResult(null);
+    setScanStatus("Allow camera access in your browser to start scanning…");
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCameraError("Camera access is unavailable. Open this page over HTTPS, or choose a QR image below.");
       setScanStatus("");
+      setCameraStarting(false);
       return;
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: "environment" } },
+        video: { facingMode: { ideal: "environment" }, width: {ideal: 1280} },
         audio: false,
       });
+      if (session !== cameraSessionRef.current) {
+        stream.getTracks().forEach(t => t.stop());
+        return;
+      }
       streamRef.current = stream;
+      setCameraStarting(false);
       setCameraActive(true);
-      setScanStatus("Point your camera at a passport QR code…");
-      setTimeout(() => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          void videoRef.current.play().catch(() => {});
-        }
-      }, 50);
-
-      scanTimerRef.current = window.setInterval(() => {
-        if (!videoRef.current || !canvasRef.current) return;
-        const decoded = decodeQrFromVideoFrame(
-          videoRef.current,
-          canvasRef.current,
-        );
-        if (decoded.codes.length > 0) {
-          const found = decoded.codes[0];
-          stopCamera();
-          setCode(found);
-          setTouched(false);
-          setScanStatus(`Scanned QR code ${found} — verifying…`);
-          void runVerification(found, file, Boolean(file && !fileError));
-        } else if (decoded.rawPayload) {
-          setScanStatus(
-            "Detected a non-OrionX QR code. Point the camera at the passport verification QR.",
-          );
-        }
-      }, 250);
-    } catch {
-      setCameraError(
-        "Camera permission was denied or no camera hardware was found. You can upload a photo/screenshot of the QR code or drop the PDF instead.",
-      );
+      setScanStatus("Camera connected. Waiting for live frames…");
+    } catch (error) {
+      if (session !== cameraSessionRef.current) return;
+      const name = error instanceof Error ? error.name : "";
+      setCameraError(name === "NotAllowedError"
+        ? "Camera permission was denied. Allow camera access in your browser, then try again, or choose a QR image."
+        : name === "NotFoundError" ? "No camera was found. Choose a QR image or use another verification method."
+        : "The camera could not start. Close other apps using it and try again, or choose a QR image.");
       setScanStatus("");
       stopCamera();
     }
   };
 
+  useEffect(() => {
+    if (!cameraActive || !videoRef.current || !streamRef.current) return;
+    const video = videoRef.current;
+    const stream = streamRef.current;
+    const session = cameraSessionRef.current;
+    video.srcObject = stream;
+    let frames = 0;
+    const started = Date.now();
+    const failCamera = () => {
+      if (session !== cameraSessionRef.current) return;
+      setCameraError("The camera stream stopped. Start the camera again or choose a QR image.");
+      setScanStatus("");
+      stopCamera();
+    };
+    stream.getVideoTracks().forEach(track => track.addEventListener("ended", failCamera));
+    void video.play().catch(failCamera);
+    scanTimerRef.current = window.setInterval(() => {
+      if (session !== cameraSessionRef.current || !canvasRef.current) return;
+      try {
+        const decoded = decodeQrFromVideoFrame(video, canvasRef.current);
+        if (!decoded.frameReady) {
+          if (Date.now() - started > 10000) failCamera();
+          return;
+        }
+        frames++;
+        setVideoRatio(video.videoWidth / video.videoHeight);
+        setScanCorners(decoded.corners || []);
+        if (frames === 1 || frames % 4 === 0) setScanFrames(frames);
+        if (decoded.codes.length) {
+          const found = decoded.codes[0];
+          if (scanTimerRef.current) window.clearInterval(scanTimerRef.current);
+          setScanFrames(frames);
+          setScanDetected(true);
+          video.pause();
+          stream.getTracks().forEach(t => t.stop());
+          setCode(found);
+          setTouched(false);
+          setScanStatus("Passport QR found. Retrieving the original and checking blockchain proof…");
+          detectionTimerRef.current = window.setTimeout(stopCamera, 900);
+          void runVerification(found, null, false, true);
+        } else if (decoded.rawPayload) {
+          setScanStatus("QR detected, but it is not an OrionX passport code. Try the passport’s verification QR.");
+        } else if ((decoded.brightness ?? 255) < 45) {
+          setScanStatus("Camera is scanning, but the image is too dark. Add light or move out of shadow.");
+        } else {
+          setScanStatus(frames > 32
+            ? "Still scanning. Move closer, avoid glare, and hold the QR steady inside the frame."
+            : "Scanner is working. Place the whole QR inside the frame and hold steady.");
+        }
+      } catch {
+        setCameraError("The scanner could not read camera frames. Restart the camera or choose a QR image.");
+        setScanStatus("");
+        stopCamera();
+      }
+    }, 250);
+    return () => {
+      if (scanTimerRef.current) window.clearInterval(scanTimerRef.current);
+      stream.getVideoTracks().forEach(track => track.removeEventListener("ended", failCamera));
+    };
+    // Keep a scan session stable while unrelated form fields change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cameraActive, stopCamera]);
+
   const handleQrImageUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    const imgFile = e.target.files?.[0];
+    const input = e.target;
+    const imgFile = input.files?.[0];
     if (!imgFile) return;
     setCameraError("");
+    stopCamera();
+    setResult(null);
     setScanStatus("Scanning uploaded image for QR code…");
     try {
       const decoded = await decodeQrFromImageFile(imgFile);
@@ -313,7 +402,7 @@ export default function Verify() {
         setCode(found);
         setTouched(false);
         setScanStatus(`Decoded ${found} from image — verifying record…`);
-        await runVerification(found, file, Boolean(file && !fileError));
+        await runVerification(found, null, false, true);
       } else if (decoded.rawPayload) {
         setCameraError(
           `Found a QR code in the image (${decoded.rawPayload.slice(0, 60)}), but it does not contain a valid OrionX D1-… verification code.`,
@@ -331,7 +420,7 @@ export default function Verify() {
       );
       setScanStatus("");
     } finally {
-      e.target.value = "";
+      input.value = "";
     }
   };
 
@@ -348,42 +437,54 @@ export default function Verify() {
           <div className="eyebrow">INDEPENDENT CREDENTIAL VERIFICATION</div>
           <h1>Trust, with proof.</h1>
           <p className="lead">
-            Check a passport’s registration and issuer, or upload its PDF to
-            verify document integrity. No account required.
+            Scan a QR code to retrieve the original passport and check its
+            blockchain proof. No upload, account, or manual code entry required.
           </p>
+        </div>
+      </div>
+
+      <section className="card verify-primary">
+        <div className="verify-heading">
+          <div className="skill-icon icon-cyan"><ScanLine size={23} /></div>
+          <div><h2>Scan once. Open the original.</h2>
+            <p className="muted">Retrieve the issued passport, check its exact fingerprint, and see its status on Solana Devnet.</p>
+          </div>
         </div>
         <div className="page-actions">
           {!cameraActive ? (
             <button
               type="button"
-              className="button secondary"
+              className="button"
+              disabled={!!pending || cameraStarting}
               onClick={() => void startCameraScan()}
             >
-              <Camera size={16} /> Scan QR with Camera
+              <Camera size={16} /> {cameraStarting ? "Connecting camera…" : "Scan QR with camera"}
             </button>
           ) : (
             <button
               type="button"
               className="button button-crimson"
-              onClick={stopCamera}
+              onClick={() => { stopCamera(); setScanStatus("Camera stopped. Start it again when you’re ready."); }}
             >
               <CameraOff size={16} /> Stop Camera
             </button>
           )}
           <label className="button secondary" style={{ cursor: "pointer" }}>
-            <ImageIcon size={16} /> Scan QR Image / Screenshot
+            <ImageIcon size={16} /> Choose QR image
             <input
               type="file"
               accept="image/*"
               className="sr-only"
+              disabled={!!pending || cameraStarting}
               onChange={handleQrImageUpload}
             />
           </label>
         </div>
-      </div>
+        <p className="field-help">Use a printed QR, a QR on another screen, or an image saved on this device. Anyone with the code can open the issued original.</p>
+      </section>
 
       {/* Live Camera QR Scanner Panel */}
-      {(cameraActive || cameraError || scanStatus) && (
+      {(cameraActive || cameraStarting || cameraError || scanStatus) && (
         <section className="card scanner-card" style={{ marginBottom: 22 }}>
           <div
             className="section-head"
@@ -393,11 +494,11 @@ export default function Verify() {
               <Camera size={18} color="var(--cyan)" />
               <h2 style={{ margin: 0, fontSize: 18 }}>QR Code Scanner</h2>
             </div>
-            {cameraActive && (
+            {(cameraActive || cameraStarting) && (
               <button
                 type="button"
                 className="button secondary btn-sm"
-                onClick={stopCamera}
+                onClick={() => { stopCamera(); setScanStatus("Camera stopped. Start it again when you’re ready."); }}
               >
                 Stop Scanning
               </button>
@@ -418,22 +519,55 @@ export default function Verify() {
             </p>
           )}
           {cameraActive && (
-            <div className="camera-stage">
+            <div className={`camera-stage${scanDetected ? " is-detected" : ""}`} style={{aspectRatio: videoRatio}}>
               <video
                 ref={videoRef}
                 playsInline
                 muted
                 className="camera-video"
               />
+              <div className="scan-guide" aria-hidden="true">
+                <i /><i /><i /><i />
+                {!scanDetected && <span className="scan-sweep" />}
+              </div>
+              {scanCorners.length > 0 && <svg className="scan-tracker" viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true">
+                <polygon points={scanCorners.map(p => `${p.x},${p.y}`).join(" ")} vectorEffect="non-scaling-stroke" />
+              </svg>}
+              <span className="scan-live"><span />{scanDetected ? "QR captured" : scanFrames ? `Live · ${scanFrames} frames checked` : "Starting video…"}</span>
               <canvas ref={canvasRef} style={{ display: "none" }} />
             </div>
           )}
         </section>
       )}
 
-      <div className="verification-grid">
+      <details className="verify-alternatives">
+        <summary>
+          <span className="methods-heading">
+            <span className="methods-heading-icon"><SlidersHorizontal size={20} /></span>
+            <span><strong>Other verification methods</strong><span>Have a PDF or a printed code? Choose a method below.</span></span>
+          </span>
+          <span className="methods-toggle"><span>Choose method</span><ChevronDown size={18} /></span>
+        </summary>
+        <div className="verification-methods" role="group" aria-label="Verification method">
+          {[
+            {id: "original", icon: Download, title: "Retrieve original", description: "Use a code to open the issued passport and verify its proof."},
+            {id: "file", icon: FileCheck2, title: "Compare a PDF", description: "Check whether a file you received matches its blockchain record."},
+            {id: "code", icon: ShieldCheck, title: "Check record only", description: "Look up registration, issuer, and version status by code."},
+          ].map(option => (
+            <button key={option.id} type="button" className="verification-method-button"
+              aria-pressed={method === option.id} aria-controls="verification-method-panel" disabled={!!pending}
+              onClick={() => {stopCamera(); setMethod(option.id); setTouched(false);}}>
+              <span className="method-button-top"><option.icon size={21} />
+                <span className="method-selection">{method === option.id && <CheckCircle2 size={18} />}</span>
+              </span>
+              <strong>{option.title}</strong>
+              <span className="method-description">{option.description}</span>
+            </button>
+          ))}
+        </div>
+      <div id="verification-method-panel" className="verification-method-content">
         {/* Card 1: Compare Original PDF (with Zero-Transcription Auto-Discovery) */}
-        <section className="card">
+        <section className="card" hidden={method !== "file"}>
           <div className="verify-heading">
             <div className="skill-icon icon-cyan">
               <UploadCloud size={21} />
@@ -479,6 +613,15 @@ export default function Verify() {
                 ? "Ready to compare. Your PDF is checked against its registered SHA-256 fingerprint."
                 : "Select a passport PDF to automatically discover its code and verify its exact bytes.")}
           </p>
+
+          <details className="pdf-manual-code">
+            <summary>Use a verification code manually</summary>
+            <label htmlFor="pdf-verification-code" className="field-label">Verification code</label>
+            <input id="pdf-verification-code" className="input mono" value={code} disabled={!!pending}
+              placeholder="D1- followed by 32 characters" autoCapitalize="characters" spellCheck={false}
+              onChange={e => {setCode(e.target.value); setResult(null); setDiscrepancy(null);}} />
+            <p className="field-help">Use this if the PDF’s code cannot be detected, or to compare against a different code.</p>
+          </details>
 
           {discoveredCodes.length > 1 && (
             <div className="notice" style={{ marginTop: 0, marginBottom: 14 }}>
@@ -558,22 +701,23 @@ export default function Verify() {
         </section>
 
         {/* Card 2: Lookup by Verification Code */}
-        <section className="card">
+        <section className="card" hidden={method === "file"}>
           <div className="verify-heading">
             <div className="skill-icon">
               <Search size={21} />
             </div>
             <div>
-              <h2>Find the Passport Record by Code</h2>
+              <h2>{method === "original" ? "Retrieve the original passport" : "Find the Passport Record by Code"}</h2>
               <p className="muted">
-                Verify a version code printed on a passport or shared via link.
+                {method === "original" ? "Use the printed code to retrieve and verify the issued original." : "Verify registration without retrieving a document."}
               </p>
             </div>
           </div>
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              void check(false);
+              if (method === "original") { setTouched(true); if (valid) void runVerification(normalized, null, false, true); }
+              else void check(false);
             }}
             noValidate
           >
@@ -611,18 +755,20 @@ export default function Verify() {
               className="button secondary"
               type="submit"
               disabled={!!pending}
-              aria-busy={pending === "code"}
+              aria-busy={pending === "code" || pending === "original"}
             >
-              {pending === "code" ? (
+              {pending === "code" || pending === "original" ? (
                 <LoaderCircle size={16} />
               ) : (
                 <Search size={16} />
               )}{" "}
-              {pending === "code" ? "Checking record…" : "Verify code"}
+              {pending === "original" ? "Retrieving original…" : pending === "code" ? "Checking record…" : method === "original" ? "Retrieve original" : "Verify code"}
             </button>
           </form>
         </section>
       </div>
+
+      </details>
 
       {/* Verification Result & 4-Pillar Proof Scorecard */}
       <div role="status" aria-live="polite">
@@ -630,12 +776,14 @@ export default function Verify() {
           <p className="field-help" style={{ marginTop: 18 }}>
             {pending === "file"
               ? "Comparing your PDF bytes with the finalized Solana Devnet record…"
+              : pending === "original" ? "Retrieving the original passport and comparing its fingerprint with Solana Devnet…"
               : "Looking up the passport version record on Solana Devnet…"}
           </p>
         )}
 
         {result && (
           <section
+            ref={resultRef}
             className={`result-panel ${
               isTampered
                 ? "result-panel-crimson"
@@ -664,9 +812,9 @@ export default function Verify() {
                   {isUnavailable
                     ? "Verification is temporarily unavailable"
                     : isTampered
-                      ? "This document doesn’t match its registered proof"
+                      ? result.documentSource === "stored-original" ? "Stored original does not match its registered proof" : "This document doesn’t match its registered proof"
                       : isMatched
-                        ? "Document matches its registered proof"
+                        ? result.documentSource === "stored-original" ? "Original passport verified" : "Document matches its registered proof"
                         : isRegistered
                           ? "Registered record found"
                           : result.errorCode === "UNKNOWN_CODE"
@@ -690,6 +838,27 @@ export default function Verify() {
             >
               {result.message}
             </p>
+
+            {result.original?.error && <p className="notice" role="note">{result.original.error}</p>}
+            {result.original?.available && isMatched && result.original.viewUrl && (
+              <div className="verified-original">
+                <div className="section-head">
+                  <div><h2>Original issued passport</h2><p className="muted">Retrieved from storage and checked against the blockchain.</p></div>
+                  <div className="page-actions">
+                    <a className="button secondary" href={API + result.original.viewUrl} target="_blank" rel="noreferrer"><ExternalLink size={16} /> Open PDF</a>
+                    {result.original.downloadUrl && <a className="button" href={API + result.original.downloadUrl}><Download size={16} /> Download original</a>}
+                  </div>
+                </div>
+                <details className="original-preview">
+                  <summary>Preview original PDF</summary>
+                  <p className="field-help">If the preview is unavailable on this device, use Open PDF or Download original above.</p>
+                  <object data={API + result.original.viewUrl} type="application/pdf" className="original-pdf" aria-label="Verified original passport PDF">
+                    <p>Your browser cannot preview PDFs here. Use Open PDF or Download original above.</p>
+                  </object>
+                </details>
+                <p className="field-help">This check applies to the original shown here. To check a separate file you received, choose “Compare a PDF I received” above.</p>
+              </div>
+            )}
 
             {/* Legacy & Automated Test Compatible Pills */}
             <div className="info-line" style={{ marginBottom: 18 }}>
@@ -764,10 +933,10 @@ export default function Verify() {
                   </strong>
                   <p className="muted">
                     {result.integrity === "MATCH"
-                      ? "Every byte of your uploaded PDF matches the SHA-256 hash recorded on-chain."
+                      ? result.documentSource === "stored-original" ? "Every byte of the retrieved original matches the SHA-256 hash recorded on-chain." : "Every byte of your uploaded PDF matches the SHA-256 hash recorded on-chain."
                       : result.integrity === "MISMATCH"
-                        ? "The uploaded PDF has been altered—its SHA-256 fingerprint does not match the registered version."
-                        : "Code lookup only. Upload the PDF above to verify that the document bytes have not been modified."}
+                        ? result.documentSource === "stored-original" ? "The stored original does not match the registered fingerprint. The document has been withheld." : "The uploaded PDF has been altered—its SHA-256 fingerprint does not match the registered version."
+                        : result.documentSource === "stored-original" ? "Original document verification could not be completed. See the retrieval status above." : "Code lookup only. Choose PDF comparison in Other verification methods to check a document’s exact bytes."}
                   </p>
                 </div>
 
@@ -861,7 +1030,7 @@ export default function Verify() {
               icon: Fingerprint,
               title: "Document integrity",
               description:
-                "The PDF’s fingerprint is compared with its registered proof. A code lookup checks registration; upload the PDF to check that its contents match.",
+                "Scanning retrieves the original and compares its fingerprint with the blockchain. Use PDF comparison to check a separate file, or code lookup to check registration alone.",
             },
             {
               icon: History,

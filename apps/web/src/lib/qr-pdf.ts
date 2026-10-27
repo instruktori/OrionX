@@ -203,25 +203,34 @@ export async function decodeQrFromImageFile(file: File): Promise<{
 export function decodeQrFromVideoFrame(
   video: HTMLVideoElement,
   canvas: HTMLCanvasElement,
-): {codes: string[]; rawPayload: string | null} {
+): {codes: string[]; rawPayload: string | null; frameReady: boolean; brightness?: number; corners?: {x: number; y: number}[]} {
   const w = video.videoWidth;
   const h = video.videoHeight;
-  if (!w || !h) return {codes: [], rawPayload: null};
+  if (!w || !h || video.readyState < 2) return {codes: [], rawPayload: null, frameReady: false};
   const scale = Math.min(1, 720 / Math.max(w, h));
   const cw = Math.max(1, Math.round(w * scale));
   const ch = Math.max(1, Math.round(h * scale));
   canvas.width = cw;
   canvas.height = ch;
   const ctx = canvas.getContext("2d", {willReadFrequently: true});
-  if (!ctx) return {codes: [], rawPayload: null};
+  if (!ctx) throw new Error("Camera frame processing is unavailable");
   ctx.drawImage(video, 0, 0, cw, ch);
   const imageData = ctx.getImageData(0, 0, cw, ch);
+  let brightness = 0, samples = 0;
+  for (let i = 0; i < imageData.data.length; i += 64) {
+    brightness += (imageData.data[i] + imageData.data[i + 1] + imageData.data[i + 2]) / 3;
+    samples++;
+  }
+  brightness /= Math.max(1, samples);
   const decoded = jsQR(imageData.data, cw, ch);
   if (decoded?.data) {
     return {
       codes: extractCodesFromText(decoded.data),
       rawPayload: decoded.data,
+      frameReady: true,
+      brightness,
+      corners: [decoded.location.topLeftCorner, decoded.location.topRightCorner, decoded.location.bottomRightCorner, decoded.location.bottomLeftCorner].map(p => ({x: p.x / cw, y: p.y / ch})),
     };
   }
-  return {codes: [], rawPayload: null};
+  return {codes: [], rawPayload: null, frameReady: true, brightness};
 }

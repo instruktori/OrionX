@@ -1,33 +1,37 @@
+"use client";
 import Link from "next/link";
+import { useI18n } from "@/lib/i18n-provider";
 import { ArrowRight, BookOpen, GraduationCap, Link2 } from "lucide-react";
 import { BrandLogo } from "./brand-logo";
 import styles from "./landing-story.module.css";
 
-const steps = [
+const storySteps = (t: ReturnType<typeof useI18n>["t"]) => [
   {
     icon: BookOpen,
-    title: "Learn something new.",
+    title: t("story.firstTitle"),
     description:
-      "A focused workshop, a practical project, an academic course. Every learning format has a place in your passport.",
-    detail: "Develop your AI skills",
+      t("story.firstText"),
+    detail: t("story.firstDetail"),
   },
   {
     icon: GraduationCap,
-    title: "Make it part of your record.",
+    title: t("story.secondTitle"),
     description:
-      "Your university records eligible achievements. Each issued version adds to your history, with the same permanent passport identity.",
-    detail: "University recognition",
+      t("story.secondText"),
+    detail: t("story.secondDetail"),
   },
   {
     icon: Link2,
-    title: "Take your progress with you.",
+    title: t("story.thirdTitle"),
     description:
-      "Share your passport PDF or verification link. Others can check the record, its history, and the authority of its issuer.",
-    detail: "Share verifiable proof",
+      t("story.thirdText"),
+    detail: t("story.thirdDetail"),
   },
 ];
 
 export function LandingStory() {
+  const { t } = useI18n();
+  const steps = storySteps(t);
   return (
     <>
       <section
@@ -36,7 +40,7 @@ export function LandingStory() {
         aria-labelledby="learning-story-title"
       >
         <div className={styles.intro}>
-          <h2 id="learning-story-title">Built around the way you learn.</h2>
+          <h2 id="learning-story-title">{t("story.heading")}</h2>
           <p>
             Learning takes different paths. Your achievements belong together,
             in a record that grows with you.
@@ -61,14 +65,14 @@ export function LandingStory() {
 
       <section className={styles.start} aria-labelledby="start-title">
         <div>
-          <h2 id="start-title">Your next chapter starts here.</h2>
-          <p>Open your private workspace. Keep building your story.</p>
+          <h2 id="start-title">{t("story.ctaHeading")}</h2>
+          <p>{t("story.ctaText")}</p>
         </div>
         <Link
           href="/login?next=/dashboard"
           className={`button ${styles.startButton}`}
         >
-          Open your workspace
+          {t("home.open")}
           <ArrowRight size={17} aria-hidden="true" />
         </Link>
       </section>
@@ -78,11 +82,11 @@ export function LandingStory() {
           <Link href="/" aria-label="OrionX home">
             <BrandLogo width={109} height={29} className={styles.logo} />
           </Link>
-          <span>AI Skills Digital Passport</span>
+          <span>{t("shell.aiSkillsPassport")}</span>
         </div>
         <div className={styles.footerLinks}>
-          <Link href="/verify">Verify a credential</Link>
-          <span>Verification uses Solana Devnet.</span>
+          <Link href="/verify">{t("shell.verify")}</Link>
+          <span>{t("story.network")}</span>
         </div>
         <p className={styles.copyright}>
           © {new Date().getFullYear()} OrionX

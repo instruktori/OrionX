@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n-provider";
-import { localeDate } from "@/lib/i18n";
+import { localeDate, toMtavruli } from "@/lib/i18n";
 import {useEffect, useState} from "react";
 import {Clock3, Download, ExternalLink, FileBadge2, GraduationCap, LockKeyhole, ShieldCheck} from "lucide-react";
 import {Shell} from "@/components/shell";
@@ -35,7 +35,7 @@ export default function PassportPage() {
     <Shell>
       <PageHeading
         eyebrow={t("passport.eyebrow")}
-        title={t("passport.heading")}
+        title={locale === "ka" ? toMtavruli(t("passport.heading")) : t("passport.heading")}
         description={issued ? t("passport.descriptionIssued") : t("passport.descriptionPending")}
       >
         {issued && latest && (

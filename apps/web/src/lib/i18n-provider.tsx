@@ -21,9 +21,14 @@ export function I18nProvider({ initialLocale, children }: { initialLocale: Local
   const value = useMemo(()=>({locale,setLocale,t}),[locale,setLocale,t]);
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }
+// Standalone previews and legacy isolated tests render without RootLayout.
+// Preserve their English default while the production root supplies the locale.
+const englishFallback: I18nContextValue = {
+  locale: DEFAULT_LOCALE,
+  setLocale: () => {},
+  t: (key, values) => translate(DEFAULT_LOCALE, key, values),
+};
 export function useI18n(): I18nContextValue {
-  const context = useContext(I18nContext);
-  if (!context) throw new Error("useI18n requires an I18nProvider");
-  return context;
+  return useContext(I18nContext) ?? englishFallback;
 }
 export const FALLBACK_LOCALE = DEFAULT_LOCALE;

@@ -58,7 +58,7 @@ export function PassportShowcase({ showHeading = true }: { showHeading?: boolean
             {paused || reducedMotion ? <Play size={12} /> : <Pause size={12} />}
             {reducedMotion ? t("showcase.still") : paused ? t("showcase.play") : t("showcase.pause")}
           </button>
-          <button className={styles.moodButton} type="button" onClick={() => setMood((mood + 1) % 3)} aria-label={`Lighting: ${[t("showcase.dawn"), t("showcase.daylight"), t("showcase.dusk")][mood]}. Change lighting mood`}>
+          <button className={styles.moodButton} type="button" onClick={() => setMood((mood + 1) % 3)} aria-label={t("showcase.lighting", { mood: [t("showcase.dawn"),t("showcase.daylight"),t("showcase.dusk")][mood] })}>
             <Sun size={14} />{[t("showcase.dawn"), t("showcase.daylight"), t("showcase.dusk")][mood]}
           </button>
         </div>

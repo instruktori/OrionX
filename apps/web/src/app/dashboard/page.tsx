@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useI18n } from "@/lib/i18n-provider";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -26,6 +27,7 @@ import { useResource } from "@/lib/use-resource";
 import { type Passport, type PassportVersion, dateLabel } from "@/lib/passport";
 
 export default function Dashboard() {
+  const {t, locale} = useI18n();
   const { session, loading } = useSession();
   const eligible =
     !!session && (session.role === "student" || !!session.studentId);
@@ -40,12 +42,12 @@ export default function Dashboard() {
   return (
     <Shell>
       <PageHeading
-        eyebrow="YOUR LEARNING WORKSPACE"
-        title={name ? `Welcome back, ${name}.` : "Make your progress count."}
-        description="A clear view of your skills, achievements, and what comes next."
+        eyebrow={t("dashboard.eyebrow")}
+        title={name ? t("dashboard.welcome", {name}) : t("dashboard.title")}
+        description={t("dashboard.description")}
       >
         <Link className="button secondary" href="/passport">
-          Open passport
+          {t("dashboard.open")}
           <ArrowUpRight size={15} />
         </Link>
       </PageHeading>
@@ -54,18 +56,18 @@ export default function Dashboard() {
       ) : !session ? (
         <EmptyState
           icon={LockKeyhole}
-          title="Your progress starts here"
-          description="Sign in to see your personal learning record and university-issued credentials."
+          title={t("dashboard.startTitle")}
+          description={t("dashboard.startText")}
           href="/login?next=/dashboard"
-          action="Sign in to your workspace"
+          action={t("dashboard.startAction")}
         />
       ) : !eligible ? (
         <EmptyState
           icon={GraduationCap}
-          title="Your university workspace is ready"
-          description="Manage student records, skills, badges, and credential issuance from your administration workspace."
+          title={t("dashboard.readyTitle")}
+          description={t("dashboard.readyText")}
           href="/admin"
-          action="Open administration"
+          action={t("dashboard.openAdmin")}
         />
       ) : passport.error ? (
         <ErrorState message={passport.error} retry={passport.reload} />
@@ -74,25 +76,25 @@ export default function Dashboard() {
       ) : (
         p && (
           <>
-            <section className="dashboard-metrics" aria-label="Your progress">
+            <section className="dashboard-metrics" aria-label={t("dashboard.progress")}>
               {[
                 {
-                  label: "Skills recorded",
+                  label: t("dashboard.skillsRecorded"),
                   value: p.counts.skills,
                   icon: BookOpen,
-                  hint: "In finalized passport versions",
+                  hint: t("dashboard.skillsHint"),
                 },
                 {
-                  label: "Earned badges",
+                  label: t("dashboard.badges"),
                   value: p.counts.badges,
                   icon: Award,
-                  hint: "University-recorded achievements",
+                  hint: t("dashboard.badgesHint"),
                 },
                 {
-                  label: "Passport versions",
+                  label: t("dashboard.versions"),
                   value: p.counts.versions,
                   icon: Layers3,
-                  hint: "Your cumulative history",
+                  hint: t("dashboard.versionsHint"),
                 },
               ].map((m) => (
                 <div key={m.label} className="dashboard-metric">
@@ -110,9 +112,9 @@ export default function Dashboard() {
                 <section className="workspace-section">
                   <div className="section-head">
                     <div>
-                      <h2>Your next step</h2>
+                      <h2>{t("dashboard.next")}</h2>
                       <p className="muted">
-                        Keep your learning moving forward.
+                        {t("dashboard.keepLearning")}
                       </p>
                     </div>
                   </div>
@@ -122,14 +124,14 @@ export default function Dashboard() {
                         <Clock3 size={23} />
                       </span>
                       <div>
-                        <Badge tone="warning">Processing</Badge>
-                        <h3>Your passport is being updated</h3>
+                        <Badge tone="warning">{t("dashboard.processing")}</Badge>
+                        <h3>{t("dashboard.updating")}</h3>
                         <p>
                           New achievements will appear after the next version is
                           finalized.
                         </p>
                         <Link className="action-link" href="/passport">
-                          View version history
+                          {t("dashboard.history")}
                           <ArrowRight size={15} />
                         </Link>
                       </div>
@@ -140,19 +142,19 @@ export default function Dashboard() {
                         <GraduationCap size={23} />
                       </span>
                       <div>
-                        <Badge tone="blue">Get connected</Badge>
-                        <h3>Connect your university record</h3>
+                        <Badge tone="blue">{t("dashboard.getConnected")}</Badge>
+                        <h3>{t("dashboard.connect")}</h3>
                         <p>
-                          Share your <strong>workspace identifier</strong> with an authorized
+                          {t("dashboard.connectBefore")} <strong>{t("dashboard.workspaceId")}</strong> with an authorized
                           university administrator to link your student record. This is not a Passport ID.
                         </p>
                         {p.workspaceId ? (
                           <div className="identity-box">
-                            <span className="mini-kicker">WORKSPACE IDENTIFIER · NOT A PASSPORT ID</span>
+                            <span className="mini-kicker">{t("dashboard.workspaceNote")}</span>
                             <code>{p.workspaceId}</code>
                           </div>
                         ) : (
-                          <p className="muted">Your workspace identifier will appear once registration is complete.</p>
+                          <p className="muted">{t("dashboard.idPending")}</p>
                         )}
                       </div>
                     </div>
@@ -162,14 +164,14 @@ export default function Dashboard() {
                         <BookOpen size={23} />
                       </span>
                       <div>
-                        <Badge tone="blue">Your passport</Badge>
-                        <h3>Keep your achievements together</h3>
+                        <Badge tone="blue">{t("dashboard.yourPassport")}</Badge>
+                        <h3>{t("dashboard.gather")}</h3>
                         <p>
                           View your recorded skills, download issued versions,
                           and share a credential verification link.
                         </p>
                         <Link className="action-link" href="/passport">
-                          View your passport
+                          {t("dashboard.viewPassport")}
                           <ArrowRight size={15} />
                         </Link>
                       </div>
@@ -179,13 +181,13 @@ export default function Dashboard() {
                 <section className="workspace-section">
                   <div className="section-head">
                     <div>
-                      <h2>Recent achievements</h2>
+                      <h2>{t("dashboard.recent")}</h2>
                       <p className="muted">
-                        The latest additions to your record.
+                        {t("dashboard.recentText")}
                       </p>
                     </div>
                     <Link href="/passport" className="action-link">
-                      View all
+                      {t("dashboard.viewAll")}
                       <ArrowUpRight size={14} />
                     </Link>
                   </div>
@@ -217,7 +219,7 @@ export default function Dashboard() {
                   ) : (
                     <div className="inline-empty">
                       <Award size={25} strokeWidth={1.4} />
-                      <h3>Room for your first achievement</h3>
+                      <h3>{t("dashboard.empty")}</h3>
                       <p>
                         Skills appear here when your university issues a
                         finalized passport version.
@@ -228,48 +230,48 @@ export default function Dashboard() {
               </div>
               <aside className="dashboard-aside">
                 <section className="passport-summary">
-                  <span className="mini-kicker">YOUR DIGITAL PASSPORT</span>
+                  <span className="mini-kicker">{t("dashboard.passportEyebrow")}</span>
                   <FileBadge2 size={32} strokeWidth={1.3} />
                   <h2>
                     {p.official
-                      ? "A growing record."
-                      : "Ready for what’s next."}
+                      ? t("dashboard.growing")
+                      : t("dashboard.ready")}
                   </h2>
                   <p>
                     {p.official
-                      ? "Every issued version builds on your achievements."
-                      : "Your private workspace is the start of your skills record."}
+                      ? t("dashboard.growingText")
+                      : t("dashboard.readyText2")}
                   </p>
                   <div className="summary-id">
-                    <small>{p.official && p.latest ? "PASSPORT ID" : "ISSUANCE STATUS"}</small>
-                    <code>{p.official && p.latest && p.passportId ? p.passportId : "No Passport ID issued yet"}</code>
+                    <small>{p.official && p.latest ? t("dashboard.passportId") : t("dashboard.issuanceStatus")}</small>
+                    <code>{p.official && p.latest && p.passportId ? p.passportId : t("dashboard.noId")}</code>
                   </div>
                   <Link className="button secondary" href="/passport">
-                    View my passport
+                    {t("dashboard.viewMy")}
                     <ArrowRight size={15} />
                   </Link>
                 </section>
                 <section className="setup-checklist">
-                  <h3>Your passport journey</h3>
+                  <h3>{t("dashboard.journey")}</h3>
                   {[
                     {
                       done: true,
-                      title: "Workspace created",
-                      desc: "Your private learning space",
+                      title: t("dashboard.created"),
+                      desc: t("dashboard.createdText"),
                     },
                     {
                       done: p.universityVerified,
-                      title: "University record linked",
+                      title: t("dashboard.linked"),
                       desc: p.universityVerified
-                        ? "Connected by your university"
-                        : "Your administrator can help",
+                        ? t("dashboard.connected")
+                        : t("dashboard.help"),
                     },
                     {
                       done: !!p.latest,
-                      title: "First credential issued",
+                      title: t("dashboard.firstIssued"),
                       desc: p.latest
-                        ? `Version ${p.latest.version} finalized`
-                        : "Appears after authorized issuance",
+                        ? t("dashboard.finalizedVersion",{version:p.latest.version})
+                        : t("dashboard.issuance"),
                     },
                   ].map((s, i) => (
                     <div key={s.title} className={s.done ? "complete" : ""}>

@@ -468,11 +468,11 @@ export default function Verify() {
               className="button button-crimson"
               onClick={() => { stopCamera(); setScanStatus(t("verify.stopCamera")); }}
             >
-              <CameraOff size={16} /> Stop Camera
+              <CameraOff size={16} /> {t("verify.stopCameraButton")}
             </button>
           )}
           <label className="button secondary" style={{ cursor: "pointer" }}>
-            <ImageIcon size={16} /> Choose QR image
+            <ImageIcon size={16} /> {t("verify.chooseImage")}
             <input
               type="file"
               accept="image/*"
@@ -502,7 +502,7 @@ export default function Verify() {
                 className="button secondary btn-sm"
                 onClick={() => { stopCamera(); setScanStatus(t("verify.stopCamera")); }}
               >
-                Stop Scanning
+                {t("verify.stopScan")}
               </button>
             )}
           </div>
@@ -585,7 +585,7 @@ export default function Verify() {
           <div className="upload-zone">
             <UploadCloud size={26} />
             <label htmlFor="verify-file">
-              Choose or drop an issued passport PDF
+              {t("verify.chooseDrop")}
               <span>
                 PDF files only (max 10 MB). Code is auto-detected when present.
               </span>
@@ -981,7 +981,7 @@ export default function Verify() {
                     color: "var(--primary)",
                   }}
                 >
-                  Inspect cryptographic & Solana Devnet proof metadata
+                  {t("verify.metadata")}
                 </summary>
                 <div className="identity-box" style={{ marginTop: 10 }}>
                   {result.verifiedCode && (

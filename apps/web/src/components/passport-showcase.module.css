@@ -30,4 +30,3 @@
 .disclaimer { font-size: 9px; color: var(--subtle); margin: 9px 0 0; }
 @media (max-width: 767px) { .showcase { width: 100%; max-width: 650px; justify-self: center; } }
 @media (max-width: 420px) { .stageHeader { padding: 0; } .stageFooter { left: 0; right: 0; } .stageCaption { font-size: 9px; } .explorer { padding: 22px 0 0; } .detail { min-height: 124px; } .tabs button { min-height: 44px; font-size: 11px; gap: 5px; } }
-

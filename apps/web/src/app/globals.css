@@ -3609,35 +3609,134 @@ html[lang="ka"] .pill {
   letter-spacing: normal;
   line-height: 1.4;
 }
-.language-select-wrap {
+/* Icon-only language control mirrors the original theme toggle exactly. */
+.language-control {
+  position: relative;
   display: inline-flex;
-  align-items: center;
   flex: 0 0 auto;
+  align-items: center;
 }
-.language-select {
-  appearance: auto;
-  max-width: 107px;
-  min-width: 89px;
-  min-height: 36px;
-  padding: 6px 8px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
+.language-control > .language-toggle { flex: 0 0 auto; }
+.language-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 90;
+  width: max-content;
+  min-width: 174px;
+  padding: 5px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
   background: var(--surface);
   color: var(--ink);
+  box-shadow: var(--shadow-lg);
+}
+.language-option {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
   font: inherit;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
+  text-align: left;
   cursor: pointer;
 }
-.language-select:focus-visible {
+.language-option:hover,
+.language-option:focus-visible,
+.language-option.is-selected {
+  background: var(--primary-soft);
+  color: var(--ink);
+}
+.language-option:focus-visible {
   outline: 2px solid var(--focus);
-  outline-offset: 2px;
+  outline-offset: -2px;
+}
+.language-option.is-selected svg { color: var(--primary); }
+
+/* Noto Sans Georgian supports both Mkhedruli body copy and Mtavruli capitals.
+   Use the display capitals only in headings, like Nino Mtavruli, without
+   bundling non-commercially licensed third-party font files. */
+html[lang="ka"] .landing-shell h2,
+html[lang="ka"] .page-heading h1,
+html[lang="ka"] .auth-scene h1,
+html[lang="ka"] .auth-scene h2,
+html[lang="ka"] .passport-unissued-state h2 {
+  font-family: var(--font-georgian), var(--font-display), sans-serif;
+  text-transform: uppercase;
+  font-weight: 700;
+  line-height: 1.32;
+  letter-spacing: 0;
+  overflow-wrap: normal;
+}
+html[lang="ka"] .button,
+html[lang="ka"] .workspace-nav a,
+html[lang="ka"] .nav-caption {
+  letter-spacing: normal;
+  line-height: 1.45;
+}
+html[lang="ka"] .page-heading,
+html[lang="ka"] .section-head,
+html[lang="ka"] .workspace-topbar,
+html[lang="ka"] .sidebar-account {
+  min-width: 0;
+}
+html[lang="ka"] .page-actions,
+html[lang="ka"] .passport-issued-only-actions {
+  flex-wrap: wrap;
+}
+html[lang="ka"] .page-actions .button,
+html[lang="ka"] .passport-issued-only-actions .button {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+  overflow-wrap: break-word;
+}
+html[lang="ka"] .workspace-nav a span,
+html[lang="ka"] .sidebar-account strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 @media (max-width: 767px) {
   .public-header .top-actions,
-  .workspace-topbar .top-actions { gap: 7px; }
-  .language-select { min-width: 78px; max-width: 95px; min-height: 36px; padding: 6px 4px; font-size: 11px; }
-  html[lang="ka"] .workspace-nav span,
-  html[lang="ka"] .page-actions,
+  .workspace-topbar .top-actions { gap: 6px; }
+  .public-header > .top-actions { flex: 0 0 auto; }
+  .workspace-topbar .topbar-note { display: none; }
   html[lang="ka"] .auth-card p { overflow-wrap: break-word; }
+}
+@media (max-width: 460px) {
+  .public-header,
+  .landing-shell .public-header {
+    gap: 6px;
+    padding-inline: 12px;
+  }
+  .public-header .brand { min-width: 0; flex-shrink: 1; }
+  .public-header .brand-logo {
+    width: clamp(96px, 27vw, 118px);
+    height: auto;
+    max-width: 100%;
+  }
+  .public-header .top-actions .button.secondary {
+    padding-inline: 9px;
+    min-height: 40px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .public-header .top-actions .button.secondary svg {
+    width: 12px;
+    height: 12px;
+  }
+  .public-header .top-actions .theme-toggle {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+  }
 }

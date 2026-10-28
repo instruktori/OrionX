@@ -121,8 +121,7 @@ function LoginContent() {
         </div>
         <h2>{t("login.heading")}</h2>
         <p className="muted" style={{ lineHeight: 1.7, marginBottom: 22 }}>
-          Your skills, credentials, and achievements, together in one place.
-          Continue with your Google account to get started.
+          {t("login.description")}
         </p>
 
         {activeError && (
@@ -217,8 +216,7 @@ function LoginContent() {
             <div>
               <strong>{t("login.progressTitle")}</strong>
               <p>
-                Open your personal workspace. Your university-issued skills and
-                downloadable passport appear once your student record is linked.
+                {t("login.progressText")}
               </p>
             </div>
           </div>
@@ -231,8 +229,7 @@ function LoginContent() {
             <div>
               <strong>{t("login.universityTitle")}</strong>
               <p>
-                Authorized staff can manage student records, record skills and
-                badges, and oversee credential issuance with the same sign-in.
+                {t("login.universityText")}
               </p>
             </div>
           </div>
@@ -245,8 +242,7 @@ function LoginContent() {
             <div>
               <strong>{t("login.privateTitle")}</strong>
               <p>
-                Your records stay in your private account. Anyone can check a
-                shared credential using the public verifier, without signing in.
+                {t("login.privateText")}
               </p>
             </div>
           </div>
@@ -280,8 +276,7 @@ export default function Login() {
             {t("login.storyTitle2")}
           </h1>
           <p>
-            A permanent home for what you learn, the achievements you earn, and
-            the proof behind them.
+            {t("login.storyText")}
           </p>
           <div className="auth-field">
             <PassportShowcase showHeading={false} />

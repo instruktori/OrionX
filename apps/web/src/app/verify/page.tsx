@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n } from "@/lib/i18n-provider";
+import { toMtavruli } from "@/lib/i18n";
 import { Shell } from "@/components/shell";
 import {
   ShieldCheck,
@@ -54,7 +55,7 @@ const API = (process.env.NEXT_PUBLIC_API_ORIGIN || "").replace(/\/+$/, "");
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 export default function Verify() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [code, setCode] = useState("");
   const [touched, setTouched] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -437,7 +438,7 @@ export default function Verify() {
       <div className="page-heading">
         <div>
           <div className="eyebrow">{t("verify.eyebrow")}</div>
-          <h1>{t("verify.heading")}</h1>
+          <h1>{locale === "ka" ? toMtavruli(t("verify.heading")) : t("verify.heading")}</h1>
           <p className="lead">
             {t("verify.scanSimple")}
           </p>

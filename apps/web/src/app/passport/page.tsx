@@ -101,6 +101,7 @@ export default function PassportPage() {
       ) : (
         p && (
           <>
+            <BtuPassportReplica passport={p} awards={awards} />
             <div className="passport-layout passport-summary-layout">
               <section className="passport-detail">
                 <div className="section-head" style={{ marginTop: 0 }}>
@@ -200,7 +201,6 @@ export default function PassportPage() {
                 versions remain available below.
               </div>
             )}
-            <BtuPassportReplica passport={p} awards={awards} />
             <section style={{ marginTop: 40 }}>
               <div className="section-head">
                 <div>

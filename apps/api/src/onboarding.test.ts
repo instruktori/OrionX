@@ -178,7 +178,7 @@ describe("self-service student onboarding over HTTP", () => {
     vi.spyOn(prisma.studentIdentity, "findUnique").mockResolvedValue({id: "i", provider: issuer, subject: NEW_SUB, role: "student", studentId: "stu-1", verifiedBy: "admin-1", verifiedAt: new Date()});
     const ensure = vi.spyOn(prisma.studentWorkspace, "create");
     const awards = [{recordId: "R1", studentId: "BTU-1", skillId: "S", name: "Prompting", category: "AI Skill", badgeCode: "B1", description: "d", dateEarned: "2026-01-01"}];
-    const version = {number: 1, state: "FINALIZED", code: "D1-ABC", pageCount: 2, createdAt: new Date(), finalizedAt: new Date(), snapshot: {student: {initialIssueDate: "2026-01-02"}, awards}, chainCluster: "devnet", finalizedSlot: BigInt(5)};
+    const version = {number: 1, state: "FINALIZED", code: "D1-ABC", pageCount: 2, createdAt: new Date(), finalizedAt: new Date(), snapshot: {student: {initialIssueDate: "2026-01-02"}, awards}, chainCluster: "devnet", finalizedSlot: BigInt(5), storageKey: "private/issued.pdf", pdfSha256: "a".repeat(64)};
     vi.spyOn(prisma.passport, "findUnique").mockResolvedValue({id: "p1", publicId: "ORX-0001", studentId: "stu-1", latestFinalizedVersion: 1, activeVersionId: null, initialIssueDate: new Date("2026-01-02"), student: {firstName: "Ana", lastName: "K", program: "AI", educationLevel: "BSc"}} as never);
     vi.spyOn(prisma.version, "findUnique").mockResolvedValue(version as never);
     vi.spyOn(prisma.version, "count").mockResolvedValue(1);

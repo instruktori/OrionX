@@ -1030,19 +1030,19 @@ export default function Verify() {
               icon: Fingerprint,
               title: t("verify.integrity"),
               description:
-                "Scanning retrieves the original and compares its fingerprint with the blockchain. Use PDF comparison to check a separate file, or code lookup to check registration alone.",
+                t("verify.integrityDetails"),
             },
             {
               icon: History,
               title: t("verify.history"),
               description:
-                "See whether a credential is the latest cumulative version or a historical record. A newer version doesn’t erase the history of an earlier one.",
+                t("verify.historyDetails"),
             },
             {
               icon: ShieldCheck,
               title: t("verify.issuerAuthority"),
               description:
-                "Blockchain registration and university authority are separate checks. A demo issuer is identified explicitly and doesn’t establish official university authorization.",
+                t("verify.issuerDetails"),
             },
           ].map((x) => (
             <div key={x.title} className="explainer-card">

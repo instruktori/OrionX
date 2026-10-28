@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useI18n } from "@/lib/i18n-provider";
 import {useEffect, useState} from "react";
 import {Copy, Check, ExternalLink, QrCode, ShieldCheck} from "lucide-react";
 import {ImageDialog} from "./image-dialog";
@@ -24,6 +25,7 @@ export function QrShareModal({
   verificationCode,
   isLatest,
 }: QrShareModalProps) {
+  const {t} = useI18n();
   const [qrUrl, setQrUrl] = useState<string>("");
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
@@ -65,18 +67,18 @@ export function QrShareModal({
 
   return (
     <ImageDialog
-      title={`Share & Verify · ${passportId} (V${version})`}
+      title={t("qr.title",{passportId,version})}
       open={open}
       onClose={onClose}
     >
       <div className="qr-share-modal">
         <div className="qr-share-top">
           <span className={`pill ${isLatest ? "pill-cyan" : "pill-pink"}`}>
-            {isLatest ? "LATEST FINALIZED VERSION" : `HISTORICAL VERSION V${version} (SUPERSEDED)`}
+            {isLatest ? t("qr.latest") : t("qr.old",{version})}
           </span>
           {studentName && <h3 style={{margin: "10px 0 4px"}}>{studentName}</h3>}
           <p className="muted" style={{margin: 0}}>
-            Scan with any phone camera or the OrionX verifier to inspect the on-chain proof for Version {version}.
+            {t("qr.help",{version})}
           </p>
         </div>
 
@@ -85,7 +87,7 @@ export function QrShareModal({
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={qrUrl}
-              alt={`Verification QR code for ${passportId} V${version}`}
+              alt={t("qr.alt",{passportId,version})}
               width={230}
               height={230}
             />
@@ -97,7 +99,7 @@ export function QrShareModal({
         </div>
 
         <div className="identity-box" style={{textAlign: "left"}}>
-          <span className="mini-kicker">VERIFICATION CODE (VERSION {version})</span>
+          <span className="mini-kicker">{t("qr.code",{version})}</span>
           <div style={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10}}>
             <code className="mono">{verificationCode}</code>
             <button
@@ -106,13 +108,13 @@ export function QrShareModal({
               onClick={() => void copyText(verificationCode, "code")}
             >
               {copiedCode ? <Check size={14} /> : <Copy size={14} />}
-              {copiedCode ? "Copied" : "Copy code"}
+              {copiedCode ? t("qr.copied") : t("qr.copyCode")}
             </button>
           </div>
         </div>
 
         <div className="identity-box" style={{textAlign: "left"}}>
-          <span className="mini-kicker">PUBLIC VERIFICATION LINK</span>
+          <span className="mini-kicker">{t("qr.publicLink")}</span>
           <div style={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10}}>
             <code className="mono" style={{fontSize: 11}}>{shareUrl}</code>
             <button
@@ -121,7 +123,7 @@ export function QrShareModal({
               onClick={() => void copyText(shareUrl, "link")}
             >
               {copiedLink ? <Check size={14} /> : <Copy size={14} />}
-              {copiedLink ? "Copied link" : "Copy link"}
+              {copiedLink ? t("qr.copiedLink") : t("qr.copyLink")}
             </button>
           </div>
         </div>

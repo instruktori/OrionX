@@ -108,8 +108,7 @@ function CallbackHandler() {
           </div>
           <h2>{t("auth.completing")}</h2>
           <p role="status" className="muted" style={{ lineHeight: 1.7 }}>
-            Confirming your Google account and checking access to your
-            university record.
+            {t("auth.confirming")}
           </p>
         </>
       )}

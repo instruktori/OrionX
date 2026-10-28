@@ -14,10 +14,16 @@ const manrope = localFont({
   weight: "200 800",
 });
 const notoGeorgian = Noto_Sans_Georgian({ subsets: ["georgian"], weight: ["400","500","600","700"], display: "swap", variable: "--font-georgian" });
-export const metadata: Metadata = {
-  title: "OrionX | AI Skills Digital Passport",
-  description: "Digital credentials, verifiable by design.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const choice = (await cookies()).get("orionx-locale")?.value;
+  const locale = isLocale(choice) ? choice : "en";
+  return {
+    title: locale === "ka" ? "OrionX | AI უნარების ციფრული პასპორტი" : "OrionX | AI Skills Digital Passport",
+    description: locale === "ka"
+      ? "ციფრული დოკუმენტები, რომელთა ნამდვილობის გადამოწმება შესაძლებელია."
+      : "Digital credentials, verifiable by design.",
+  };
+}
 export default async function RootLayout({
   children,
 }: {

@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import { useI18n } from "@/lib/i18n-provider";
 import { useState } from "react";
 import { ArrowUpRight, CalendarDays, Search, X } from "lucide-react";
 import { skills } from "@/lib/demo";
@@ -7,6 +8,7 @@ import { imagePath, skillTypes } from "@/lib/design";
 import { ImageDialog } from "./image-dialog";
 
 export function SkillCollection() {
+  const {t} = useI18n();
   const [category, setCategory] = useState("All skills");
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<(typeof skills)[number] | null>(
@@ -21,18 +23,18 @@ export function SkillCollection() {
     <section id="skill-collection" className="collection">
       <div className="section-head">
         <div>
-          <h2>Explore the skill collection</h2>
+          <h2>{t("skills.heading")}</h2>
           <p className="muted">
             Sample achievements, in the original BTU stamp system.
           </p>
         </div>
-        <span className="sample-label">6 sample skills</span>
+        <span className="sample-label">{t("skills.sampleCount")}</span>
       </div>
       <div className="collection-toolbar">
         <div
           className="filter-group"
           role="group"
-          aria-label="Filter skills by category"
+          aria-label={t("skills.filter")}
         >
           {["All skills", ...skillTypes.map((t) => t.id)].map((c) => (
             <button
@@ -41,7 +43,7 @@ export function SkillCollection() {
               aria-pressed={category === c}
               onClick={() => setCategory(c)}
             >
-              {c}
+              {c === "All skills" ? t("skills.all") : c}
             </button>
           ))}
         </div>
@@ -53,14 +55,14 @@ export function SkillCollection() {
           <input
             id="skill-search"
             className="input"
-            placeholder="Search skills"
+            placeholder={t("skills.search")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
           {query && (
             <button
               type="button"
-              aria-label="Clear skill search"
+              aria-label={t("skills.clear")}
               onClick={() => setQuery("")}
             >
               <X size={15} />
@@ -69,7 +71,7 @@ export function SkillCollection() {
         </div>
       </div>
       <p className="sr-only" role="status">
-        {filtered.length} sample skills found
+        {t("skills.found",{count:filtered.length})}
       </p>
       <div className="skill-cards">
         {filtered.map((s) => {
@@ -108,8 +110,8 @@ export function SkillCollection() {
       {!filtered.length && (
         <div className="empty-state">
           <Search size={25} />
-          <h3>No skills found</h3>
-          <p>Try another name or show all categories.</p>
+          <h3>{t("skills.empty")}</h3>
+          <p>{t("skills.emptyHelp")}</p>
           <button
             type="button"
             className="button secondary"
@@ -123,7 +125,7 @@ export function SkillCollection() {
         </div>
       )}
       <ImageDialog
-        title="Sample achievement"
+        title={t("skills.sample")}
         open={!!selected}
         onClose={() => setSelected(null)}
       >
@@ -143,7 +145,7 @@ export function SkillCollection() {
             <span className="category-label">{selected.category}</span>
             <h3>{selected.name}</h3>
             <p>{selected.description}</p>
-            <p className="muted">Sample date earned: {selected.date}</p>
+            <p className="muted">{t("skills.earned")} {selected.date}</p>
             <div className="notice">
               This is a fictional achievement for exploring the passport design.
             </div>

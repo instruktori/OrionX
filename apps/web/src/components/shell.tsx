@@ -110,7 +110,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <nav aria-label={t("shell.mainNavigation")}>
             <Link href="/#how-it-works">{t("shell.how")}</Link>
             <Link href="/verify">
-              Verify a credential <ArrowUpRight size={13} />
+              {t("shell.verify")} <ArrowUpRight size={13} />
             </Link>
           </nav>
           <div className="top-actions">
@@ -126,7 +126,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                   : "/login"
               }
             >
-              {session ? "Open workspace" : "Sign in"}
+              {session ? t("shell.openWorkspace") : t("common.signIn")}
               <ChevronRight size={14} />
             </Link>
           </div>
@@ -185,7 +185,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                     aria-current={path === "/admin" ? "page" : undefined}
                   >
                     <Settings2 size={17} />
-                    Administration
+                    {t("shell.administration")}
                   </Link>
                 </nav>
               </>
@@ -256,7 +256,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
               >
                 <Menu size={18} />
               </button>
-              <span className="breadcrumb-org">Workspace</span>
+              <span className="breadcrumb-org">{t("shell.workspace")}</span>
               <ChevronRight size={13} className="muted" />
               <span>{current}</span>
             </div>
@@ -265,6 +265,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 <ShieldCheck size={14} />
                 {path === "/verify" ? t("shell.publicVerification") : t("shell.privateByDefault")}
               </span>
+              <LanguageSelector />
               <ThemeToggle />
             </div>
           </header>

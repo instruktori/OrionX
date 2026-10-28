@@ -99,7 +99,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   }
   const initials = (session?.email?.slice(0, 2) || "OX").toUpperCase();
   return (
-    <div className={`shell ${publicPage ? "public-shell" : "workspace-shell"}`}>
+    <div className={`shell ${publicPage ? "public-shell" : "workspace-shell"} ${path === "/" ? "landing-shell" : ""}`}>
       {publicPage ? (
         <header className="public-header">
           <Brand />

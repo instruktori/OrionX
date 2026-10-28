@@ -3407,3 +3407,33 @@ label.field-label,
   outline: 2px solid var(--focus);
   outline-offset: 4px;
 }
+
+/* Luminous landing: product artwork carries the color, typography stays quiet. */
+.landing-shell {
+  --background: #101b2d;
+  --surface: #17243a;
+  --surface-sunken: #132035;
+  --ink: #edf3ff;
+  --muted: #abb9ce;
+  --subtle: #99aac1;
+  --line: #2b3b53;
+  --primary: #a3a0ff;
+  --primary-solid: #635bff;
+  --primary-soft: #2a2e50;
+  background: var(--background);
+}
+[data-theme="light"] .landing-shell {
+  --background: #fafcfe;
+  --surface: #fff;
+  --surface-sunken: #f3f6fb;
+  --ink: #0a2540;
+  --muted: #51657c;
+  --subtle: #62758a;
+  --line: #e3eaf2;
+  --primary: #584ddd;
+  --primary-solid: #635bff;
+  --primary-soft: #efedfc;
+  --hover: #f1f4fb;
+}
+@media (max-width: 767px) { .landing-shell .public-header { height: 72px; } .landing-shell .content { padding-left: 24px; padding-right: 24px; } }
+@media (max-width: 370px) { .landing-shell .content { padding-left: 18px; padding-right: 18px; } }

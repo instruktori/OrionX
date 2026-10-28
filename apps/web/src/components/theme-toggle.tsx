@@ -2,9 +2,9 @@
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 export function ThemeToggle() {
-  const [theme, setTheme] = useState("dark");
+  const [theme, setTheme] = useState("light");
   useEffect(() => {
-    setTheme(document.documentElement.dataset.theme || "dark");
+    setTheme(document.documentElement.dataset.theme || "light");
   }, []);
   function toggle() {
     const next = theme === "dark" ? "light" : "dark";

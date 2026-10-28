@@ -143,13 +143,17 @@ export default function Dashboard() {
                         <Badge tone="blue">Get connected</Badge>
                         <h3>Connect your university record</h3>
                         <p>
-                          Share your workspace identifier with an authorized
-                          university administrator to link your student record.
+                          Share your <strong>workspace identifier</strong> with an authorized
+                          university administrator to link your student record. This is not a Passport ID.
                         </p>
-                        <Link className="action-link" href="/passport">
-                          Find your workspace ID
-                          <ArrowRight size={15} />
-                        </Link>
+                        {p.workspaceId ? (
+                          <div className="identity-box">
+                            <span className="mini-kicker">WORKSPACE IDENTIFIER · NOT A PASSPORT ID</span>
+                            <code>{p.workspaceId}</code>
+                          </div>
+                        ) : (
+                          <p className="muted">Your workspace identifier will appear once registration is complete.</p>
+                        )}
                       </div>
                     </div>
                   ) : (
@@ -237,20 +241,8 @@ export default function Dashboard() {
                       : "Your private workspace is the start of your skills record."}
                   </p>
                   <div className="summary-id">
-                    <small>
-                      {p.passportId
-                        ? "PASSPORT ID"
-                        : p.workspaceId
-                          ? "WORKSPACE ID"
-                          : "UNIVERSITY RECORD"}
-                    </small>
-                    <code>
-                      {p.passportId ||
-                        p.workspaceId ||
-                        (p.universityVerified
-                          ? "Linked · awaiting first issuance"
-                          : "Awaiting university link")}
-                    </code>
+                    <small>{p.official && p.latest ? "PASSPORT ID" : "ISSUANCE STATUS"}</small>
+                    <code>{p.official && p.latest && p.passportId ? p.passportId : "No Passport ID issued yet"}</code>
                   </div>
                   <Link className="button secondary" href="/passport">
                     View my passport

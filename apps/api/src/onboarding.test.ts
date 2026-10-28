@@ -178,7 +178,7 @@ describe("self-service student onboarding over HTTP", () => {
     vi.spyOn(prisma.studentIdentity, "findUnique").mockResolvedValue({id: "i", provider: issuer, subject: NEW_SUB, role: "student", studentId: "stu-1", verifiedBy: "admin-1", verifiedAt: new Date()});
     const ensure = vi.spyOn(prisma.studentWorkspace, "create");
     const awards = [{recordId: "R1", studentId: "BTU-1", skillId: "S", name: "Prompting", category: "AI Skill", badgeCode: "B1", description: "d", dateEarned: "2026-01-01"}];
-    const version = {number: 1, state: "FINALIZED", code: "D1-ABC", pageCount: 2, createdAt: new Date(), finalizedAt: new Date(), snapshot: {student: {initialIssueDate: "2026-01-02"}, awards}, chainCluster: "devnet", finalizedSlot: BigInt(5)};
+    const version = {number: 1, state: "FINALIZED", code: "D1-ABC", pageCount: 2, createdAt: new Date(), finalizedAt: new Date(), snapshot: {student: {initialIssueDate: "2026-01-02"}, awards}, chainCluster: "devnet", finalizedSlot: BigInt(5), storageKey: "private/issued.pdf", pdfSha256: "a".repeat(64)};
     vi.spyOn(prisma.passport, "findUnique").mockResolvedValue({id: "p1", publicId: "ORX-0001", studentId: "stu-1", latestFinalizedVersion: 1, activeVersionId: null, initialIssueDate: new Date("2026-01-02"), student: {firstName: "Ana", lastName: "K", program: "AI", educationLevel: "BSc"}} as never);
     vi.spyOn(prisma.version, "findUnique").mockResolvedValue(version as never);
     vi.spyOn(prisma.version, "count").mockResolvedValue(1);
@@ -196,6 +196,52 @@ describe("self-service student onboarding over HTTP", () => {
     vi.spyOn(prisma.passport, "findUnique").mockResolvedValue(null);
     const passport = await call("/me/passport", await token(NEW_SUB));
     expect(passport.body).toMatchObject({official: false, universityVerified: true, passportId: null, counts: {skills: 0, badges: 0, versions: 0}});
+  });
+
+  it("hides a reserved passport ID until a real PDF version is finalized", async () => {
+    vi.spyOn(prisma.studentIdentity, "findUnique").mockResolvedValue({
+      id: "identity-reserved", provider: issuer, subject: NEW_SUB, role: "student",
+      studentId: "student-reserved", verifiedBy: "admin", verifiedAt: new Date(),
+    });
+    vi.spyOn(prisma.passport, "findUnique").mockResolvedValue({
+      id: "passport-reserved", publicId: "BTU-AI-RESERVED", studentId: "student-reserved",
+      latestFinalizedVersion: 0, activeVersionId: "draft-v1",
+      initialIssueDate: new Date("2026-10-28"),
+      student: {firstName: "Not", lastName: "Issued"},
+    } as never);
+    const versionLookup = vi.spyOn(prisma.version, "findUnique");
+    const t = await token(NEW_SUB);
+    const response = await call("/me/passport", t);
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      official: false, status: "ISSUANCE_PENDING", passportId: null,
+      originalIssueDate: null, latest: null, student: null, pending: true,
+      counts: {skills: 0, badges: 0, versions: 0},
+    });
+    expect(JSON.stringify(response.body)).not.toContain("BTU-AI-RESERVED");
+    expect(versionLookup).not.toHaveBeenCalled();
+    expect((await call("/me/passport/versions/1/download", t)).status).toBe(404);
+  });
+
+  it("withholds a reserved ID when a version row lacks finalized PDF storage", async () => {
+    vi.spyOn(prisma.studentIdentity, "findUnique").mockResolvedValue({
+      id: "identity-without-pdf", provider: issuer, subject: NEW_SUB, role: "student",
+      studentId: "student-without-pdf", verifiedBy: "admin", verifiedAt: new Date(),
+    });
+    vi.spyOn(prisma.passport, "findUnique").mockResolvedValue({
+      id: "passport-without-pdf", publicId: "BTU-AI-HIDDEN", studentId: "student-without-pdf",
+      latestFinalizedVersion: 1, activeVersionId: null,
+      initialIssueDate: new Date("2026-10-28"),
+      student: {firstName: "Not", lastName: "Finalized"},
+    } as never);
+    vi.spyOn(prisma.version, "findUnique").mockResolvedValue({
+      number: 1, finalizedSlot: null, storageKey: "pending-file.pdf", pdfSha256: null,
+    } as never);
+    const t = await token(NEW_SUB);
+    const result = await call("/me/passport", t);
+    expect(result.body).toMatchObject({official: false, passportId: null, latest: null, status: "NOT_ISSUED"});
+    expect(JSON.stringify(result.body)).not.toContain("BTU-AI-HIDDEN");
+    expect((await call("/me/passport/versions/1/download", t)).status).toBe(404);
   });
 
   it("keeps administrator privileges and gives admins no student passport", async () => {
@@ -245,7 +291,7 @@ describe("self-service student onboarding over HTTP", () => {
     expect(paged.body).toMatchObject({total: 120, skip: 100, take: 25});
     const myPass = await call("/me/passport", t);
     expect(myPass.status).toBe(200);
-    expect(myPass.body).toMatchObject({official: true, passportId: "BTU-AI-000125"});
+    expect(myPass.body).toMatchObject({official: false, status: "NOT_ISSUED", passportId: null, latest: null});
   });
 
   it.each([0, 1])("atomically retries only an eligible job (matched rows: %i)", async count => {

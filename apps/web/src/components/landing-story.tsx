@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n-provider";
+import { toMtavruli } from "@/lib/i18n";
 import { ArrowRight, BookOpen, GraduationCap, Link2 } from "lucide-react";
 import { BrandLogo } from "./brand-logo";
 import styles from "./landing-story.module.css";
@@ -30,7 +31,7 @@ const storySteps = (t: ReturnType<typeof useI18n>["t"]) => [
 ];
 
 export function LandingStory() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const steps = storySteps(t);
   return (
     <>
@@ -40,7 +41,7 @@ export function LandingStory() {
         aria-labelledby="learning-story-title"
       >
         <div className={styles.intro}>
-          <h2 id="learning-story-title">{t("story.heading")}</h2>
+          <h2 id="learning-story-title">{locale === "ka" ? toMtavruli(t("story.heading")) : t("story.heading")}</h2>
           <p>
             {t("story.intro")}
           </p>
@@ -64,7 +65,7 @@ export function LandingStory() {
 
       <section className={styles.start} aria-labelledby="start-title">
         <div>
-          <h2 id="start-title">{t("story.ctaHeading")}</h2>
+          <h2 id="start-title">{locale === "ka" ? toMtavruli(t("story.ctaHeading")) : t("story.ctaHeading")}</h2>
           <p>{t("story.ctaText")}</p>
         </div>
         <Link

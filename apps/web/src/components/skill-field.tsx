@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useI18n } from "@/lib/i18n-provider";
 import { FIELD_COUNT, fieldPoint } from "@/lib/skill-field";
 import styles from "./passport-showcase.module.css";
 
@@ -11,6 +12,7 @@ const colors = [
 ];
 
 export function SkillField({ format, mood, paused }: { format: number; mood: number; paused: boolean }) {
+  const {t} = useI18n();
   const canvas = useRef<HTMLCanvasElement>(null);
   const config = useRef({ format, mood, paused });
   const redraw = useRef<(() => void) | null>(null);
@@ -132,7 +134,7 @@ export function SkillField({ format, mood, paused }: { format: number; mood: num
         {Array.from({ length: 65 }, (_, i) => { const p = fieldPoint(i * 2, format); return <g key={i} stroke="#8c91c8" strokeWidth=".7"><path opacity=".3" d={`M${300 + p.rootX * 500},${188 + p.rootY * 364} Q300,240 ${300 + p.x * 500},${188 + p.y * 364}`} fill="none" /><circle cx={300 + p.x * 500} cy={188 + p.y * 364} r="1.5" fill="#8c91c8" /></g>; })}
       </svg>
       <canvas ref={canvas} className={styles.canvas} aria-hidden="true" />
-      <span className="sr-only">Interactive skill connections. The selected learning format changes the pattern.</span>
+      <span className="sr-only">{t("skillfield.sr")}</span>
     </div>
   );
 }

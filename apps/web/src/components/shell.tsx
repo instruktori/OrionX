@@ -18,15 +18,19 @@ import { useSession } from "@/lib/session";
 import { oauthCallbackTarget } from "@/lib/oauth-redirect";
 import { ThemeToggle } from "./theme-toggle";
 import { BrandLogo } from "./brand-logo";
+import { LanguageSelector } from "./language-selector";
+import { useI18n } from "@/lib/i18n-provider";
 
 export function Brand() {
+  const { t } = useI18n();
   return (
-    <Link className="brand" href="/" aria-label="OrionX home">
+    <Link className="brand" href="/" aria-label={t("common.orionxHome")}>
       <BrandLogo className="brand-logo" priority width={138} height={36} />
     </Link>
   );
 }
 export function Shell({ children }: { children: React.ReactNode }) {
+  const { t } = useI18n();
   const path = usePathname();
   const router = useRouter();
   const { session, loading, signOut } = useSession();
@@ -36,15 +40,15 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const menu = useRef<HTMLButtonElement>(null);
   const publicPage = ["/", "/login", "/auth/callback"].includes(path);
   const nav = [
-    { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-    { href: "/passport", label: "My passport", icon: FileBadge2 },
-    { href: "/verify", label: "Verify a credential", icon: ShieldCheck },
+    { href: "/dashboard", label: t("shell.overview"), icon: LayoutDashboard },
+    { href: "/passport", label: t("shell.myPassport"), icon: FileBadge2 },
+    { href: "/verify", label: t("shell.verify"), icon: ShieldCheck },
   ];
   const active = (href: string) =>
     path === href || (href !== "/" && path.startsWith(href + "/"));
   const current = path.startsWith("/admin")
-    ? "Administration"
-    : nav.find((n) => active(n.href))?.label || "Workspace";
+    ? t("shell.administration")
+    : nav.find((n) => active(n.href))?.label || t("shell.workspace");
   useEffect(() => {
     const callback = oauthCallbackTarget(path, window.location.search);
     if (callback) router.replace(callback);
@@ -94,7 +98,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       router.push("/login");
       router.refresh();
     } catch {
-      setSignOutError("Unable to sign out. Please try again.");
+      setSignOutError(t("shell.signOutError"));
     }
   }
   const initials = (session?.email?.slice(0, 2) || "OX").toUpperCase();
@@ -103,13 +107,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
       {publicPage ? (
         <header className="public-header">
           <Brand />
-          <nav aria-label="Main navigation">
-            <Link href="/#how-it-works">How it works</Link>
+          <nav aria-label={t("shell.mainNavigation")}>
+            <Link href="/#how-it-works">{t("shell.how")}</Link>
             <Link href="/verify">
-              Verify a credential <ArrowUpRight size={13} />
+              {t("shell.verify")} <ArrowUpRight size={13} />
             </Link>
           </nav>
           <div className="top-actions">
+            <LanguageSelector />
             <ThemeToggle />
             <Link
               className="button secondary btn-sm"
@@ -121,7 +126,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                   : "/login"
               }
             >
-              {session ? "Open workspace" : "Sign in"}
+              {session ? t("shell.openWorkspace") : t("common.signIn")}
               <ChevronRight size={14} />
             </Link>
           </div>
@@ -132,14 +137,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
             ref={drawer}
             className={`workspace-sidebar ${open ? "is-open" : ""}`}
             id="workspace-navigation"
-            aria-label="Workspace navigation"
+            aria-label={t("shell.workspaceNav")}
           >
             <div className="sidebar-brand">
               <Brand />
               <button
                 className="icon-button mobile-close"
                 type="button"
-                aria-label="Close menu"
+                aria-label={t("shell.closeMenu")}
                 onClick={() => setOpen(false)}
               >
                 <X size={18} />
@@ -151,11 +156,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
               </span>
               <div>
                 <strong>BTU</strong>
-                <small>AI Skills Digital Passport</small>
+                <small>{t("shell.aiSkillsPassport")}</small>
               </div>
-              <span className="workspace-label">Workspace</span>
+              <span className="workspace-label">{t("shell.workspace")}</span>
             </div>
-            <div className="nav-caption">WORKSPACE</div>
+            <div className="nav-caption">{t("shell.workspace")}</div>
             <nav className="workspace-nav">
               {nav.map((n) => (
                 <Link
@@ -172,7 +177,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             </nav>
             {session?.role === "admin" && (
               <>
-                <div className="nav-caption">UNIVERSITY</div>
+                <div className="nav-caption">{t("shell.university")}</div>
                 <nav className="workspace-nav">
                   <Link
                     href="/admin"
@@ -180,7 +185,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                     aria-current={path === "/admin" ? "page" : undefined}
                   >
                     <Settings2 size={17} />
-                    Administration
+                    {t("shell.administration")}
                   </Link>
                 </nav>
               </>
@@ -188,24 +193,24 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <div className="sidebar-bottom">
               <div className="network-label">
                 <span className="network-dot" />
-                Solana Devnet<span className="mono">TEST NETWORK</span>
+                Solana Devnet<span className="mono">{t("shell.network")}</span>
               </div>
               <div className="sidebar-account">
                 <span className="avatar">{initials}</span>
                 <div>
                   <strong>
                     {loading
-                      ? "Loading account…"
-                      : session?.email || "Your workspace"}
+                      ? t("shell.accountLoading")
+                      : session?.email || t("shell.yourWorkspace")}
                   </strong>
                   <small>
                     {session
                       ? session.role === "admin"
-                        ? "Administrator"
+                        ? t("shell.adminRole")
                         : session.verification === "UNIVERSITY_VERIFIED"
-                          ? "University-linked student"
-                          : "Personal account"
-                      : "Sign in to get started"}
+                          ? t("shell.studentVerified")
+                          : t("shell.personalAccount")
+                      : t("shell.signInStart")}
                   </small>
                 </div>
                 {session ? (
@@ -213,12 +218,12 @@ export function Shell({ children }: { children: React.ReactNode }) {
                     type="button"
                     className="icon-button"
                     onClick={logOut}
-                    aria-label="Sign out"
+                    aria-label={t("common.signOut")}
                   >
                     <LogOut size={15} />
                   </button>
                 ) : (
-                  <Link href="/login" aria-label="Sign in">
+                  <Link href="/login" aria-label={t("common.signIn")}>
                     <ChevronRight size={18} />
                   </Link>
                 )}
@@ -234,7 +239,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               className="mobile-backdrop"
-              aria-label="Close navigation"
+              aria-label={t("shell.closeNavigation")}
               onClick={() => setOpen(false)}
             />
           )}
@@ -244,22 +249,23 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 ref={menu}
                 type="button"
                 className="icon-button mobile-menu"
-                aria-label="Open menu"
+                aria-label={t("shell.openMenu")}
                 aria-expanded={open}
                 aria-controls="workspace-navigation"
                 onClick={() => setOpen(true)}
               >
                 <Menu size={18} />
               </button>
-              <span className="breadcrumb-org">Workspace</span>
+              <span className="breadcrumb-org">{t("shell.workspace")}</span>
               <ChevronRight size={13} className="muted" />
               <span>{current}</span>
             </div>
             <div className="top-actions">
               <span className="topbar-note">
                 <ShieldCheck size={14} />
-                {path === "/verify" ? "Public verification" : "Private by default"}
+                {path === "/verify" ? t("shell.publicVerification") : t("shell.privateByDefault")}
               </span>
+              <LanguageSelector />
               <ThemeToggle />
             </div>
           </header>

@@ -3581,3 +3581,205 @@ label.field-label,
   .passport-issued-only-actions .button {flex:1 1 145px;}
   .passport-unissued-state {margin:24px auto;}
 }
+
+
+/* Georgian is LTR. The Next-hosted Noto Georgian subset contains Georgian
+   glyphs only: Latin identifiers retain the existing Manrope face. */
+html[lang="ka"] body {
+  font-family: var(--font-georgian), var(--font-display), Arial, sans-serif;
+  line-height: 1.58;
+}
+html[lang="ka"] h1,
+html[lang="ka"] h2,
+html[lang="ka"] h3,
+html[lang="ka"] h4 {
+  font-family: var(--font-georgian), var(--font-display), Arial, sans-serif;
+  line-height: 1.3;
+  letter-spacing: normal;
+  text-transform: none;
+}
+html[lang="ka"] .eyebrow,
+html[lang="ka"] .nav-caption,
+html[lang="ka"] .mini-kicker,
+html[lang="ka"] .auth-badge,
+html[lang="ka"] .workspace-label,
+html[lang="ka"] .category-label,
+html[lang="ka"] .pill {
+  text-transform: none;
+  letter-spacing: normal;
+  line-height: 1.4;
+}
+/* Icon-only language control mirrors the original theme toggle exactly. */
+.language-control {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
+.language-control > .language-toggle { flex: 0 0 auto; }
+.language-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 90;
+  width: max-content;
+  min-width: 174px;
+  padding: 5px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-lg);
+}
+.language-option {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.language-option:hover,
+.language-option:focus-visible,
+.language-option.is-selected {
+  background: var(--primary-soft);
+  color: var(--ink);
+}
+.language-option:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+.language-option.is-selected svg { color: var(--primary); }
+
+/* Noto Sans Georgian supports both Mkhedruli body copy and Mtavruli capitals.
+   Use the display capitals only in headings, like Nino Mtavruli, without
+   bundling non-commercially licensed third-party font files. */
+html[lang="ka"] .landing-shell h2,
+html[lang="ka"] .page-heading h1,
+html[lang="ka"] .auth-scene h1,
+html[lang="ka"] .auth-scene h2,
+html[lang="ka"] .passport-unissued-state h2 {
+  font-family: var(--font-georgian), var(--font-display), sans-serif;
+  text-transform: uppercase;
+  font-weight: 700;
+  line-height: 1.32;
+  letter-spacing: 0;
+  overflow-wrap: normal;
+}
+html[lang="ka"] .button,
+html[lang="ka"] .workspace-nav a,
+html[lang="ka"] .nav-caption {
+  letter-spacing: normal;
+  line-height: 1.45;
+}
+html[lang="ka"] .page-heading,
+html[lang="ka"] .section-head,
+html[lang="ka"] .workspace-topbar,
+html[lang="ka"] .sidebar-account {
+  min-width: 0;
+}
+html[lang="ka"] .page-actions,
+html[lang="ka"] .passport-issued-only-actions {
+  flex-wrap: wrap;
+}
+html[lang="ka"] .page-actions .button,
+html[lang="ka"] .passport-issued-only-actions .button {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+  overflow-wrap: break-word;
+}
+html[lang="ka"] .workspace-nav a span,
+html[lang="ka"] .sidebar-account strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 767px) {
+  .public-header .top-actions,
+  .workspace-topbar .top-actions { gap: 6px; }
+  .public-header > .top-actions { flex: 0 0 auto; }
+  .workspace-topbar .topbar-note { display: none; }
+  html[lang="ka"] .auth-card p { overflow-wrap: break-word; }
+}
+@media (max-width: 460px) {
+  .public-header,
+  .landing-shell .public-header {
+    gap: 6px;
+    padding-inline: 12px;
+  }
+  .public-header .brand { min-width: 0; flex-shrink: 1; }
+  /* Explicit logo box: width-only + height:auto let the image establish
+     an unexpectedly large intrinsic height in iOS Safari. */
+  .public-header .brand-logo {
+    width: 106px;
+    max-width: 106px;
+    height: 28px;
+    min-height: 28px;
+    flex: 0 0 106px;
+    overflow: hidden;
+  }
+  .public-header .brand-logo > .brand-logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .public-header .top-actions .button.secondary {
+    padding-inline: 9px;
+    min-height: 40px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .public-header .top-actions .button.secondary svg {
+    width: 12px;
+    height: 12px;
+  }
+  .public-header .top-actions .theme-toggle {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+  }
+}
+
+/* Stable logo geometry for all phone sizes, including 461-767px where the
+   public header's 30px height used to depend on the nested PNG intrinsic size. */
+@media (min-width: 461px) and (max-width: 767px) {
+  .public-header .brand-logo {
+    width: 115px;
+    max-width: 115px;
+    height: 30px;
+    min-height: 30px;
+    flex: 0 0 115px;
+    overflow: hidden;
+  }
+  .public-header .brand-logo > .brand-logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+}
+@media (max-width: 360px) {
+  .public-header .brand-logo {
+    width: 96px;
+    max-width: 96px;
+    height: 25px;
+    min-height: 25px;
+    flex-basis: 96px;
+  }
+}
+/* Guard desktop/header logo sizing against theme-specific or inherited
+   responsive image rules. The logo PNG files and branding remain unchanged. */
+.public-header .brand-logo-img {
+  max-width: 100%;
+  max-height: 100%;
+}

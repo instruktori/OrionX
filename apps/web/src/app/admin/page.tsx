@@ -1,5 +1,7 @@
 "use client";
 import Link from "next/link";
+import { useI18n } from "@/lib/i18n-provider";
+import { toMtavruli } from "@/lib/i18n";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -286,6 +288,7 @@ type CatalogSkill = {
 };
 
 export default function Admin() {
+  const {t,locale} = useI18n();
   const router = useRouter();
   const { session, loading } = useSession();
 
@@ -422,7 +425,7 @@ export default function Admin() {
       }
     } catch (e) {
       setError(
-        e instanceof Error ? e.message : "Unable to load student records",
+        e instanceof Error ? e.message : t("admin.loadStudents"),
       );
     }
   }, [page, pageSize, query, statusFilter]);
@@ -435,7 +438,7 @@ export default function Admin() {
       setAccountsData(data);
     } catch (e) {
       setError(
-        e instanceof Error ? e.message : "Unable to load account bindings",
+        e instanceof Error ? e.message : t("admin.loadBindings"),
       );
     }
   }, [accountQuery]);
@@ -449,7 +452,7 @@ export default function Admin() {
         setAwardSkillId(data.skills[0].skillId);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Unable to load skill catalog");
+      setError(e instanceof Error ? e.message : t("admin.loadCatalog"));
     }
   }, [awardSkillId]);
 
@@ -467,7 +470,7 @@ export default function Admin() {
       setAuditEvents(Array.isArray(auditRes) ? auditRes : auditRes.items || []);
     } catch (e) {
       setError(
-        e instanceof Error ? e.message : "Unable to load jobs and audit log",
+        e instanceof Error ? e.message : t("admin.loadJobs"),
       );
     }
   }, [jobStateFilter, auditQuery]);
@@ -510,7 +513,7 @@ export default function Admin() {
       setSelectedPassport(detail);
     } catch (e) {
       setError(
-        e instanceof Error ? e.message : "Unable to load passport details",
+        e instanceof Error ? e.message : t("admin.loadPassport"),
       );
     } finally {
       setLoadingDetail(false);
@@ -521,7 +524,7 @@ export default function Admin() {
     stopProcessing.current = false;
     setProcessing(true);
     setError("");
-    setProgress("Checking pending jobs…");
+    setProgress(t("admin.checkingJobs"));
     let completedStages = 0;
     try {
       while (!stopProcessing.current) {
@@ -550,14 +553,14 @@ export default function Admin() {
       }
       if (stopProcessing.current) {
         setProgress(
-          "Stopped after the current step. Pending jobs are saved; select Process pending jobs to continue.",
+          t("admin.stopped"),
         );
       }
     } catch (e) {
       setError(
         e instanceof Error
           ? e.message
-          : "Processing unavailable. Pending jobs are saved; try again.",
+          : t("admin.processingUnavailable"),
       );
     } finally {
       setProcessing(false);
@@ -576,7 +579,7 @@ export default function Admin() {
           })
           .catch((e) =>
             setError(
-              e instanceof Error ? e.message : "Unable to check sync status",
+              e instanceof Error ? e.message : t("admin.syncFailed"),
             ),
           ),
       2000,
@@ -615,7 +618,7 @@ export default function Admin() {
       setError(
         err instanceof Error
           ? err.message
-          : "Unable to update identity binding",
+          : t("admin.bindingFailed"),
       );
     } finally {
       setAccountActionPending(false);
@@ -645,7 +648,7 @@ export default function Admin() {
       setLinkStudentRef("");
       await Promise.all([loadAccounts(), loadOverview(), loadPassports()]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to link workspace");
+      setError(err instanceof Error ? err.message : t("admin.linkFailed"));
     } finally {
       setAccountActionPending(false);
     }
@@ -663,7 +666,7 @@ export default function Admin() {
       setBannerSuccess(`Removed binding for subject ${subject}.`);
       await Promise.all([loadAccounts(), loadOverview(), loadPassports()]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to remove binding");
+      setError(err instanceof Error ? err.message : t("admin.unlinkFailed"));
     } finally {
       setAccountActionPending(false);
     }
@@ -684,7 +687,7 @@ export default function Admin() {
           autoSync: andProcess,
         }),
       });
-      const createdRecordId = res.row?.award?.recordId || "new award";
+      const createdRecordId = res.row?.award?.recordId || t("admin.newAward");
       setBannerSuccess(
         `Added award ${createdRecordId} (${awardSkillId}) for ${awardStudentId} in ${res.mode} source.`,
       );
@@ -699,7 +702,7 @@ export default function Admin() {
       }
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Unable to add source award",
+        err instanceof Error ? err.message : t("admin.addAwardFailed"),
       );
     } finally {
       setSubmittingAward(false);
@@ -709,66 +712,66 @@ export default function Admin() {
   const handleBindIdentity = (event: React.FormEvent) => {
     event.preventDefault();
     setConfirmation({
-      title: "Change account access?",
+      title: t("admin.changeAccess"),
       message:
         "This changes which university records and operations this account can access. Review the identity and role before continuing.",
       details: [
-        { label: "Account subject", value: bindSubject.trim() },
+        { label: t("admin.accountSubject"), value: bindSubject.trim() },
         {
-          label: "Role",
-          value: bindRole === "admin" ? "Administrator" : "Verified student",
+          label: t("admin.role"),
+          value: bindRole === "admin" ? t("shell.adminRole") : t("admin.verifiedRole"),
         },
         {
-          label: "Student record",
+          label: t("admin.studentRecord"),
           value:
             bindStudentRef.trim() ||
             (bindPreserveStudent
-              ? "Preserve existing link"
-              : "No student link"),
+              ? t("admin.preserveLink")
+              : t("admin.noLink")),
         },
       ],
-      label: "Confirm access change",
+      label: t("admin.confirmAccess"),
       action: performBindIdentity,
     });
   };
   const handleLinkWorkspace = (event: React.FormEvent) => {
     event.preventDefault();
     setConfirmation({
-      title: "Link this student record?",
+      title: t("admin.confirmLink"),
       message:
         "The workspace owner will gain access to this student's private passport. Check both identifiers carefully.",
       details: [
-        { label: "Workspace", value: linkWorkspaceId.trim() },
-        { label: "Student record", value: linkStudentRef.trim() },
+        { label: t("shell.workspace"), value: linkWorkspaceId.trim() },
+        { label: t("admin.studentRecord"), value: linkStudentRef.trim() },
       ],
-      label: "Confirm student link",
+      label: t("admin.confirmStudent"),
       action: performLinkWorkspace,
     });
   };
   const handleUnlinkSubject = (subject: string) => {
     setConfirmation({
-      title: "Remove account access?",
+      title: t("admin.removeAccess"),
       message:
         "This removes the account's current role and student link. Issued credentials and student records are preserved.",
-      details: [{ label: "Account subject", value: subject }],
-      label: "Remove binding",
+      details: [{ label: t("admin.accountSubject"), value: subject }],
+      label: t("admin.removeBinding"),
       action: () => performUnlinkSubject(subject),
     });
   };
   const handleAddAward = (andProcess: boolean) => {
     setConfirmation({
       title: andProcess
-        ? "Record and process this achievement?"
-        : "Record this achievement?",
+        ? t("admin.recordProcess")
+        : t("admin.recordConfirm"),
       message: andProcess
-        ? "This writes the achievement to the configured source and runs the existing authorized issuance process."
-        : "This writes the achievement to the configured source. Issuance follows the existing synchronization process.",
+        ? t("admin.writesIssue")
+        : t("admin.writesSource"),
       details: [
-        { label: "Student", value: awardStudentId },
+        { label: t("admin.studentRole"), value: awardStudentId },
         { label: "Skill", value: awardSkillId },
-        { label: "Earned date", value: awardDate },
+        { label: t("admin.earned"), value: awardDate },
       ],
-      label: andProcess ? "Record & process" : "Record achievement",
+      label: andProcess ? t("admin.recordAndProcess") : t("admin.recordAchievement"),
       action: () => performAddAward(andProcess),
     });
   };
@@ -795,7 +798,7 @@ export default function Admin() {
       await loadJobsAndAudit();
       await loadOverview();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to retry job");
+      setError(err instanceof Error ? err.message : t("admin.retryFailed"));
     } finally {
       setRetryingJobId(null);
     }
@@ -813,11 +816,10 @@ export default function Admin() {
     <Shell>
       <div className="page-heading">
         <div>
-          <div className="eyebrow">UNIVERSITY WORKSPACE</div>
-          <h1>Administration</h1>
+          <div className="eyebrow">{t("admin.eyebrow")}</div>
+          <h1>{locale === "ka" ? toMtavruli(t("shell.administration")) : t("shell.administration")}</h1>
           <p className="lead">
-            Manage student records, recognize achievements, and oversee
-            credential issuance.
+            {t("admin.manageIntro")}
           </p>
         </div>
         <div className="page-actions">
@@ -828,12 +830,12 @@ export default function Admin() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              Open Google Sheets <ExternalLink size={16} aria-hidden="true" />
+              {t("admin.openSheets")} <ExternalLink size={16} aria-hidden="true" />
             </a>
           )}
           {session?.studentId && (
             <Link className="button secondary" href="/passport">
-              <FileBadge2 size={16} /> View My Personal Passport
+              <FileBadge2 size={16} /> {t("admin.personalPassport")}
             </Link>
           )}
         </div>
@@ -841,35 +843,34 @@ export default function Admin() {
 
       {loading ? (
         <p className="loading-state" role="status">
-          Loading workspace session…
+          {t("admin.loadingSession")}
         </p>
       ) : !session ? (
         <section className="card access-card">
           <div>
             <span className="pill pill-blue" style={{ marginBottom: 10 }}>
-              CENTRALIZED AUTHENTICATION
+              {t("admin.centralAuth")}
             </span>
-            <h2>Sign in to OrionX</h2>
+            <h2>{t("admin.signIn")}</h2>
             <p className="muted">
-              Sign in with Google. OrionX automatically verifies your role and
-              opens either the Administrator Console or your Student Passport.
+              {t("admin.signInHelp")}
             </p>
           </div>
           <Link className="button" href="/login?next=/admin">
-            Continue with Google
+            {t("admin.google")}
           </Link>
         </section>
       ) : session.role !== "admin" ? (
         <section className="card" style={{ maxWidth: 620 }}>
-          <span className="pill pill-pink">STUDENT SESSION DETECTED</span>
-          <h2 style={{ marginTop: 12 }}>Redirecting to My Passport…</h2>
+          <span className="pill pill-pink">{t("admin.studentSession")}</span>
+          <h2 style={{ marginTop: 12 }}>{t("admin.redirecting")}</h2>
           <p className="muted">
-            Signed in as <b>{session.email || session.subject}</b>. Student
+            {t("admin.signedAs")} <b>{session.email || session.subject}</b>. Student
             accounts are routed directly to their personal passport workspace.
           </p>
           <div className="page-actions" style={{ marginTop: 16 }}>
             <Link className="button" href="/passport">
-              Open My Passport
+              {t("admin.openMyPassport")}
             </Link>
           </div>
         </section>
@@ -879,7 +880,7 @@ export default function Admin() {
           <div className="stats admin-kpi-grid">
             <section className="card kpi-card kpi-blue">
               <div className="stat-top">
-                <span className="stat-label">Passports & Students</span>
+                <span className="stat-label">{t("admin.passportsStudents")}</span>
                 <FileBadge2 size={18} />
               </div>
               <div className="stat-value">
@@ -888,13 +889,13 @@ export default function Admin() {
               <div className="stat-bottom">
                 {overview
                   ? `${overview.studentsTotal} students · ${overview.activeUpdates} updating`
-                  : "Database total"}
+                  : t("admin.databaseTotal")}
               </div>
             </section>
 
             <section className="card kpi-card kpi-cyan">
               <div className="stat-top">
-                <span className="stat-label">Finalized Chain Versions</span>
+                <span className="stat-label">{t("admin.finalizedVersions")}</span>
                 <Layers size={18} />
               </div>
               <div className="stat-value">
@@ -905,13 +906,13 @@ export default function Admin() {
               <div className="stat-bottom">
                 {overview
                   ? `${overview.awardsTotal} cumulative skill awards`
-                  : "Anchored on Solana Devnet"}
+                  : t("admin.anchored")}
               </div>
             </section>
 
             <section className="card kpi-card kpi-pink">
               <div className="stat-top">
-                <span className="stat-label">Identity & Workspaces</span>
+                <span className="stat-label">{t("admin.identity")}</span>
                 <Users size={18} />
               </div>
               <div className="stat-value">
@@ -923,7 +924,7 @@ export default function Admin() {
               <div className="stat-bottom">
                 {overview
                   ? `${overview.accounts.bindingsAdmin} admins (${overview.accounts.bindingsDual} dual) · ${overview.accounts.workspacesUnlinked} unlinked`
-                  : "Server-bound accounts"}
+                  : t("admin.serverAccounts")}
               </div>
             </section>
 
@@ -933,7 +934,7 @@ export default function Admin() {
               }`}
             >
               <div className="stat-top">
-                <span className="stat-label">Queue & Attention</span>
+                <span className="stat-label">{t("admin.queue")}</span>
                 <Activity size={18} />
               </div>
               <div className="stat-value">
@@ -946,7 +947,7 @@ export default function Admin() {
               <div className="stat-bottom">
                 {overview
                   ? `${overview.jobs.blocked} failed/blocked · ${overview.jobs.completed} completed`
-                  : "Durable job queue"}
+                  : t("admin.durableQueue")}
               </div>
             </section>
           </div>
@@ -963,7 +964,7 @@ export default function Admin() {
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <h2 style={{ margin: 0 }}>
-                    Synchronize Source & Process Queue
+                    {t("admin.syncQueue")}
                   </h2>
                   {run && (
                     <span
@@ -980,9 +981,7 @@ export default function Admin() {
                   )}
                 </div>
                 <p className="muted" style={{ margin: "6px 0 0" }}>
-                  Import verified Google Sheets changes and advance PDF
-                  rendering, Solana Devnet finality, and Sheets writeback one
-                  durable stage at a time.
+                  {t("admin.syncIntro")}
                 </p>
               </div>
               <div className="page-actions">
@@ -1006,7 +1005,7 @@ export default function Admin() {
                       setError(
                         e instanceof Error
                           ? e.message
-                          : "Synchronization unavailable",
+                          : t("admin.syncUnavailable"),
                       );
                     } finally {
                       setSyncing(false);
@@ -1014,7 +1013,7 @@ export default function Admin() {
                   }}
                 >
                   <RefreshCw size={15} />
-                  {syncing ? "Synchronizing…" : "Run synchronization"}
+                  {syncing ? "Synchronizing…" : t("admin.sync")}
                 </button>
                 <button
                   type="button"
@@ -1023,7 +1022,7 @@ export default function Admin() {
                   onClick={() => void processJobs()}
                 >
                   <Play size={15} />
-                  {processing ? "Processing jobs…" : "Process pending jobs"}
+                  {processing ? t("admin.processing") : t("admin.processPending")}
                 </button>
                 {processing && (
                   <button
@@ -1032,11 +1031,11 @@ export default function Admin() {
                     onClick={() => {
                       stopProcessing.current = true;
                       setProgress(
-                        "Finishing the current step before stopping…",
+                        t("admin.finishing"),
                       );
                     }}
                   >
-                    <Square size={14} /> Stop after current step
+                    <Square size={14} /> {t("admin.stopAfter")}
                   </button>
                 )}
               </div>
@@ -1095,7 +1094,7 @@ export default function Admin() {
           <div
             className="admin-tabs"
             role="tablist"
-            aria-label="Administration sections"
+            aria-label={t("admin.sections")}
           >
             <button
               type="button"
@@ -1107,7 +1106,7 @@ export default function Admin() {
               onClick={() => setActiveTab("passports")}
             >
               <FileBadge2 size={16} />
-              <span>Passports & Versions</span>
+              <span>{t("admin.passportsVersions")}</span>
               <span className="tab-count">
                 {overview?.passportsTotal ?? records.length}
               </span>
@@ -1122,7 +1121,7 @@ export default function Admin() {
               onClick={() => setActiveTab("accounts")}
             >
               <Users size={16} />
-              <span>People, Accounts & Access</span>
+              <span>{t("admin.people")}</span>
               {overview && overview.accounts.workspacesUnlinked > 0 && (
                 <span className="tab-count tab-count-pink">
                   {overview.accounts.workspacesUnlinked} unlinked
@@ -1139,7 +1138,7 @@ export default function Admin() {
               onClick={() => setActiveTab("source")}
             >
               <PlusCircle size={16} />
-              <span>Source Entry & Awards</span>
+              <span>{t("admin.sourceAwards")}</span>
             </button>
             <button
               type="button"
@@ -1151,7 +1150,7 @@ export default function Admin() {
               onClick={() => setActiveTab("jobs")}
             >
               <Activity size={16} />
-              <span>Jobs, Conflicts & Audit</span>
+              <span>{t("admin.jobs")}</span>
               {overview && overview.jobs.blocked > 0 && (
                 <span className="tab-count tab-count-crimson">
                   {overview.jobs.blocked} alert
@@ -1168,10 +1167,9 @@ export default function Admin() {
                 style={{ marginTop: 0, flexWrap: "wrap" }}
               >
                 <div>
-                  <h2>Student Passports Directory</h2>
+                  <h2>{t("admin.studentsDirectory")}</h2>
                   <p className="muted">
-                    Search across all student records, inspect version history,
-                    download finalized PDFs, or manage account bindings.
+                    {t("admin.studentsIntro")}
                   </p>
                 </div>
                 <span className="pill pill-blue">
@@ -1186,12 +1184,12 @@ export default function Admin() {
                 >
                   <Search size={16} />
                   <label htmlFor="student-search" className="sr-only">
-                    Search student records
+                    {t("admin.searchStudents")}
                   </label>
                   <input
                     id="student-search"
-                    aria-label="Search student records"
-                    placeholder="Search name, student ID, passport ID, email or program…"
+                    aria-label={t("admin.searchStudents")}
+                    placeholder={t("admin.searchStudentPlaceholder")}
                     className="input"
                     value={query}
                     onChange={(e) => {
@@ -1202,7 +1200,7 @@ export default function Admin() {
                   {query && (
                     <button
                       type="button"
-                      aria-label="Clear search"
+                      aria-label={t("admin.clear")}
                       onClick={() => {
                         setQuery("");
                         setPage(0);
@@ -1216,13 +1214,13 @@ export default function Admin() {
                 <div
                   className="filter-group"
                   role="group"
-                  aria-label="Filter by issuance status"
+                  aria-label={t("admin.filterIssuance")}
                 >
                   {[
-                    { id: "ALL", label: "All Records" },
-                    { id: "ISSUED", label: "Finalized" },
-                    { id: "PROCESSING", label: "Updating" },
-                    { id: "UNISSUED", label: "Unissued" },
+                    { id: "ALL", label: t("admin.allRecords") },
+                    { id: "ISSUED", label: t("common.finalized") },
+                    { id: "PROCESSING", label: t("admin.updating") },
+                    { id: "UNISSUED", label: t("admin.unissued") },
                   ].map((f) => (
                     <button
                       key={f.id}
@@ -1243,13 +1241,13 @@ export default function Admin() {
                 <table className="table">
                   <thead>
                     <tr>
-                      <th>STUDENT</th>
-                      <th>STUDENT ID</th>
-                      <th>PASSPORT ID</th>
-                      <th>ACCOUNT BINDING</th>
-                      <th>ISSUED VERSION</th>
-                      <th>UPDATE</th>
-                      <th>ACTIONS</th>
+                      <th>{t("admin.student")}</th>
+                      <th>{t("admin.studentId")}</th>
+                      <th>{t("admin.passportId")}</th>
+                      <th>{t("admin.binding")}</th>
+                      <th>{t("admin.issuedVersion")}</th>
+                      <th>{t("admin.update")}</th>
+                      <th>{t("admin.actions")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1274,14 +1272,14 @@ export default function Admin() {
                           <td>
                             {hasAdmin ? (
                               <span className="pill pill-pink">
-                                ADMIN · DUAL LINKED
+                                {t("admin.adminLinked")}
                               </span>
                             ) : hasStudent ? (
                               <span className="pill pill-cyan">
-                                UNIVERSITY VERIFIED
+                                {t("admin.verified")}
                               </span>
                             ) : (
-                              <span className="pill">UNBOUND</span>
+                              <span className="pill">{t("admin.unbound")}</span>
                             )}
                           </td>
                           <td>
@@ -1291,14 +1289,14 @@ export default function Admin() {
                                 total)
                               </span>
                             ) : (
-                              <span className="pill">Not issued</span>
+                              <span className="pill">{t("admin.notIssued")}</span>
                             )}
                           </td>
                           <td>
                             {p.activeVersionId ? (
-                              <span className="pill pill-pink">Processing</span>
+                              <span className="pill pill-pink">{t("admin.processingState")}</span>
                             ) : (
-                              <span className="muted">None</span>
+                              <span className="muted">{t("admin.none")}</span>
                             )}
                           </td>
                           <td>
@@ -1308,7 +1306,7 @@ export default function Admin() {
                                 className="button secondary btn-sm"
                                 onClick={() => void inspectPassport(p.publicId)}
                               >
-                                Inspect Record
+                                {t("admin.inspect")}
                               </button>
                               {p.latestFinalizedVersion > 0 && (
                                 <a
@@ -1330,7 +1328,7 @@ export default function Admin() {
 
               {!records.length && (
                 <p role="status" className="muted" style={{ marginTop: 16 }}>
-                  No matching student records.
+                  {t("admin.noMatching")}
                 </p>
               )}
 
@@ -1342,7 +1340,7 @@ export default function Admin() {
                 </div>
                 <div className="page-actions">
                   <select
-                    aria-label="Records per page"
+                    aria-label={t("admin.recordsPerPage")}
                     className="input select-sm"
                     value={pageSize}
                     onChange={(e) => {
@@ -1350,10 +1348,10 @@ export default function Admin() {
                       setPage(0);
                     }}
                   >
-                    <option value={10}>10 per page</option>
-                    <option value={25}>25 per page</option>
-                    <option value={50}>50 per page</option>
-                    <option value={100}>100 per page</option>
+                    <option value={10}>{t("admin.perPage10")}</option>
+                    <option value={25}>{t("admin.perPage25")}</option>
+                    <option value={50}>{t("admin.perPage50")}</option>
+                    <option value={100}>{t("admin.perPage100")}</option>
                   </select>
                   <button
                     type="button"
@@ -1361,7 +1359,7 @@ export default function Admin() {
                     disabled={page === 0}
                     onClick={() => setPage((p) => Math.max(0, p - 1))}
                   >
-                    <ChevronLeft size={14} /> Previous
+                    <ChevronLeft size={14} /> {t("admin.previous")}
                   </button>
                   <button
                     type="button"
@@ -1371,7 +1369,7 @@ export default function Admin() {
                       setPage((p) => Math.min(totalPages - 1, p + 1))
                     }
                   >
-                    Next <ChevronRight size={14} />
+                    {t("admin.next")} <ChevronRight size={14} />
                   </button>
                 </div>
               </div>
@@ -1386,7 +1384,7 @@ export default function Admin() {
                 <section className="card">
                   <div className="section-head" style={{ marginTop: 0 }}>
                     <div>
-                      <h2>Link Self-Registered Workspace</h2>
+                      <h2>{t("admin.linkWorkspace")}</h2>
                       <p className="muted">
                         Associate a student’s Google workspace (
                         <code>WS-…</code>) with their official university
@@ -1411,7 +1409,7 @@ export default function Admin() {
                     </div>
                     <div>
                       <label htmlFor="ws-student-input" className="field-label">
-                        Target Student Record
+                        {t("admin.targetStudent")}
                       </label>
                       <input
                         id="ws-student-input"
@@ -1430,8 +1428,8 @@ export default function Admin() {
                     >
                       <Link2 size={15} />
                       {accountActionPending
-                        ? "Linking Workspace…"
-                        : "Link Workspace & Verify Student"}
+                        ? t("admin.linking")
+                        : t("admin.linkAndVerify")}
                     </button>
                   </form>
                 </section>
@@ -1440,9 +1438,9 @@ export default function Admin() {
                 <section className="card">
                   <div className="section-head" style={{ marginTop: 0 }}>
                     <div>
-                      <h2>Manage Account Role & Binding</h2>
+                      <h2>{t("admin.manageAccount")}</h2>
                       <p className="muted">
-                        Grant or update <b>Student</b> or <b>Administrator</b>{" "}
+                        {t("admin.grant")} <b>{t("admin.studentRole")}</b> or <b>{t("shell.adminRole")}</b>{" "}
                         permissions for a Google subject ID, including dual-role
                         admin + student links.
                       </p>
@@ -1472,7 +1470,7 @@ export default function Admin() {
                           htmlFor="bind-role-select"
                           className="field-label"
                         >
-                          Application Role
+                          {t("admin.applicationRole")}
                         </label>
                         <select
                           id="bind-role-select"
@@ -1482,8 +1480,8 @@ export default function Admin() {
                             setBindRole(e.target.value as "student" | "admin")
                           }
                         >
-                          <option value="student">Student (Verified)</option>
-                          <option value="admin">Administrator</option>
+                          <option value="student">{t("admin.verifiedStudent")}</option>
+                          <option value="admin">{t("shell.adminRole")}</option>
                         </select>
                       </div>
                       <div>
@@ -1493,7 +1491,7 @@ export default function Admin() {
                         >
                           Student Record{" "}
                           {bindRole === "admin"
-                            ? "(Optional Dual-Role)"
+                            ? t("admin.dual")
                             : "(Required)"}
                         </label>
                         <input
@@ -1524,7 +1522,7 @@ export default function Admin() {
                             setBindPreserveStudent(e.target.checked)
                           }
                         />
-                        Preserve existing linked Student Record if already bound
+                        {t("admin.preserve")}
                       </label>
                     )}
                     <button
@@ -1534,8 +1532,8 @@ export default function Admin() {
                     >
                       <ShieldCheck size={15} />
                       {accountActionPending
-                        ? "Saving Binding…"
-                        : "Save Role & Identity Binding"}
+                        ? t("admin.savingBinding")
+                        : t("admin.saveRole")}
                     </button>
                   </form>
                 </section>
@@ -1556,18 +1554,17 @@ export default function Admin() {
                   style={{ marginTop: 0, flexWrap: "wrap" }}
                 >
                   <div>
-                    <h2>Self-Registered Workspaces & Active Role Bindings</h2>
+                    <h2>{t("admin.workspacesBindings")}</h2>
                     <p className="muted">
-                      Click any workspace or subject below to pre-fill the
-                      linking and role forms above.
+                      {t("admin.prefill")}
                     </p>
                   </div>
                   <div className="search-field" style={{ minWidth: 260 }}>
                     <Search size={16} />
                     <input
                       className="input"
-                      aria-label="Search accounts"
-                      placeholder="Filter by email, workspace, subject or student…"
+                      aria-label={t("admin.searchAccounts")}
+                      placeholder={t("admin.searchAccountPlaceholder")}
                       value={accountQuery}
                       onChange={(e) => setAccountQuery(e.target.value)}
                     />
@@ -1582,11 +1579,11 @@ export default function Admin() {
                   <table className="table">
                     <thead>
                       <tr>
-                        <th>WORKSPACE ID</th>
-                        <th>GOOGLE EMAIL</th>
-                        <th>SUBJECT UUID</th>
-                        <th>CURRENT STATUS</th>
-                        <th>QUICK ACTIONS</th>
+                        <th>{t("admin.workspaceId")}</th>
+                        <th>{t("admin.googleEmail")}</th>
+                        <th>{t("admin.subject")}</th>
+                        <th>{t("admin.status")}</th>
+                        <th>{t("admin.quickActions")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1613,7 +1610,7 @@ export default function Admin() {
                               </span>
                             ) : (
                               <span className="pill pill-pink">
-                                UNLINKED SELF-REGISTERED
+                                {t("admin.unlinkedSelf")}
                               </span>
                             )}
                           </td>
@@ -1631,7 +1628,7 @@ export default function Admin() {
                                     });
                                   }}
                                 >
-                                  Select Workspace
+                                  {t("admin.selectWorkspace")}
                                 </button>
                               )}
                               <button
@@ -1650,7 +1647,7 @@ export default function Admin() {
                                   });
                                 }}
                               >
-                                Edit Role / Binding
+                                {t("admin.editRole")}
                               </button>
                             </div>
                           </td>
@@ -1668,12 +1665,12 @@ export default function Admin() {
                   <table className="table">
                     <thead>
                       <tr>
-                        <th>ROLE</th>
-                        <th>EMAIL / WORKSPACE</th>
-                        <th>SUBJECT UUID</th>
-                        <th>LINKED STUDENT RECORD</th>
-                        <th>VERIFIED AT</th>
-                        <th>ACTIONS</th>
+                        <th>{t("admin.roleLabel")}</th>
+                        <th>{t("admin.emailWorkspace")}</th>
+                        <th>{t("admin.subject")}</th>
+                        <th>{t("admin.linkedStudent")}</th>
+                        <th>{t("admin.verifiedAt")}</th>
+                        <th>{t("admin.actions")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1691,9 +1688,9 @@ export default function Admin() {
                             >
                               {idRow.role === "admin"
                                 ? idRow.student
-                                  ? "ADMIN · DUAL"
+                                  ? t("admin.adminDual")
                                   : "ADMIN"
-                                : "STUDENT"}
+                                : t("admin.student")}
                             </span>
                           </td>
                           <td>
@@ -1734,7 +1731,7 @@ export default function Admin() {
                                 )}
                               </div>
                             ) : (
-                              <span className="muted">No student linked</span>
+                              <span className="muted">{t("admin.noLinked")}</span>
                             )}
                           </td>
                           <td className="mono">
@@ -1763,7 +1760,7 @@ export default function Admin() {
                                   });
                                 }}
                               >
-                                Change Role
+                                {t("admin.changeRole")}
                               </button>
                               {idRow.subject !== session.subject && (
                                 <button
@@ -1773,7 +1770,7 @@ export default function Admin() {
                                     void handleUnlinkSubject(idRow.subject)
                                   }
                                 >
-                                  <Unlink size={13} /> Unbind
+                                  <Unlink size={13} /> {t("admin.unbind")}
                                 </button>
                               )}
                             </div>
@@ -1793,7 +1790,7 @@ export default function Admin() {
               <section className="card">
                 <div className="section-head" style={{ marginTop: 0 }}>
                   <div>
-                    <h2>Record New Skill Award in Source</h2>
+                    <h2>{t("admin.newSkill")}</h2>
                     <p className="muted">
                       Writes a validated student + skill award row directly to
                       the authoritative Google Sheet (preserving badge formulas
@@ -1806,7 +1803,7 @@ export default function Admin() {
                 <div className="form-stack">
                   <div>
                     <label htmlFor="award-student" className="field-label">
-                      1. Select Student Record
+                      {t("admin.selectStudent")}
                     </label>
                     <select
                       id="award-student"
@@ -1829,7 +1826,7 @@ export default function Admin() {
 
                   <div>
                     <label htmlFor="award-skill" className="field-label">
-                      2. Select BTU Catalog Skill
+                      {t("admin.selectSkill")}
                     </label>
                     <select
                       id="award-skill"
@@ -1845,7 +1842,7 @@ export default function Admin() {
                           <option key={sk.skillId} value={sk.skillId}>
                             {sk.skillId} — {sk.name} [{sk.category} ·{" "}
                             {sk.badgeCode}]
-                            {alreadyEarned ? " (Already earned)" : ""}
+                            {alreadyEarned ? t("admin.alreadyEarnedFull") : ""}
                           </option>
                         );
                       })}
@@ -1872,7 +1869,7 @@ export default function Admin() {
                       <input
                         id="award-record-id"
                         className="input mono"
-                        placeholder="Auto-generated if blank"
+                        placeholder={t("admin.autoGenerated")}
                         value={awardRecordId}
                         onChange={(e) => setAwardRecordId(e.target.value)}
                       />
@@ -1888,8 +1885,8 @@ export default function Admin() {
                     >
                       <Sparkles size={15} />
                       {submittingAward
-                        ? "Writing & Synchronizing…"
-                        : "Save to Sheet & Issue New Version"}
+                        ? t("admin.writing")
+                        : t("admin.saveIssue")}
                     </button>
                     <button
                       type="button"
@@ -1897,17 +1894,17 @@ export default function Admin() {
                       disabled={submittingAward || processing || syncing}
                       onClick={() => void handleAddAward(false)}
                     >
-                      <PlusCircle size={15} /> Save to Source Sheet Only
+                      <PlusCircle size={15} /> {t("admin.saveSource")}
                     </button>
                   </div>
                 </div>
               </section>
 
               <section className="card">
-                <h2>Selected Award Preview</h2>
+                <h2>{t("admin.preview")}</h2>
                 {selectedStudentObj && (
                   <div className="identity-box" style={{ marginBottom: 16 }}>
-                    <span className="mini-kicker">TARGET STUDENT PASSPORT</span>
+                    <span className="mini-kicker">{t("admin.targetPassport")}</span>
                     <b>
                       {selectedStudentObj.firstName}{" "}
                       {selectedStudentObj.lastName} (
@@ -1917,7 +1914,7 @@ export default function Admin() {
                       Permanent ID:{" "}
                       <code className="mono">
                         {selectedStudentObj.passport?.publicId ||
-                          "Will be assigned"}
+                          t("admin.assigned")}
                       </code>{" "}
                       · Current Version:{" "}
                       <b>
@@ -1960,7 +1957,7 @@ export default function Admin() {
                 )}
 
                 <div className="notice" style={{ marginTop: 18 }}>
-                  <strong>Cumulative Version Guarantee:</strong> Existing awards
+                  <strong>{t("admin.cumulative")}</strong> Existing awards
                   and historical versions (V1, V2…) remain immutable. Adding a
                   new award creates the next sequential version on the same
                   permanent Passport ID.
@@ -1978,22 +1975,21 @@ export default function Admin() {
                   style={{ marginTop: 0, flexWrap: "wrap" }}
                 >
                   <div>
-                    <h2>Durable Issuance & Sync Jobs</h2>
+                    <h2>{t("admin.durable")}</h2>
                     <p className="muted">
-                      Inspect individual job stages, error diagnostics, and
-                      retry eligible jobs.
+                      {t("admin.jobsIntro")}
                     </p>
                   </div>
                   <div
                     className="filter-group"
                     role="group"
-                    aria-label="Filter jobs"
+                    aria-label={t("admin.filterJobs")}
                   >
                     {[
-                      { id: "ALL", label: "All Jobs" },
-                      { id: "ACTIVE", label: "Active / Queued" },
-                      { id: "FAILED", label: "Failed / Retry Wait" },
-                      { id: "COMPLETED", label: "Completed" },
+                      { id: "ALL", label: t("admin.allJobs") },
+                      { id: "ACTIVE", label: t("admin.activeQueued") },
+                      { id: "FAILED", label: t("admin.failedRetry") },
+                      { id: "COMPLETED", label: t("admin.completed") },
                     ].map((f) => (
                       <button
                         key={f.id}
@@ -2011,12 +2007,12 @@ export default function Admin() {
                   <table className="table">
                     <thead>
                       <tr>
-                        <th>JOB / STAGE</th>
-                        <th>STATE</th>
-                        <th>PASSPORT & VERSION</th>
-                        <th>ATTEMPTS</th>
-                        <th>DIAGNOSTIC / LAST ERROR</th>
-                        <th>ACTION</th>
+                        <th>{t("admin.jobStage")}</th>
+                        <th>{t("admin.jobState")}</th>
+                        <th>{t("admin.passportVersion")}</th>
+                        <th>{t("admin.attempts")}</th>
+                        <th>{t("admin.diagnostic")}</th>
+                        <th>{t("admin.action")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -2062,7 +2058,7 @@ export default function Admin() {
                                   </div>
                                 </div>
                               ) : (
-                                <span className="muted">Source Sync Job</span>
+                                <span className="muted">{t("admin.syncJob")}</span>
                               )}
                             </td>
                             <td className="mono">{j.attempts}</td>
@@ -2078,7 +2074,7 @@ export default function Admin() {
                                   {j.lastError}
                                 </span>
                               ) : (
-                                <span className="muted">No errors</span>
+                                <span className="muted">{t("admin.noErrors")}</span>
                               )}
                             </td>
                             <td>
@@ -2092,7 +2088,7 @@ export default function Admin() {
                                   <RotateCcw size={13} />
                                   {retryingJobId === j.id
                                     ? "Retrying…"
-                                    : "Retry Job"}
+                                    : t("admin.retry")}
                                 </button>
                               ) : (
                                 <span className="muted">—</span>
@@ -2105,7 +2101,7 @@ export default function Admin() {
                   </table>
                 </div>
                 {!jobs.length && (
-                  <p className="muted">No jobs match the selected filter.</p>
+                  <p className="muted">{t("admin.noJobs")}</p>
                 )}
               </section>
 
@@ -2116,20 +2112,19 @@ export default function Admin() {
                     <div>
                       <h2>Quarantined Source Conflicts ({conflicts.length})</h2>
                       <p className="muted">
-                        Rows quarantined during import runs because an immutable
-                        field or catalog definition was modified.
+                        {t("admin.quarantineHelp")}
                       </p>
                     </div>
-                    <span className="pill pill-crimson">NEEDS SOURCE FIX</span>
+                    <span className="pill pill-crimson">{t("admin.needsFix")}</span>
                   </div>
                   <div className="table-wrap">
                     <table className="table">
                       <thead>
                         <tr>
-                          <th>STUDENT ID</th>
-                          <th>RECORD ID</th>
-                          <th>CONFLICT REASON</th>
-                          <th>OBSERVED AT</th>
+                          <th>{t("admin.studentId")}</th>
+                          <th>{t("admin.recordId")}</th>
+                          <th>{t("admin.conflict")}</th>
+                          <th>{t("admin.observed")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -2163,18 +2158,17 @@ export default function Admin() {
                   style={{ marginTop: 0, flexWrap: "wrap" }}
                 >
                   <div>
-                    <h2>Security & Operations Audit Log</h2>
+                    <h2>{t("admin.audit")}</h2>
                     <p className="muted">
-                      Immutable record of role changes, workspace links, source
-                      imports, and version reservations.
+                      {t("admin.auditHelp")}
                     </p>
                   </div>
                   <div className="search-field" style={{ minWidth: 250 }}>
                     <Search size={16} />
                     <input
                       className="input"
-                      aria-label="Filter audit events"
-                      placeholder="Filter by action, actor or target…"
+                      aria-label={t("admin.filterAudit")}
+                      placeholder={t("admin.filterAuditPlaceholder")}
                       value={auditQuery}
                       onChange={(e) => setAuditQuery(e.target.value)}
                     />
@@ -2184,11 +2178,11 @@ export default function Admin() {
                   <table className="table">
                     <thead>
                       <tr>
-                        <th>TIMESTAMP</th>
-                        <th>ACTION</th>
-                        <th>ACTOR</th>
-                        <th>TARGET</th>
-                        <th>DETAILS</th>
+                        <th>{t("admin.timestamp")}</th>
+                        <th>{t("admin.action")}</th>
+                        <th>{t("admin.actor")}</th>
+                        <th>{t("admin.target")}</th>
+                        <th>{t("admin.details")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -2230,22 +2224,22 @@ export default function Admin() {
               className="drawer-backdrop"
               role="dialog"
               aria-modal="true"
-              aria-label="Passport Record Inspector"
+              aria-label={t("admin.inspector")}
             >
               <div className="drawer-panel">
                 <div className="dialog-heading">
                   <div>
-                    <span className="pill pill-blue">PASSPORT DOSSIER</span>
+                    <span className="pill pill-blue">{t("admin.dossier")}</span>
                     <h2 style={{ marginTop: 8 }}>
                       {selectedPassport
                         ? `${selectedPassport.student.firstName} ${selectedPassport.student.lastName}`
-                        : "Loading passport record…"}
+                        : t("admin.inspectorLoading")}
                     </h2>
                   </div>
                   <button
                     type="button"
                     className="icon-button"
-                    aria-label="Close inspector"
+                    aria-label={t("admin.closeInspector")}
                     onClick={() => setSelectedPassport(null)}
                   >
                     <X size={18} />
@@ -2256,19 +2250,19 @@ export default function Admin() {
                   <div className="bento-stack">
                     <div className="passport-grid" style={{ marginTop: 0 }}>
                       <div className="identity-box">
-                        <span className="mini-kicker">PASSPORT ID</span>
+                        <span className="mini-kicker">{t("admin.passportId")}</span>
                         <code className="mono">
                           {selectedPassport.publicId}
                         </code>
                       </div>
                       <div className="identity-box">
-                        <span className="mini-kicker">STUDENT ID</span>
+                        <span className="mini-kicker">{t("admin.studentId")}</span>
                         <code className="mono">
                           {selectedPassport.student.externalId}
                         </code>
                       </div>
                       <div className="identity-box">
-                        <span className="mini-kicker">ORIGINAL ISSUE DATE</span>
+                        <span className="mini-kicker">{t("admin.originalIssue")}</span>
                         <code className="mono">
                           {String(selectedPassport.initialIssueDate).slice(
                             0,
@@ -2280,7 +2274,7 @@ export default function Admin() {
 
                     <div className="identity-box">
                       <span className="mini-kicker">
-                        ACADEMIC PROFILE & BOUND ACCOUNTS
+                        {t("admin.academicProfile")}
                       </span>
                       <div>
                         <b>{selectedPassport.student.program}</b> ·{" "}
@@ -2304,8 +2298,7 @@ export default function Admin() {
                         </div>
                       ) : (
                         <span className="muted">
-                          No Google account bound yet. Use People, Accounts &
-                          Access to link a workspace.
+                          {t("admin.noGoogleLinked")}
                         </span>
                       )}
                     </div>
@@ -2354,7 +2347,7 @@ export default function Admin() {
                                 }`}
                               >
                                 {isLatest
-                                  ? "LATEST FINALIZED"
+                                  ? t("admin.latestFinalized")
                                   : isFinalized
                                     ? "SUPERSEDED"
                                     : ver.state}
@@ -2374,20 +2367,20 @@ export default function Admin() {
                                   })
                                 }
                               >
-                                <QrCode size={13} /> QR & Share
+                                <QrCode size={13} /> {t("admin.qrShare")}
                               </button>
                               <Link
                                 className="button secondary btn-sm"
                                 href={`/verify?code=${encodeURIComponent(ver.code)}`}
                               >
-                                <ExternalLink size={13} /> Verify
+                                <ExternalLink size={13} /> {t("admin.verify")}
                               </Link>
                               {isFinalized && (
                                 <a
                                   className="button btn-sm"
                                   href={`${API}/api/v1/admin/passports/${encodeURIComponent(selectedPassport.publicId)}/versions/${ver.number}/download`}
                                 >
-                                  <Download size={13} /> Download PDF
+                                  <Download size={13} /> {t("admin.downloadPDF")}
                                 </a>
                               )}
                             </div>
@@ -2441,7 +2434,7 @@ export default function Admin() {
       )}
       <Dialog
         open={!!confirmation}
-        title={confirmation?.title || "Confirm operation"}
+        title={confirmation?.title || t("admin.confirmOperation")}
         onClose={() => {
           if (!confirming) setConfirmation(null);
         }}
@@ -2463,7 +2456,7 @@ export default function Admin() {
                 onClick={() => setConfirmation(null)}
                 disabled={confirming}
               >
-                Cancel
+                {t("admin.cancel")}
               </Button>
               <Button onClick={() => void confirmOperation()} busy={confirming}>
                 {confirmation.label}

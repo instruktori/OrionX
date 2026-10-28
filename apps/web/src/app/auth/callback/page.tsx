@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useI18n } from "@/lib/i18n-provider";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ShieldCheck, AlertTriangle, ArrowLeft } from "lucide-react";
@@ -7,6 +8,7 @@ import { Shell } from "@/components/shell";
 import { api, useSession } from "@/lib/session";
 
 function CallbackHandler() {
+  const {t} = useI18n();
   const router = useRouter();
   const { refresh } = useSession();
   const searchParams = useSearchParams();
@@ -24,7 +26,7 @@ function CallbackHandler() {
     );
     if (hashParams.get("access_token")) {
       setError(
-        "Implicit OAuth flow is disabled for security. Please sign in using the PKCE flow.",
+        t("auth.security"),
       );
       return;
     }
@@ -38,12 +40,12 @@ function CallbackHandler() {
       hashParams.get("error_description");
 
     if (oauthError) {
-      setError(errorDescription || "Google sign-in was cancelled or denied.");
+      setError(errorDescription || t("auth.denied"));
       return;
     }
 
     if (!code) {
-      setError("Missing OAuth authorization code. Please start sign-in again.");
+      setError(t("auth.missingCode"));
       return;
     }
 
@@ -69,7 +71,7 @@ function CallbackHandler() {
         setError(
           err instanceof Error
             ? err.message
-            : "Unable to complete Google sign-in",
+            : t("auth.failed"),
         );
       });
   }, [router, searchParams]);
@@ -83,18 +85,18 @@ function CallbackHandler() {
             style={{ background: "var(--notice)", color: "var(--notice-ink)" }}
           >
             <AlertTriangle size={16} />
-            <span>SIGN-IN NEEDS YOUR ATTENTION</span>
+            <span>{t("auth.attention")}</span>
           </div>
-          <h2>Unable to complete sign-in</h2>
+          <h2>{t("auth.unable")}</h2>
           <p role="alert" className="notice" style={{ marginTop: 12 }}>
             {error}
           </p>
           <div className="page-actions" style={{ marginTop: 18 }}>
             <Link className="button" href="/login">
-              <ArrowLeft size={15} /> Return to sign in
+              <ArrowLeft size={15} /> {t("auth.back")}
             </Link>
             <Link className="button secondary" href="/verify">
-              Public verifier
+              {t("auth.verifier")}
             </Link>
           </div>
         </>
@@ -102,9 +104,9 @@ function CallbackHandler() {
         <>
           <div className="auth-badge">
             <ShieldCheck size={16} />
-            <span>CHECKING YOUR ACCOUNT</span>
+            <span>{t("auth.checking")}</span>
           </div>
-          <h2>Completing sign-in…</h2>
+          <h2>{t("auth.completing")}</h2>
           <p role="status" className="muted" style={{ lineHeight: 1.7 }}>
             Confirming your Google account and checking access to your
             university record.
@@ -116,17 +118,18 @@ function CallbackHandler() {
 }
 
 export default function AuthCallbackPage() {
+  const {t, locale} = useI18n();
   return (
     <Shell>
-      <div className="eyebrow">SECURE SIGN IN</div>
-      <h1>Connecting your account</h1>
+      <div className="eyebrow">{t("auth.secure")}</div>
+      <h1>{t("auth.connecting")}</h1>
       <p className="lead">
-        We’re checking your account’s access to the workspace.
+        {t("auth.access")}
       </p>
       <Suspense
         fallback={
           <section className="card auth-card">
-            <p role="status">Completing Google sign-in…</p>
+            <p role="status">{t("auth.google")}</p>
           </section>
         }
       >

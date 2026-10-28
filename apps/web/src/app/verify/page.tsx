@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useI18n } from "@/lib/i18n-provider";
 import { Shell } from "@/components/shell";
 import {
   ShieldCheck,
@@ -53,6 +54,7 @@ const API = (process.env.NEXT_PUBLIC_API_ORIGIN || "").replace(/\/+$/, "");
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 export default function Verify() {
+  const { t } = useI18n();
   const [code, setCode] = useState("");
   const [touched, setTouched] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -158,8 +160,8 @@ export default function Verify() {
             data.message ||
             data.error?.message ||
             (response.ok
-              ? "No verified proof returned."
-              : "Verification could not be completed. Check your code and try again."),
+              ? t("verify.noProof")
+              : t("verify.failed")),
           registration: data.registration,
           integrity: data.integrity,
           issuerTrust: data.issuerTrust,
@@ -179,12 +181,12 @@ export default function Verify() {
         setResult({
           unavailable: true,
           message:
-            "The verification service is unavailable. No proof has been established. Please try again later.",
+            t("verify.serviceUnavailable"),
         });
       } finally {
         if (requestId === requestRef.current) {
           setPending(null);
-          if (original) setScanStatus(current => current ? "Passport lookup complete. See the verification result below." : "");
+          if (original) setScanStatus(current => current ? t("verify.lookupDone") : "");
         }
       }
     },
@@ -227,15 +229,15 @@ export default function Verify() {
       return;
     }
     if (!/\.pdf$/i.test(selected.name)) {
-      setFileError("Choose a PDF document to continue.");
+      setFileError(t("verify.choosePdf"));
       return;
     }
     if (selected.size > MAX_FILE_SIZE) {
-      setFileError("This file exceeds 10 MB. Choose a smaller PDF.");
+      setFileError(t("verify.bigPdf"));
       return;
     }
     if (selected.size === 0) {
-      setFileError("This PDF is empty. Choose the original document.");
+      setFileError(t("verify.emptyPdf"));
       return;
     }
     setFileError("");
@@ -269,13 +271,13 @@ export default function Verify() {
       } else {
         setDiscoveryNote(
           valid
-            ? "Ready to compare against the entered verification code."
+            ? t("verify.readyCompare")
             : "Could not auto-detect an embedded QR code from this scan. Enter the D1-… code printed on the passport to compare bytes.",
         );
       }
     } catch {
       setDiscoveryNote(
-        "Ready to compare. Click Compare PDF to verify the document bytes.",
+        t("verify.compareHint"),
       );
     }
   };
@@ -290,9 +292,9 @@ export default function Verify() {
     setScanCorners([]);
     setScanDetected(false);
     setResult(null);
-    setScanStatus("Allow camera access in your browser to start scanning…");
+    setScanStatus(t("verify.cameraAllow"));
     if (!navigator.mediaDevices?.getUserMedia) {
-      setCameraError("Camera access is unavailable. Open this page over HTTPS, or choose a QR image below.");
+      setCameraError(t("verify.cameraUnavailable"));
       setScanStatus("");
       setCameraStarting(false);
       return;
@@ -309,14 +311,14 @@ export default function Verify() {
       streamRef.current = stream;
       setCameraStarting(false);
       setCameraActive(true);
-      setScanStatus("Camera connected. Waiting for live frames…");
+      setScanStatus(t("verify.cameraConnected"));
     } catch (error) {
       if (session !== cameraSessionRef.current) return;
       const name = error instanceof Error ? error.name : "";
       setCameraError(name === "NotAllowedError"
-        ? "Camera permission was denied. Allow camera access in your browser, then try again, or choose a QR image."
-        : name === "NotFoundError" ? "No camera was found. Choose a QR image or use another verification method."
-        : "The camera could not start. Close other apps using it and try again, or choose a QR image.");
+        ? t("verify.cameraDenied")
+        : name === "NotFoundError" ? t("verify.cameraMissing")
+        : t("verify.cameraFail"));
       setScanStatus("");
       stopCamera();
     }
@@ -332,7 +334,7 @@ export default function Verify() {
     const started = Date.now();
     const failCamera = () => {
       if (session !== cameraSessionRef.current) return;
-      setCameraError("The camera stream stopped. Start the camera again or choose a QR image.");
+      setCameraError(t("verify.cameraStopped"));
       setScanStatus("");
       stopCamera();
     };
@@ -359,20 +361,20 @@ export default function Verify() {
           stream.getTracks().forEach(t => t.stop());
           setCode(found);
           setTouched(false);
-          setScanStatus("Passport QR found. Retrieving the original and checking blockchain proof…");
+          setScanStatus(t("verify.foundQR"));
           detectionTimerRef.current = window.setTimeout(stopCamera, 900);
           void runVerification(found, null, false, true);
         } else if (decoded.rawPayload) {
-          setScanStatus("QR detected, but it is not an OrionX passport code. Try the passport’s verification QR.");
+          setScanStatus(t("verify.invalidQR"));
         } else if ((decoded.brightness ?? 255) < 45) {
-          setScanStatus("Camera is scanning, but the image is too dark. Add light or move out of shadow.");
+          setScanStatus(t("verify.dark"));
         } else {
           setScanStatus(frames > 32
-            ? "Still scanning. Move closer, avoid glare, and hold the QR steady inside the frame."
-            : "Scanner is working. Place the whole QR inside the frame and hold steady.");
+            ? t("verify.hold")
+            : t("verify.scanning"));
         }
       } catch {
-        setCameraError("The scanner could not read camera frames. Restart the camera or choose a QR image.");
+        setCameraError(t("verify.cameraReadFail"));
         setScanStatus("");
         stopCamera();
       }
@@ -394,7 +396,7 @@ export default function Verify() {
     setCameraError("");
     stopCamera();
     setResult(null);
-    setScanStatus("Scanning uploaded image for QR code…");
+    setScanStatus(t("verify.imageScanning"));
     try {
       const decoded = await decodeQrFromImageFile(imgFile);
       if (decoded.codes.length > 0) {
@@ -410,13 +412,13 @@ export default function Verify() {
         setScanStatus("");
       } else {
         setCameraError(
-          "No readable QR code was detected in that image. Try a clearer screenshot or upload the original PDF.",
+          t("verify.noQR"),
         );
         setScanStatus("");
       }
     } catch {
       setCameraError(
-        "Could not read that image file. Choose a PNG, JPG, or WebP screenshot.",
+        t("verify.badImage"),
       );
       setScanStatus("");
     } finally {
@@ -434,8 +436,8 @@ export default function Verify() {
     <Shell>
       <div className="page-heading">
         <div>
-          <div className="eyebrow">INDEPENDENT CREDENTIAL VERIFICATION</div>
-          <h1>Trust, with proof.</h1>
+          <div className="eyebrow">{t("verify.eyebrow")}</div>
+          <h1>{t("verify.heading")}</h1>
           <p className="lead">
             Scan a QR code to retrieve the original passport and check its
             blockchain proof. No upload, account, or manual code entry required.
@@ -446,8 +448,8 @@ export default function Verify() {
       <section className="card verify-primary">
         <div className="verify-heading">
           <div className="skill-icon icon-cyan"><ScanLine size={23} /></div>
-          <div><h2>Scan once. Open the original.</h2>
-            <p className="muted">Retrieve the issued passport, check its exact fingerprint, and see its status on Solana Devnet.</p>
+          <div><h2>{t("verify.scanHeading")}</h2>
+            <p className="muted">{t("verify.scanIntro")}</p>
           </div>
         </div>
         <div className="page-actions">
@@ -458,13 +460,13 @@ export default function Verify() {
               disabled={!!pending || cameraStarting}
               onClick={() => void startCameraScan()}
             >
-              <Camera size={16} /> {cameraStarting ? "Connecting camera…" : "Scan QR with camera"}
+              <Camera size={16} /> {cameraStarting ? t("verify.connectingCamera") : t("verify.scanCamera")}
             </button>
           ) : (
             <button
               type="button"
               className="button button-crimson"
-              onClick={() => { stopCamera(); setScanStatus("Camera stopped. Start it again when you’re ready."); }}
+              onClick={() => { stopCamera(); setScanStatus(t("verify.stopCamera")); }}
             >
               <CameraOff size={16} /> Stop Camera
             </button>
@@ -480,7 +482,7 @@ export default function Verify() {
             />
           </label>
         </div>
-        <p className="field-help">Use a printed QR, a QR on another screen, or an image saved on this device. Anyone with the code can open the issued original.</p>
+        <p className="field-help">{t("verify.scanHelp")}</p>
       </section>
 
       {/* Live Camera QR Scanner Panel */}
@@ -492,13 +494,13 @@ export default function Verify() {
           >
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <Camera size={18} color="var(--cyan)" />
-              <h2 style={{ margin: 0, fontSize: 18 }}>QR Code Scanner</h2>
+              <h2 style={{ margin: 0, fontSize: 18 }}>{t("verify.scanner")}</h2>
             </div>
             {(cameraActive || cameraStarting) && (
               <button
                 type="button"
                 className="button secondary btn-sm"
-                onClick={() => { stopCamera(); setScanStatus("Camera stopped. Start it again when you’re ready."); }}
+                onClick={() => { stopCamera(); setScanStatus(t("verify.stopCamera")); }}
               >
                 Stop Scanning
               </button>
@@ -533,7 +535,7 @@ export default function Verify() {
               {scanCorners.length > 0 && <svg className="scan-tracker" viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true">
                 <polygon points={scanCorners.map(p => `${p.x},${p.y}`).join(" ")} vectorEffect="non-scaling-stroke" />
               </svg>}
-              <span className="scan-live"><span />{scanDetected ? "QR captured" : scanFrames ? `Live · ${scanFrames} frames checked` : "Starting video…"}</span>
+              <span className="scan-live"><span />{scanDetected ? t("verify.captured") : scanFrames ? `Live · ${scanFrames} frames checked` : t("verify.starting")}</span>
               <canvas ref={canvasRef} style={{ display: "none" }} />
             </div>
           )}
@@ -544,15 +546,15 @@ export default function Verify() {
         <summary>
           <span className="methods-heading">
             <span className="methods-heading-icon"><SlidersHorizontal size={20} /></span>
-            <span><strong>Other verification methods</strong><span>Have a PDF or a printed code? Choose a method below.</span></span>
+            <span><strong>{t("verify.methods")}</strong><span>{t("verify.methodsHelp")}</span></span>
           </span>
-          <span className="methods-toggle"><span>Choose method</span><ChevronDown size={18} /></span>
+          <span className="methods-toggle"><span>{t("verify.choose")}</span><ChevronDown size={18} /></span>
         </summary>
-        <div className="verification-methods" role="group" aria-label="Verification method">
+        <div className="verification-methods" role="group" aria-label={t("verify.method")}>
           {[
-            {id: "original", icon: Download, title: "Retrieve original", description: "Use a code to open the issued passport and verify its proof."},
-            {id: "file", icon: FileCheck2, title: "Compare a PDF", description: "Check whether a file you received matches its blockchain record."},
-            {id: "code", icon: ShieldCheck, title: "Check record only", description: "Look up registration, issuer, and version status by code."},
+            {id: "original", icon: Download, title: t("verify.retrieveOriginal"), description: t("verify.retrieveMethod")},
+            {id: "file", icon: FileCheck2, title: t("verify.comparePdf"), description: t("verify.compareMethod")},
+            {id: "code", icon: ShieldCheck, title: t("verify.recordOnly"), description: t("verify.recordMethod")},
           ].map(option => (
             <button key={option.id} type="button" className="verification-method-button"
               aria-pressed={method === option.id} aria-controls="verification-method-panel" disabled={!!pending}
@@ -573,7 +575,7 @@ export default function Verify() {
               <UploadCloud size={21} />
             </div>
             <div>
-              <h2>Drop or Select Passport PDF</h2>
+              <h2>{t("verify.drop")}</h2>
               <p className="muted">
                 Automatically extracts the embedded QR/version code and verifies
                 every byte against Solana Devnet.
@@ -610,22 +612,22 @@ export default function Verify() {
             {fileError ||
               discoveryNote ||
               (file
-                ? "Ready to compare. Your PDF is checked against its registered SHA-256 fingerprint."
-                : "Select a passport PDF to automatically discover its code and verify its exact bytes.")}
+                ? t("verify.readySHA")
+                : t("verify.selectPdf"))}
           </p>
 
           <details className="pdf-manual-code">
-            <summary>Use a verification code manually</summary>
-            <label htmlFor="pdf-verification-code" className="field-label">Verification code</label>
+            <summary>{t("verify.manual")}</summary>
+            <label htmlFor="pdf-verification-code" className="field-label">{t("verify.code")}</label>
             <input id="pdf-verification-code" className="input mono" value={code} disabled={!!pending}
-              placeholder="D1- followed by 32 characters" autoCapitalize="characters" spellCheck={false}
+              placeholder={t("verify.codePlaceholder")} autoCapitalize="characters" spellCheck={false}
               onChange={e => {setCode(e.target.value); setResult(null); setDiscrepancy(null);}} />
-            <p className="field-help">Use this if the PDF’s code cannot be detected, or to compare against a different code.</p>
+            <p className="field-help">{t("verify.codeHelp")}</p>
           </details>
 
           {discoveredCodes.length > 1 && (
             <div className="notice" style={{ marginTop: 0, marginBottom: 14 }}>
-              <strong>Multiple codes detected in PDF — choose one:</strong>
+              <strong>{t("verify.multiple")}</strong>
               <div className="page-actions" style={{ marginTop: 8 }}>
                 {discoveredCodes.map((dc) => (
                   <button
@@ -649,7 +651,7 @@ export default function Verify() {
               className="notice notice-crimson"
               style={{ marginTop: 0, marginBottom: 14 }}
             >
-              <strong>Code Discrepancy Detected:</strong> This PDF contains{" "}
+              <strong>{t("verify.discrepancy")}</strong> This PDF contains{" "}
               <code className="mono">{discrepancy.pdfCode}</code>, while the
               input box has{" "}
               <code className="mono">{discrepancy.typedCode}</code>.
@@ -696,7 +698,7 @@ export default function Verify() {
             ) : (
               <FileCheck2 size={16} />
             )}{" "}
-            {pending === "file" ? "Comparing document…" : "Compare PDF"}
+            {pending === "file" ? t("verify.comparing") : t("verify.compareAction")}
           </button>
         </section>
 
@@ -707,9 +709,9 @@ export default function Verify() {
               <Search size={21} />
             </div>
             <div>
-              <h2>{method === "original" ? "Retrieve the original passport" : "Find the Passport Record by Code"}</h2>
+              <h2>{method === "original" ? t("verify.retrieveHeading") : t("verify.findCodeHeading")}</h2>
               <p className="muted">
-                {method === "original" ? "Use the printed code to retrieve and verify the issued original." : "Verify registration without retrieving a document."}
+                {method === "original" ? t("verify.retrieveHelp") : t("verify.recordHelp")}
               </p>
             </div>
           </div>
@@ -722,7 +724,7 @@ export default function Verify() {
             noValidate
           >
             <label htmlFor="verify-code" className="field-label">
-              Verification code
+              {t("verify.code")}
             </label>
             <input
               id="verify-code"
@@ -735,7 +737,7 @@ export default function Verify() {
                 setDiscrepancy(null);
               }}
               onBlur={() => setTouched(true)}
-              placeholder="D1- followed by 32 characters"
+              placeholder={t("verify.codePlaceholder")}
               autoCapitalize="characters"
               autoComplete="off"
               spellCheck={false}
@@ -748,8 +750,8 @@ export default function Verify() {
               aria-live="polite"
             >
               {codeError
-                ? "Enter a canonical D1- code followed by 32 Base32 characters (A-Z, 2-7)."
-                : "Filled automatically when you drop a passport PDF, scan a QR code, or open a verification link."}
+                ? t("verify.canonical")
+                : t("verify.autofill")}
             </p>
             <button
               className="button secondary"
@@ -762,7 +764,7 @@ export default function Verify() {
               ) : (
                 <Search size={16} />
               )}{" "}
-              {pending === "original" ? "Retrieving original…" : pending === "code" ? "Checking record…" : method === "original" ? "Retrieve original" : "Verify code"}
+              {pending === "original" ? t("verify.retrieving") : pending === "code" ? t("verify.checking") : method === "original" ? t("verify.retrieveOriginal") : t("verify.verifyCode")}
             </button>
           </form>
         </section>
@@ -775,9 +777,9 @@ export default function Verify() {
         {pending && (
           <p className="field-help" style={{ marginTop: 18 }}>
             {pending === "file"
-              ? "Comparing your PDF bytes with the finalized Solana Devnet record…"
-              : pending === "original" ? "Retrieving the original passport and comparing its fingerprint with Solana Devnet…"
-              : "Looking up the passport version record on Solana Devnet…"}
+              ? t("verify.comparingChain")
+              : pending === "original" ? t("verify.retrievingChain")
+              : t("verify.lookupChain")}
           </p>
         )}
 
@@ -810,16 +812,16 @@ export default function Verify() {
                 )}
                 <strong style={{ fontSize: 16 }}>
                   {isUnavailable
-                    ? "Verification is temporarily unavailable"
+                    ? t("verify.temporarily")
                     : isTampered
-                      ? result.documentSource === "stored-original" ? "Stored original does not match its registered proof" : "This document doesn’t match its registered proof"
+                      ? result.documentSource === "stored-original" ? t("verify.storedMismatch") : t("verify.uploadMismatch")
                       : isMatched
-                        ? result.documentSource === "stored-original" ? "Original passport verified" : "Document matches its registered proof"
+                        ? result.documentSource === "stored-original" ? t("verify.originalVerified") : t("verify.documentMatch")
                         : isRegistered
-                          ? "Registered record found"
+                          ? t("verify.recordFound")
                           : result.errorCode === "UNKNOWN_CODE"
-                            ? "No credential found for this code"
-                            : "Verification could not be completed"}
+                            ? t("verify.codeNotFound")
+                            : t("verify.incomplete")}
                 </strong>
               </div>
               {result.version != null && (
@@ -843,20 +845,20 @@ export default function Verify() {
             {result.original?.available && isMatched && result.original.viewUrl && (
               <div className="verified-original">
                 <div className="section-head">
-                  <div><h2>Original issued passport</h2><p className="muted">Retrieved from storage and checked against the blockchain.</p></div>
+                  <div><h2>{t("verify.original")}</h2><p className="muted">{t("verify.originalHelp")}</p></div>
                   <div className="page-actions">
-                    <a className="button secondary" href={API + result.original.viewUrl} target="_blank" rel="noreferrer"><ExternalLink size={16} /> Open PDF</a>
-                    {result.original.downloadUrl && <a className="button" href={API + result.original.downloadUrl}><Download size={16} /> Download original</a>}
+                    <a className="button secondary" href={API + result.original.viewUrl} target="_blank" rel="noreferrer"><ExternalLink size={16} /> {t("verify.openPdf")}</a>
+                    {result.original.downloadUrl && <a className="button" href={API + result.original.downloadUrl}><Download size={16} /> {t("verify.download")}</a>}
                   </div>
                 </div>
                 <details className="original-preview">
-                  <summary>Preview original PDF</summary>
-                  <p className="field-help">If the preview is unavailable on this device, use Open PDF or Download original above.</p>
-                  <object data={API + result.original.viewUrl} type="application/pdf" className="original-pdf" aria-label="Verified original passport PDF">
-                    <p>Your browser cannot preview PDFs here. Use Open PDF or Download original above.</p>
+                  <summary>{t("verify.preview")}</summary>
+                  <p className="field-help">{t("verify.previewHelp")}</p>
+                  <object data={API + result.original.viewUrl} type="application/pdf" className="original-pdf" aria-label={t("verify.verifiedOriginal")}>
+                    <p>{t("verify.previewFailed")}</p>
                   </object>
                 </details>
-                <p className="field-help">This check applies to the original shown here. To check a separate file you received, choose “Compare a PDF I received” above.</p>
+                <p className="field-help">{t("verify.integrityHelp")}</p>
               </div>
             )}
 
@@ -900,7 +902,7 @@ export default function Verify() {
               )}
               <span className="pill">
                 BTU authority:{" "}
-                {result.officialBtu === true ? "Confirmed" : "Not confirmed"}
+                {result.officialBtu === true ? "Confirmed" : t("verify.notConfirmed")}
               </span>
             </div>
 
@@ -908,17 +910,17 @@ export default function Verify() {
             {result.registration && (
               <div className="proof-pillars-grid">
                 <div className="proof-pillar-card">
-                  <span className="mini-kicker">1. CHAIN RECORD</span>
+                  <span className="mini-kicker">{t("verify.chain")}</span>
                   <strong>{result.registration}</strong>
                   <p className="muted">
                     {result.registration === "REGISTERED"
-                      ? "This version code is anchored and finalized on the Solana Devnet registry."
-                      : "No finalized blockchain record exists for this verification code."}
+                      ? t("verify.chainFinalized")
+                      : t("verify.chainMissing")}
                   </p>
                 </div>
 
                 <div className="proof-pillar-card">
-                  <span className="mini-kicker">2. PDF BYTE INTEGRITY</span>
+                  <span className="mini-kicker">{t("verify.bytes")}</span>
                   <strong
                     style={{
                       color:
@@ -929,38 +931,38 @@ export default function Verify() {
                             : undefined,
                     }}
                   >
-                    {result.integrity || "NOT CHECKED"}
+                    {result.integrity || t("verify.notChecked")}
                   </strong>
                   <p className="muted">
                     {result.integrity === "MATCH"
-                      ? result.documentSource === "stored-original" ? "Every byte of the retrieved original matches the SHA-256 hash recorded on-chain." : "Every byte of your uploaded PDF matches the SHA-256 hash recorded on-chain."
+                      ? result.documentSource === "stored-original" ? t("verify.bytesMatchOriginal") : t("verify.bytesMatchUploaded")
                       : result.integrity === "MISMATCH"
-                        ? result.documentSource === "stored-original" ? "The stored original does not match the registered fingerprint. The document has been withheld." : "The uploaded PDF has been altered—its SHA-256 fingerprint does not match the registered version."
-                        : result.documentSource === "stored-original" ? "Original document verification could not be completed. See the retrieval status above." : "Code lookup only. Choose PDF comparison in Other verification methods to check a document’s exact bytes."}
+                        ? result.documentSource === "stored-original" ? t("verify.storedAltered") : t("verify.uploadAltered")
+                        : result.documentSource === "stored-original" ? t("verify.originalUnverified") : t("verify.codeOnly")}
                   </p>
                 </div>
 
                 <div className="proof-pillar-card">
-                  <span className="mini-kicker">3. VERSION CURRENCY</span>
+                  <span className="mini-kicker">{t("verify.currency")}</span>
                   <strong>{result.currency || "UNKNOWN"}</strong>
                   <p className="muted">
                     {result.currency === "LATEST"
-                      ? "This is the newest cumulative version issued for this student passport."
+                      ? t("verify.current")
                       : result.currency === "SUPERSEDED"
-                        ? "Authentic historical version. A newer cumulative version with additional skills has since been issued."
-                        : "Version lineage could not be established."}
+                        ? t("verify.historical")
+                        : t("verify.unknownHistory")}
                   </p>
                 </div>
 
                 <div className="proof-pillar-card">
-                  <span className="mini-kicker">4. ISSUER AUTHORITY</span>
+                  <span className="mini-kicker">{t("verify.issuer")}</span>
                   <strong>
-                    {result.officialBtu ? "BTU CONFIRMED" : "DEMO ISSUER"}
+                    {result.officialBtu ? t("verify.btu") : t("verify.demo")}
                   </strong>
                   <p className="muted">
                     {result.officialBtu
-                      ? "Signed by an officially attested university issuer key."
-                      : "Issued by the OrionX hackathon simulated Devnet issuer (officialBtu=false)."}
+                      ? t("verify.btuAttested")
+                      : t("verify.demoInfo")}
                   </p>
                 </div>
               </div>
@@ -984,7 +986,7 @@ export default function Verify() {
                 <div className="identity-box" style={{ marginTop: 10 }}>
                   {result.verifiedCode && (
                     <div>
-                      <span className="mini-kicker">VERIFIED CODE: </span>
+                      <span className="mini-kicker">{t("verify.verifiedCode")} </span>
                       <code className="mono">{result.verifiedCode}</code>
                     </div>
                   )}
@@ -998,7 +1000,7 @@ export default function Verify() {
                   )}
                   {result.versionPda && (
                     <div>
-                      <span className="mini-kicker">SOLANA VERSION PDA: </span>
+                      <span className="mini-kicker">{t("verify.pda")} </span>
                       <code className="mono">{result.versionPda}</code>
                     </div>
                   )}
@@ -1023,24 +1025,24 @@ export default function Verify() {
       </div>
 
       <section className="verification-explainer">
-        <h2>Understand what’s being checked</h2>
+        <h2>{t("verify.explain")}</h2>
         <div className="verification-checks">
           {[
             {
               icon: Fingerprint,
-              title: "Document integrity",
+              title: t("verify.integrity"),
               description:
                 "Scanning retrieves the original and compares its fingerprint with the blockchain. Use PDF comparison to check a separate file, or code lookup to check registration alone.",
             },
             {
               icon: History,
-              title: "Version history",
+              title: t("verify.history"),
               description:
                 "See whether a credential is the latest cumulative version or a historical record. A newer version doesn’t erase the history of an earlier one.",
             },
             {
               icon: ShieldCheck,
-              title: "Issuer authority",
+              title: t("verify.issuerAuthority"),
               description:
                 "Blockchain registration and university authority are separate checks. A demo issuer is identified explicitly and doesn’t establish official university authorization.",
             },

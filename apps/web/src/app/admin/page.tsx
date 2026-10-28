@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useI18n } from "@/lib/i18n-provider";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -286,6 +287,7 @@ type CatalogSkill = {
 };
 
 export default function Admin() {
+  const {t,locale} = useI18n();
   const router = useRouter();
   const { session, loading } = useSession();
 
@@ -422,7 +424,7 @@ export default function Admin() {
       }
     } catch (e) {
       setError(
-        e instanceof Error ? e.message : "Unable to load student records",
+        e instanceof Error ? e.message : t("admin.loadStudents"),
       );
     }
   }, [page, pageSize, query, statusFilter]);
@@ -435,7 +437,7 @@ export default function Admin() {
       setAccountsData(data);
     } catch (e) {
       setError(
-        e instanceof Error ? e.message : "Unable to load account bindings",
+        e instanceof Error ? e.message : t("admin.loadBindings"),
       );
     }
   }, [accountQuery]);
@@ -449,7 +451,7 @@ export default function Admin() {
         setAwardSkillId(data.skills[0].skillId);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Unable to load skill catalog");
+      setError(e instanceof Error ? e.message : t("admin.loadCatalog"));
     }
   }, [awardSkillId]);
 
@@ -467,7 +469,7 @@ export default function Admin() {
       setAuditEvents(Array.isArray(auditRes) ? auditRes : auditRes.items || []);
     } catch (e) {
       setError(
-        e instanceof Error ? e.message : "Unable to load jobs and audit log",
+        e instanceof Error ? e.message : t("admin.loadJobs"),
       );
     }
   }, [jobStateFilter, auditQuery]);
@@ -510,7 +512,7 @@ export default function Admin() {
       setSelectedPassport(detail);
     } catch (e) {
       setError(
-        e instanceof Error ? e.message : "Unable to load passport details",
+        e instanceof Error ? e.message : t("admin.loadPassport"),
       );
     } finally {
       setLoadingDetail(false);
@@ -521,7 +523,7 @@ export default function Admin() {
     stopProcessing.current = false;
     setProcessing(true);
     setError("");
-    setProgress("Checking pending jobs…");
+    setProgress(t("admin.checkingJobs"));
     let completedStages = 0;
     try {
       while (!stopProcessing.current) {
@@ -550,14 +552,14 @@ export default function Admin() {
       }
       if (stopProcessing.current) {
         setProgress(
-          "Stopped after the current step. Pending jobs are saved; select Process pending jobs to continue.",
+          t("admin.stopped"),
         );
       }
     } catch (e) {
       setError(
         e instanceof Error
           ? e.message
-          : "Processing unavailable. Pending jobs are saved; try again.",
+          : t("admin.processingUnavailable"),
       );
     } finally {
       setProcessing(false);
@@ -576,7 +578,7 @@ export default function Admin() {
           })
           .catch((e) =>
             setError(
-              e instanceof Error ? e.message : "Unable to check sync status",
+              e instanceof Error ? e.message : t("admin.syncFailed"),
             ),
           ),
       2000,
@@ -615,7 +617,7 @@ export default function Admin() {
       setError(
         err instanceof Error
           ? err.message
-          : "Unable to update identity binding",
+          : t("admin.bindingFailed"),
       );
     } finally {
       setAccountActionPending(false);
@@ -645,7 +647,7 @@ export default function Admin() {
       setLinkStudentRef("");
       await Promise.all([loadAccounts(), loadOverview(), loadPassports()]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to link workspace");
+      setError(err instanceof Error ? err.message : t("admin.linkFailed"));
     } finally {
       setAccountActionPending(false);
     }
@@ -663,7 +665,7 @@ export default function Admin() {
       setBannerSuccess(`Removed binding for subject ${subject}.`);
       await Promise.all([loadAccounts(), loadOverview(), loadPassports()]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to remove binding");
+      setError(err instanceof Error ? err.message : t("admin.unlinkFailed"));
     } finally {
       setAccountActionPending(false);
     }
@@ -684,7 +686,7 @@ export default function Admin() {
           autoSync: andProcess,
         }),
       });
-      const createdRecordId = res.row?.award?.recordId || "new award";
+      const createdRecordId = res.row?.award?.recordId || t("admin.newAward");
       setBannerSuccess(
         `Added award ${createdRecordId} (${awardSkillId}) for ${awardStudentId} in ${res.mode} source.`,
       );
@@ -699,7 +701,7 @@ export default function Admin() {
       }
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Unable to add source award",
+        err instanceof Error ? err.message : t("admin.addAwardFailed"),
       );
     } finally {
       setSubmittingAward(false);
@@ -709,66 +711,66 @@ export default function Admin() {
   const handleBindIdentity = (event: React.FormEvent) => {
     event.preventDefault();
     setConfirmation({
-      title: "Change account access?",
+      title: t("admin.changeAccess"),
       message:
         "This changes which university records and operations this account can access. Review the identity and role before continuing.",
       details: [
-        { label: "Account subject", value: bindSubject.trim() },
+        { label: t("admin.accountSubject"), value: bindSubject.trim() },
         {
-          label: "Role",
-          value: bindRole === "admin" ? "Administrator" : "Verified student",
+          label: t("admin.role"),
+          value: bindRole === "admin" ? "Administrator" : t("admin.verifiedRole"),
         },
         {
-          label: "Student record",
+          label: t("admin.studentRecord"),
           value:
             bindStudentRef.trim() ||
             (bindPreserveStudent
-              ? "Preserve existing link"
-              : "No student link"),
+              ? t("admin.preserveLink")
+              : t("admin.noLink")),
         },
       ],
-      label: "Confirm access change",
+      label: t("admin.confirmAccess"),
       action: performBindIdentity,
     });
   };
   const handleLinkWorkspace = (event: React.FormEvent) => {
     event.preventDefault();
     setConfirmation({
-      title: "Link this student record?",
+      title: t("admin.confirmLink"),
       message:
         "The workspace owner will gain access to this student's private passport. Check both identifiers carefully.",
       details: [
         { label: "Workspace", value: linkWorkspaceId.trim() },
-        { label: "Student record", value: linkStudentRef.trim() },
+        { label: t("admin.studentRecord"), value: linkStudentRef.trim() },
       ],
-      label: "Confirm student link",
+      label: t("admin.confirmStudent"),
       action: performLinkWorkspace,
     });
   };
   const handleUnlinkSubject = (subject: string) => {
     setConfirmation({
-      title: "Remove account access?",
+      title: t("admin.removeAccess"),
       message:
         "This removes the account's current role and student link. Issued credentials and student records are preserved.",
-      details: [{ label: "Account subject", value: subject }],
-      label: "Remove binding",
+      details: [{ label: t("admin.accountSubject"), value: subject }],
+      label: t("admin.removeBinding"),
       action: () => performUnlinkSubject(subject),
     });
   };
   const handleAddAward = (andProcess: boolean) => {
     setConfirmation({
       title: andProcess
-        ? "Record and process this achievement?"
-        : "Record this achievement?",
+        ? t("admin.recordProcess")
+        : t("admin.recordConfirm"),
       message: andProcess
-        ? "This writes the achievement to the configured source and runs the existing authorized issuance process."
-        : "This writes the achievement to the configured source. Issuance follows the existing synchronization process.",
+        ? t("admin.writesIssue")
+        : t("admin.writesSource"),
       details: [
         { label: "Student", value: awardStudentId },
         { label: "Skill", value: awardSkillId },
-        { label: "Earned date", value: awardDate },
+        { label: t("admin.earned"), value: awardDate },
       ],
-      label: andProcess ? "Record & process" : "Record achievement",
+      label: andProcess ? t("admin.recordAndProcess") : t("admin.recordAchievement"),
       action: () => performAddAward(andProcess),
     });
   };
@@ -795,7 +797,7 @@ export default function Admin() {
       await loadJobsAndAudit();
       await loadOverview();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to retry job");
+      setError(err instanceof Error ? err.message : t("admin.retryFailed"));
     } finally {
       setRetryingJobId(null);
     }
@@ -813,7 +815,7 @@ export default function Admin() {
     <Shell>
       <div className="page-heading">
         <div>
-          <div className="eyebrow">UNIVERSITY WORKSPACE</div>
+          <div className="eyebrow">{t("admin.eyebrow")}</div>
           <h1>Administration</h1>
           <p className="lead">
             Manage student records, recognize achievements, and oversee
@@ -849,7 +851,7 @@ export default function Admin() {
             <span className="pill pill-blue" style={{ marginBottom: 10 }}>
               CENTRALIZED AUTHENTICATION
             </span>
-            <h2>Sign in to OrionX</h2>
+            <h2>{t("admin.signIn")}</h2>
             <p className="muted">
               Sign in with Google. OrionX automatically verifies your role and
               opens either the Administrator Console or your Student Passport.
@@ -861,8 +863,8 @@ export default function Admin() {
         </section>
       ) : session.role !== "admin" ? (
         <section className="card" style={{ maxWidth: 620 }}>
-          <span className="pill pill-pink">STUDENT SESSION DETECTED</span>
-          <h2 style={{ marginTop: 12 }}>Redirecting to My Passport…</h2>
+          <span className="pill pill-pink">{t("admin.studentSession")}</span>
+          <h2 style={{ marginTop: 12 }}>{t("admin.redirecting")}</h2>
           <p className="muted">
             Signed in as <b>{session.email || session.subject}</b>. Student
             accounts are routed directly to their personal passport workspace.
@@ -879,7 +881,7 @@ export default function Admin() {
           <div className="stats admin-kpi-grid">
             <section className="card kpi-card kpi-blue">
               <div className="stat-top">
-                <span className="stat-label">Passports & Students</span>
+                <span className="stat-label">{t("admin.passportsStudents")}</span>
                 <FileBadge2 size={18} />
               </div>
               <div className="stat-value">
@@ -888,13 +890,13 @@ export default function Admin() {
               <div className="stat-bottom">
                 {overview
                   ? `${overview.studentsTotal} students · ${overview.activeUpdates} updating`
-                  : "Database total"}
+                  : t("admin.databaseTotal")}
               </div>
             </section>
 
             <section className="card kpi-card kpi-cyan">
               <div className="stat-top">
-                <span className="stat-label">Finalized Chain Versions</span>
+                <span className="stat-label">{t("admin.finalizedVersions")}</span>
                 <Layers size={18} />
               </div>
               <div className="stat-value">
@@ -905,13 +907,13 @@ export default function Admin() {
               <div className="stat-bottom">
                 {overview
                   ? `${overview.awardsTotal} cumulative skill awards`
-                  : "Anchored on Solana Devnet"}
+                  : t("admin.anchored")}
               </div>
             </section>
 
             <section className="card kpi-card kpi-pink">
               <div className="stat-top">
-                <span className="stat-label">Identity & Workspaces</span>
+                <span className="stat-label">{t("admin.identity")}</span>
                 <Users size={18} />
               </div>
               <div className="stat-value">
@@ -923,7 +925,7 @@ export default function Admin() {
               <div className="stat-bottom">
                 {overview
                   ? `${overview.accounts.bindingsAdmin} admins (${overview.accounts.bindingsDual} dual) · ${overview.accounts.workspacesUnlinked} unlinked`
-                  : "Server-bound accounts"}
+                  : t("admin.serverAccounts")}
               </div>
             </section>
 
@@ -933,7 +935,7 @@ export default function Admin() {
               }`}
             >
               <div className="stat-top">
-                <span className="stat-label">Queue & Attention</span>
+                <span className="stat-label">{t("admin.queue")}</span>
                 <Activity size={18} />
               </div>
               <div className="stat-value">
@@ -946,7 +948,7 @@ export default function Admin() {
               <div className="stat-bottom">
                 {overview
                   ? `${overview.jobs.blocked} failed/blocked · ${overview.jobs.completed} completed`
-                  : "Durable job queue"}
+                  : t("admin.durableQueue")}
               </div>
             </section>
           </div>
@@ -1006,7 +1008,7 @@ export default function Admin() {
                       setError(
                         e instanceof Error
                           ? e.message
-                          : "Synchronization unavailable",
+                          : t("admin.syncUnavailable"),
                       );
                     } finally {
                       setSyncing(false);
@@ -1014,7 +1016,7 @@ export default function Admin() {
                   }}
                 >
                   <RefreshCw size={15} />
-                  {syncing ? "Synchronizing…" : "Run synchronization"}
+                  {syncing ? "Synchronizing…" : t("admin.sync")}
                 </button>
                 <button
                   type="button"
@@ -1023,7 +1025,7 @@ export default function Admin() {
                   onClick={() => void processJobs()}
                 >
                   <Play size={15} />
-                  {processing ? "Processing jobs…" : "Process pending jobs"}
+                  {processing ? t("admin.processing") : t("admin.processPending")}
                 </button>
                 {processing && (
                   <button
@@ -1032,7 +1034,7 @@ export default function Admin() {
                     onClick={() => {
                       stopProcessing.current = true;
                       setProgress(
-                        "Finishing the current step before stopping…",
+                        t("admin.finishing"),
                       );
                     }}
                   >
@@ -1095,7 +1097,7 @@ export default function Admin() {
           <div
             className="admin-tabs"
             role="tablist"
-            aria-label="Administration sections"
+            aria-label={t("admin.sections")}
           >
             <button
               type="button"
@@ -1107,7 +1109,7 @@ export default function Admin() {
               onClick={() => setActiveTab("passports")}
             >
               <FileBadge2 size={16} />
-              <span>Passports & Versions</span>
+              <span>{t("admin.passportsVersions")}</span>
               <span className="tab-count">
                 {overview?.passportsTotal ?? records.length}
               </span>
@@ -1122,7 +1124,7 @@ export default function Admin() {
               onClick={() => setActiveTab("accounts")}
             >
               <Users size={16} />
-              <span>People, Accounts & Access</span>
+              <span>{t("admin.people")}</span>
               {overview && overview.accounts.workspacesUnlinked > 0 && (
                 <span className="tab-count tab-count-pink">
                   {overview.accounts.workspacesUnlinked} unlinked
@@ -1139,7 +1141,7 @@ export default function Admin() {
               onClick={() => setActiveTab("source")}
             >
               <PlusCircle size={16} />
-              <span>Source Entry & Awards</span>
+              <span>{t("admin.sourceAwards")}</span>
             </button>
             <button
               type="button"
@@ -1151,7 +1153,7 @@ export default function Admin() {
               onClick={() => setActiveTab("jobs")}
             >
               <Activity size={16} />
-              <span>Jobs, Conflicts & Audit</span>
+              <span>{t("admin.jobs")}</span>
               {overview && overview.jobs.blocked > 0 && (
                 <span className="tab-count tab-count-crimson">
                   {overview.jobs.blocked} alert
@@ -1168,7 +1170,7 @@ export default function Admin() {
                 style={{ marginTop: 0, flexWrap: "wrap" }}
               >
                 <div>
-                  <h2>Student Passports Directory</h2>
+                  <h2>{t("admin.studentsDirectory")}</h2>
                   <p className="muted">
                     Search across all student records, inspect version history,
                     download finalized PDFs, or manage account bindings.
@@ -1186,12 +1188,12 @@ export default function Admin() {
                 >
                   <Search size={16} />
                   <label htmlFor="student-search" className="sr-only">
-                    Search student records
+                    {t("admin.searchStudents")}
                   </label>
                   <input
                     id="student-search"
-                    aria-label="Search student records"
-                    placeholder="Search name, student ID, passport ID, email or program…"
+                    aria-label={t("admin.searchStudents")}
+                    placeholder={t("admin.searchStudentPlaceholder")}
                     className="input"
                     value={query}
                     onChange={(e) => {
@@ -1202,7 +1204,7 @@ export default function Admin() {
                   {query && (
                     <button
                       type="button"
-                      aria-label="Clear search"
+                      aria-label={t("admin.clear")}
                       onClick={() => {
                         setQuery("");
                         setPage(0);
@@ -1216,10 +1218,10 @@ export default function Admin() {
                 <div
                   className="filter-group"
                   role="group"
-                  aria-label="Filter by issuance status"
+                  aria-label={t("admin.filterIssuance")}
                 >
                   {[
-                    { id: "ALL", label: "All Records" },
+                    { id: "ALL", label: t("admin.allRecords") },
                     { id: "ISSUED", label: "Finalized" },
                     { id: "PROCESSING", label: "Updating" },
                     { id: "UNISSUED", label: "Unissued" },
@@ -1244,10 +1246,10 @@ export default function Admin() {
                   <thead>
                     <tr>
                       <th>STUDENT</th>
-                      <th>STUDENT ID</th>
-                      <th>PASSPORT ID</th>
-                      <th>ACCOUNT BINDING</th>
-                      <th>ISSUED VERSION</th>
+                      <th>{t("admin.studentId")}</th>
+                      <th>{t("admin.passportId")}</th>
+                      <th>{t("admin.binding")}</th>
+                      <th>{t("admin.issuedVersion")}</th>
                       <th>UPDATE</th>
                       <th>ACTIONS</th>
                     </tr>
@@ -1291,7 +1293,7 @@ export default function Admin() {
                                 total)
                               </span>
                             ) : (
-                              <span className="pill">Not issued</span>
+                              <span className="pill">{t("admin.notIssued")}</span>
                             )}
                           </td>
                           <td>
@@ -1342,7 +1344,7 @@ export default function Admin() {
                 </div>
                 <div className="page-actions">
                   <select
-                    aria-label="Records per page"
+                    aria-label={t("admin.recordsPerPage")}
                     className="input select-sm"
                     value={pageSize}
                     onChange={(e) => {
@@ -1350,10 +1352,10 @@ export default function Admin() {
                       setPage(0);
                     }}
                   >
-                    <option value={10}>10 per page</option>
-                    <option value={25}>25 per page</option>
-                    <option value={50}>50 per page</option>
-                    <option value={100}>100 per page</option>
+                    <option value={10}>{t("admin.perPage10")}</option>
+                    <option value={25}>{t("admin.perPage25")}</option>
+                    <option value={50}>{t("admin.perPage50")}</option>
+                    <option value={100}>{t("admin.perPage100")}</option>
                   </select>
                   <button
                     type="button"
@@ -1386,7 +1388,7 @@ export default function Admin() {
                 <section className="card">
                   <div className="section-head" style={{ marginTop: 0 }}>
                     <div>
-                      <h2>Link Self-Registered Workspace</h2>
+                      <h2>{t("admin.linkWorkspace")}</h2>
                       <p className="muted">
                         Associate a student’s Google workspace (
                         <code>WS-…</code>) with their official university
@@ -1430,8 +1432,8 @@ export default function Admin() {
                     >
                       <Link2 size={15} />
                       {accountActionPending
-                        ? "Linking Workspace…"
-                        : "Link Workspace & Verify Student"}
+                        ? t("admin.linking")
+                        : t("admin.linkAndVerify")}
                     </button>
                   </form>
                 </section>
@@ -1440,7 +1442,7 @@ export default function Admin() {
                 <section className="card">
                   <div className="section-head" style={{ marginTop: 0 }}>
                     <div>
-                      <h2>Manage Account Role & Binding</h2>
+                      <h2>{t("admin.manageAccount")}</h2>
                       <p className="muted">
                         Grant or update <b>Student</b> or <b>Administrator</b>{" "}
                         permissions for a Google subject ID, including dual-role
@@ -1482,7 +1484,7 @@ export default function Admin() {
                             setBindRole(e.target.value as "student" | "admin")
                           }
                         >
-                          <option value="student">Student (Verified)</option>
+                          <option value="student">{t("admin.verifiedStudent")}</option>
                           <option value="admin">Administrator</option>
                         </select>
                       </div>
@@ -1493,7 +1495,7 @@ export default function Admin() {
                         >
                           Student Record{" "}
                           {bindRole === "admin"
-                            ? "(Optional Dual-Role)"
+                            ? t("admin.dual")
                             : "(Required)"}
                         </label>
                         <input
@@ -1534,8 +1536,8 @@ export default function Admin() {
                     >
                       <ShieldCheck size={15} />
                       {accountActionPending
-                        ? "Saving Binding…"
-                        : "Save Role & Identity Binding"}
+                        ? t("admin.savingBinding")
+                        : t("admin.saveRole")}
                     </button>
                   </form>
                 </section>
@@ -1556,7 +1558,7 @@ export default function Admin() {
                   style={{ marginTop: 0, flexWrap: "wrap" }}
                 >
                   <div>
-                    <h2>Self-Registered Workspaces & Active Role Bindings</h2>
+                    <h2>{t("admin.workspacesBindings")}</h2>
                     <p className="muted">
                       Click any workspace or subject below to pre-fill the
                       linking and role forms above.
@@ -1566,8 +1568,8 @@ export default function Admin() {
                     <Search size={16} />
                     <input
                       className="input"
-                      aria-label="Search accounts"
-                      placeholder="Filter by email, workspace, subject or student…"
+                      aria-label={t("admin.searchAccounts")}
+                      placeholder={t("admin.searchAccountPlaceholder")}
                       value={accountQuery}
                       onChange={(e) => setAccountQuery(e.target.value)}
                     />
@@ -1582,11 +1584,11 @@ export default function Admin() {
                   <table className="table">
                     <thead>
                       <tr>
-                        <th>WORKSPACE ID</th>
-                        <th>GOOGLE EMAIL</th>
-                        <th>SUBJECT UUID</th>
-                        <th>CURRENT STATUS</th>
-                        <th>QUICK ACTIONS</th>
+                        <th>{t("admin.workspaceId")}</th>
+                        <th>{t("admin.googleEmail")}</th>
+                        <th>{t("admin.subject")}</th>
+                        <th>{t("admin.status")}</th>
+                        <th>{t("admin.quickActions")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1669,10 +1671,10 @@ export default function Admin() {
                     <thead>
                       <tr>
                         <th>ROLE</th>
-                        <th>EMAIL / WORKSPACE</th>
-                        <th>SUBJECT UUID</th>
-                        <th>LINKED STUDENT RECORD</th>
-                        <th>VERIFIED AT</th>
+                        <th>{t("admin.emailWorkspace")}</th>
+                        <th>{t("admin.subject")}</th>
+                        <th>{t("admin.linkedStudent")}</th>
+                        <th>{t("admin.verifiedAt")}</th>
                         <th>ACTIONS</th>
                       </tr>
                     </thead>
@@ -1691,7 +1693,7 @@ export default function Admin() {
                             >
                               {idRow.role === "admin"
                                 ? idRow.student
-                                  ? "ADMIN · DUAL"
+                                  ? t("admin.adminDual")
                                   : "ADMIN"
                                 : "STUDENT"}
                             </span>
@@ -1734,7 +1736,7 @@ export default function Admin() {
                                 )}
                               </div>
                             ) : (
-                              <span className="muted">No student linked</span>
+                              <span className="muted">{t("admin.noLinked")}</span>
                             )}
                           </td>
                           <td className="mono">
@@ -1793,7 +1795,7 @@ export default function Admin() {
               <section className="card">
                 <div className="section-head" style={{ marginTop: 0 }}>
                   <div>
-                    <h2>Record New Skill Award in Source</h2>
+                    <h2>{t("admin.newSkill")}</h2>
                     <p className="muted">
                       Writes a validated student + skill award row directly to
                       the authoritative Google Sheet (preserving badge formulas
@@ -1872,7 +1874,7 @@ export default function Admin() {
                       <input
                         id="award-record-id"
                         className="input mono"
-                        placeholder="Auto-generated if blank"
+                        placeholder={t("admin.autoGenerated")}
                         value={awardRecordId}
                         onChange={(e) => setAwardRecordId(e.target.value)}
                       />
@@ -1888,8 +1890,8 @@ export default function Admin() {
                     >
                       <Sparkles size={15} />
                       {submittingAward
-                        ? "Writing & Synchronizing…"
-                        : "Save to Sheet & Issue New Version"}
+                        ? t("admin.writing")
+                        : t("admin.saveIssue")}
                     </button>
                     <button
                       type="button"
@@ -1904,10 +1906,10 @@ export default function Admin() {
               </section>
 
               <section className="card">
-                <h2>Selected Award Preview</h2>
+                <h2>{t("admin.preview")}</h2>
                 {selectedStudentObj && (
                   <div className="identity-box" style={{ marginBottom: 16 }}>
-                    <span className="mini-kicker">TARGET STUDENT PASSPORT</span>
+                    <span className="mini-kicker">{t("admin.targetPassport")}</span>
                     <b>
                       {selectedStudentObj.firstName}{" "}
                       {selectedStudentObj.lastName} (
@@ -1917,7 +1919,7 @@ export default function Admin() {
                       Permanent ID:{" "}
                       <code className="mono">
                         {selectedStudentObj.passport?.publicId ||
-                          "Will be assigned"}
+                          t("admin.assigned")}
                       </code>{" "}
                       · Current Version:{" "}
                       <b>
@@ -1960,7 +1962,7 @@ export default function Admin() {
                 )}
 
                 <div className="notice" style={{ marginTop: 18 }}>
-                  <strong>Cumulative Version Guarantee:</strong> Existing awards
+                  <strong>{t("admin.cumulative")}</strong> Existing awards
                   and historical versions (V1, V2…) remain immutable. Adding a
                   new award creates the next sequential version on the same
                   permanent Passport ID.
@@ -1978,7 +1980,7 @@ export default function Admin() {
                   style={{ marginTop: 0, flexWrap: "wrap" }}
                 >
                   <div>
-                    <h2>Durable Issuance & Sync Jobs</h2>
+                    <h2>{t("admin.durable")}</h2>
                     <p className="muted">
                       Inspect individual job stages, error diagnostics, and
                       retry eligible jobs.
@@ -1987,10 +1989,10 @@ export default function Admin() {
                   <div
                     className="filter-group"
                     role="group"
-                    aria-label="Filter jobs"
+                    aria-label={t("admin.filterJobs")}
                   >
                     {[
-                      { id: "ALL", label: "All Jobs" },
+                      { id: "ALL", label: t("admin.allJobs") },
                       { id: "ACTIVE", label: "Active / Queued" },
                       { id: "FAILED", label: "Failed / Retry Wait" },
                       { id: "COMPLETED", label: "Completed" },
@@ -2011,11 +2013,11 @@ export default function Admin() {
                   <table className="table">
                     <thead>
                       <tr>
-                        <th>JOB / STAGE</th>
+                        <th>{t("admin.jobStage")}</th>
                         <th>STATE</th>
-                        <th>PASSPORT & VERSION</th>
+                        <th>{t("admin.passportVersion")}</th>
                         <th>ATTEMPTS</th>
-                        <th>DIAGNOSTIC / LAST ERROR</th>
+                        <th>{t("admin.diagnostic")}</th>
                         <th>ACTION</th>
                       </tr>
                     </thead>
@@ -2062,7 +2064,7 @@ export default function Admin() {
                                   </div>
                                 </div>
                               ) : (
-                                <span className="muted">Source Sync Job</span>
+                                <span className="muted">{t("admin.syncJob")}</span>
                               )}
                             </td>
                             <td className="mono">{j.attempts}</td>
@@ -2078,7 +2080,7 @@ export default function Admin() {
                                   {j.lastError}
                                 </span>
                               ) : (
-                                <span className="muted">No errors</span>
+                                <span className="muted">{t("admin.noErrors")}</span>
                               )}
                             </td>
                             <td>
@@ -2092,7 +2094,7 @@ export default function Admin() {
                                   <RotateCcw size={13} />
                                   {retryingJobId === j.id
                                     ? "Retrying…"
-                                    : "Retry Job"}
+                                    : t("admin.retry")}
                                 </button>
                               ) : (
                                 <span className="muted">—</span>
@@ -2105,7 +2107,7 @@ export default function Admin() {
                   </table>
                 </div>
                 {!jobs.length && (
-                  <p className="muted">No jobs match the selected filter.</p>
+                  <p className="muted">{t("admin.noJobs")}</p>
                 )}
               </section>
 
@@ -2120,16 +2122,16 @@ export default function Admin() {
                         field or catalog definition was modified.
                       </p>
                     </div>
-                    <span className="pill pill-crimson">NEEDS SOURCE FIX</span>
+                    <span className="pill pill-crimson">{t("admin.needsFix")}</span>
                   </div>
                   <div className="table-wrap">
                     <table className="table">
                       <thead>
                         <tr>
-                          <th>STUDENT ID</th>
-                          <th>RECORD ID</th>
-                          <th>CONFLICT REASON</th>
-                          <th>OBSERVED AT</th>
+                          <th>{t("admin.studentId")}</th>
+                          <th>{t("admin.recordId")}</th>
+                          <th>{t("admin.conflict")}</th>
+                          <th>{t("admin.observed")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -2163,7 +2165,7 @@ export default function Admin() {
                   style={{ marginTop: 0, flexWrap: "wrap" }}
                 >
                   <div>
-                    <h2>Security & Operations Audit Log</h2>
+                    <h2>{t("admin.audit")}</h2>
                     <p className="muted">
                       Immutable record of role changes, workspace links, source
                       imports, and version reservations.
@@ -2173,8 +2175,8 @@ export default function Admin() {
                     <Search size={16} />
                     <input
                       className="input"
-                      aria-label="Filter audit events"
-                      placeholder="Filter by action, actor or target…"
+                      aria-label={t("admin.filterAudit")}
+                      placeholder={t("admin.filterAuditPlaceholder")}
                       value={auditQuery}
                       onChange={(e) => setAuditQuery(e.target.value)}
                     />
@@ -2230,22 +2232,22 @@ export default function Admin() {
               className="drawer-backdrop"
               role="dialog"
               aria-modal="true"
-              aria-label="Passport Record Inspector"
+              aria-label={t("admin.inspector")}
             >
               <div className="drawer-panel">
                 <div className="dialog-heading">
                   <div>
-                    <span className="pill pill-blue">PASSPORT DOSSIER</span>
+                    <span className="pill pill-blue">{t("admin.dossier")}</span>
                     <h2 style={{ marginTop: 8 }}>
                       {selectedPassport
                         ? `${selectedPassport.student.firstName} ${selectedPassport.student.lastName}`
-                        : "Loading passport record…"}
+                        : t("admin.inspectorLoading")}
                     </h2>
                   </div>
                   <button
                     type="button"
                     className="icon-button"
-                    aria-label="Close inspector"
+                    aria-label={t("admin.closeInspector")}
                     onClick={() => setSelectedPassport(null)}
                   >
                     <X size={18} />
@@ -2256,19 +2258,19 @@ export default function Admin() {
                   <div className="bento-stack">
                     <div className="passport-grid" style={{ marginTop: 0 }}>
                       <div className="identity-box">
-                        <span className="mini-kicker">PASSPORT ID</span>
+                        <span className="mini-kicker">{t("admin.passportId")}</span>
                         <code className="mono">
                           {selectedPassport.publicId}
                         </code>
                       </div>
                       <div className="identity-box">
-                        <span className="mini-kicker">STUDENT ID</span>
+                        <span className="mini-kicker">{t("admin.studentId")}</span>
                         <code className="mono">
                           {selectedPassport.student.externalId}
                         </code>
                       </div>
                       <div className="identity-box">
-                        <span className="mini-kicker">ORIGINAL ISSUE DATE</span>
+                        <span className="mini-kicker">{t("admin.originalIssue")}</span>
                         <code className="mono">
                           {String(selectedPassport.initialIssueDate).slice(
                             0,
@@ -2354,7 +2356,7 @@ export default function Admin() {
                                 }`}
                               >
                                 {isLatest
-                                  ? "LATEST FINALIZED"
+                                  ? t("admin.latestFinalized")
                                   : isFinalized
                                     ? "SUPERSEDED"
                                     : ver.state}
@@ -2441,7 +2443,7 @@ export default function Admin() {
       )}
       <Dialog
         open={!!confirmation}
-        title={confirmation?.title || "Confirm operation"}
+        title={confirmation?.title || t("admin.confirmOperation")}
         onClose={() => {
           if (!confirming) setConfirmation(null);
         }}
@@ -2463,7 +2465,7 @@ export default function Admin() {
                 onClick={() => setConfirmation(null)}
                 disabled={confirming}
               >
-                Cancel
+                {t("admin.cancel")}
               </Button>
               <Button onClick={() => void confirmOperation()} busy={confirming}>
                 {confirmation.label}

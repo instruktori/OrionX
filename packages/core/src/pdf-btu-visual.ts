@@ -22,7 +22,7 @@ export async function renderBtuVisualPdf(s: Snapshot): Promise<Uint8Array> {
   const georgian = await doc.embedFont(readFileSync(repositoryResource("packages/core/assets/NotoSansGeorgian-Regular.ttf")), {subset:true});
   const latin = new Set(regular.getCharacterSet()), geo = new Set(georgian.getCharacterSet());
   const black = rgb(0.035,0.035,0.035), white = rgb(1,1,1), border = rgb(0.72,0.72,0.72);
-  const size = [842,595] as const;
+  const size: [number,number] = [842,595];
   const parts = (value: string): {value:string; font:PDFFont}[] => {
     const result: {value:string; font:PDFFont}[] = [];
     for (const char of value.replace(/[\r\n\t]/g, " ")) {

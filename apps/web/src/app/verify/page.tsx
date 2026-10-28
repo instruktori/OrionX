@@ -439,8 +439,7 @@ export default function Verify() {
           <div className="eyebrow">{t("verify.eyebrow")}</div>
           <h1>{t("verify.heading")}</h1>
           <p className="lead">
-            Scan a QR code to retrieve the original passport and check its
-            blockchain proof. No upload, account, or manual code entry required.
+            {t("verify.scanSimple")}
           </p>
         </div>
       </div>
@@ -577,8 +576,7 @@ export default function Verify() {
             <div>
               <h2>{t("verify.drop")}</h2>
               <p className="muted">
-                Automatically extracts the embedded QR/version code and verifies
-                every byte against Solana Devnet.
+                {t("verify.autoExtract")}
               </p>
             </div>
           </div>
@@ -1058,8 +1056,7 @@ export default function Verify() {
       <div className="preview-notice">
         <LockKeyhole size={16} />
         <p>
-          Preview artwork does not establish proof. Official BTU authorization
-          requires independent university confirmation.
+          {t("verify.disclaimer")}
         </p>
       </div>
     </Shell>

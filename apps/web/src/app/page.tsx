@@ -8,7 +8,7 @@ import { LandingStory } from "@/components/landing-story";
 import styles from "./landing.module.css";
 
 export default function Home() {
-  const {t} = useI18n();
+  const { t, locale } = useI18n();
   return (
     <Shell>
       <div className={styles.page}>
@@ -18,13 +18,19 @@ export default function Home() {
               <span className={styles.eyebrowMark}><Layers3 size={14} /></span>
               {t("home.eyebrow")} <ArrowRight size={13} />
             </a>
-            <h1 id="hero-title">{t("home.titleLine1")}<br />{t("home.titleLine2")}<br className={styles.desktopBreak} /> {t("home.titleLine3")}</h1>
+            <h1 id="hero-title">
+              {locale === "ka" ? (
+                <>{t("home.titleLine1")}<br />{t("home.titleLine2")}</>
+              ) : (
+                <>{t("home.titleLine1")}<br />{t("home.titleLine2")}<br className={styles.desktopBreak} /> {t("home.titleLine3")}</>
+              )}
+            </h1>
             <p>{t("home.intro")}</p>
             <div className={styles.actions}>
               <Link className={`button ${styles.primary}`} href="/login?next=/dashboard">
                 {t("home.open")} <ArrowRight size={16} />
               </Link>
-              <Link className={styles.verify} href="/verify">{t("shell.verify")} <ArrowRight size={15} /></Link>
+              <Link className={styles.verify} href="/verify">{t("home.verify")} <ArrowRight size={15} /></Link>
             </div>
           </div>
           <PassportShowcase />

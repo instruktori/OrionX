@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { ArrowUpRight, BookOpen, GraduationCap, Layers3, Pause, Play, Sun } from "lucide-react";
-import { imagePath, skillTypes } from "@/lib/design";
+import { skillTypes } from "@/lib/design";
 import { SkillField } from "./skill-field";
 import styles from "./passport-showcase.module.css";
 
@@ -46,15 +46,15 @@ export function PassportShowcase() {
     <div className={styles.showcase} data-paused={paused || reducedMotion} data-format={selected}>
       <div className={styles.stage}>
         <div className={styles.stageHeader}>
-          <span>Your learning, connected</span>
+          <h2>Your learning, connected</h2>
+          <p>A skillset that keeps growing</p>
+        </div>
+        <SkillField format={selected} mood={mood} paused={paused || reducedMotion} />
+        <div className={styles.stageControls} role="group" aria-label="Skill field controls">
           <button type="button" className={styles.motionButton} disabled={reducedMotion} onClick={() => setPaused(!paused)} aria-label={reducedMotion ? "Animation disabled by reduced motion preference" : paused ? "Play badge animation" : "Pause badge animation"} aria-pressed={paused || reducedMotion}>
             {paused || reducedMotion ? <Play size={12} /> : <Pause size={12} />}
             {reducedMotion ? "Still" : paused ? "Play" : "Pause"}
           </button>
-        </div>
-        <SkillField format={selected} mood={mood} paused={paused || reducedMotion} />
-        <div className={styles.stageFooter}>
-          <span className={styles.stageCaption}>A skillset that keeps growing</span>
           <button className={styles.moodButton} type="button" onClick={() => setMood((mood + 1) % 3)} aria-label={`Lighting: ${["Dawn", "Daylight", "Dusk"][mood]}. Change lighting mood`}>
             <Sun size={14} />{["Dawn", "Daylight", "Dusk"][mood]}
           </button>
@@ -71,7 +71,7 @@ export function PassportShowcase() {
         </div>
         {formats.map((item, i) => (
           <div key={item.short} id={`format-panel-${i}`} role="tabpanel" aria-labelledby={`format-tab-${i}`} hidden={selected !== i} className={styles.detail} tabIndex={0}>
-            <div className={styles.detailTitle}><Image src={imagePath(skillTypes[i].image)} alt={`${skillTypes[i].label} badge artwork`} width={36} height={30} unoptimized /><h3>{item.title}</h3></div>
+            <div className={styles.detailTitle}><Image src={`/images/btu/vector/${skillTypes[i].image}.svg`} alt={`${skillTypes[i].label} badge artwork`} width={64} height={56} unoptimized /><h3>{item.title}</h3></div>
             <p>{item.summary}</p>
           </div>
         ))}

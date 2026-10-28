@@ -1,7 +1,10 @@
 .showcase { min-width: 0; align-self: center; }
-.stage { position: relative; padding-bottom: 48px; isolation: isolate; }
-.stageHeader { display: flex; justify-content: space-between; align-items: center; padding: 0 12px; color: var(--muted); font-size: 11px; font-weight: 600; }
-.motionButton, .moodButton { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 5px 11px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); font-size: 10px; }
+.stage { position: relative; isolation: isolate; }
+.stageHeader { text-align: center; padding: 24px 12px 16px; }
+.stageHeader h2 { margin: 0 0 6px; font-size: 16px; font-weight: 600; letter-spacing: -.025em; }
+.stageHeader p { margin: 0; max-width: none; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.stageControls { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 8px auto 0; }
+.motionButton, .moodButton { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 40px; padding: 7px 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); font-size: 12px; line-height: 1.5; }
 .motionButton:hover, .moodButton:hover { background: var(--primary-soft); color: var(--primary); }
 .field { position: relative; width: min(100%, 410px); aspect-ratio: 1; margin: 12px auto 0; isolation: isolate; overflow: hidden; border-radius: 50%;
   /* Feather the whole scene, including lines, into either page theme. */
@@ -12,21 +15,18 @@
 .field[data-mood="1"] { background: radial-gradient(ellipse 110% 130% at 48% 112%, #ffd5a4 0%, #f2bce4 30%, #dfc5fc 65%, #f5edfc 100%); }
 .field[data-mood="2"] { background: radial-gradient(ellipse 100% 120% at 50% 112%, #f8a684 0%, #eaa0d6 30%, #c5a0ee 65%, #e5d6f6 100%); }
 .canvas, .fallback { position: absolute; display: block; width: 100%; height: 100%; }
-.fallback { position: absolute; display: block; width: 100%; height: 100%; -webkit-mask-image: radial-gradient(circle closest-side, #000 76%, transparent 100%); mask-image: radial-gradient(circle closest-side, #000 76%, transparent 100%); }
 .fallback { pointer-events: none; }
-.stageFooter { position: absolute; bottom: 0; left: 12px; right: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.stageCaption { font-size: 10px; color: var(--subtle); }
-.explorer { padding: 24px 12px 0; }
-.explorerHeading { display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 11px; margin-bottom: 13px; }
+.explorer { padding: 26px 0 0; }
+.explorerHeading { display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 12px; margin-bottom: 13px; }
 .tabs { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
 .tabs button { display: flex; justify-content: center; align-items: center; gap: 7px; min-height: 40px; padding: 5px; border: 1px solid transparent; border-radius: 999px; background: transparent; color: var(--muted); font-size: 12px; font-weight: 600; }
 .tabs button:hover { color: var(--primary); background: var(--hover); }
 .tabs button[aria-selected="true"] { color: var(--primary); background: var(--primary-soft); border-color: var(--primary-border); }
-.detail { min-height: 112px; padding-top: 17px; }
-.detailTitle { display: flex; align-items: center; gap: 10px; min-height: 30px; margin-bottom: 5px; }
-.detailTitle img { object-fit: contain; }
-.detail h3 { font-size: 14px; margin: 0; letter-spacing: -.02em; }
-.detail p { font-size: 11px; line-height: 1.8; color: var(--muted); margin: 0; max-width: 54ch; }
-.disclaimer { font-size: 9px; color: var(--subtle); margin: 9px 0 0; }
+.detail { min-height: 150px; padding-top: 18px; }
+.detailTitle { display: flex; align-items: center; gap: 14px; min-height: 56px; margin-bottom: 10px; }
+.detailTitle img { display: block; object-fit: contain; width: 64px; height: 56px; flex: 0 0 64px; background: transparent; }
+.detail h3 { font-size: 15px; margin: 0; letter-spacing: -.02em; }
+.detail p { font-size: 13px; line-height: 1.8; color: var(--muted); margin: 0; max-width: 54ch; }
+.disclaimer { font-size: 10px; color: var(--subtle); margin: 9px 0 0; }
 @media (max-width: 767px) { .showcase { width: 100%; max-width: 650px; justify-self: center; } }
-@media (max-width: 420px) { .stageHeader { padding: 0; } .stageFooter { left: 0; right: 0; } .stageCaption { font-size: 9px; } .explorer { padding: 22px 0 0; } .detail { min-height: 124px; } .tabs button { min-height: 44px; font-size: 11px; gap: 5px; } }
+@media (max-width: 420px) { .stageHeader { padding: 24px 0 16px; } .explorer { padding: 22px 0 0; } .stageControls button { min-height: 44px; } .detail { min-height: 175px; } .tabs button { min-height: 44px; font-size: 11px; gap: 5px; } }

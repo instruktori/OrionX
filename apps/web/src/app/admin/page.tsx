@@ -287,7 +287,7 @@ type CatalogSkill = {
 };
 
 export default function Admin() {
-  const {t,locale} = useI18n();
+  const {t} = useI18n();
   const router = useRouter();
   const { session, loading } = useSession();
 

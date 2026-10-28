@@ -74,7 +74,7 @@ export function PassportShowcase({ showHeading = true }: { showHeading?: boolean
         </div>
         {formats.map((item, i) => (
           <div key={item.short} id={`format-panel-${i}`} role="tabpanel" aria-labelledby={`format-tab-${i}`} hidden={selected !== i} className={styles.detail} tabIndex={0}>
-            <div className={styles.detailTitle}><Image src={`/images/btu/vector/${skillTypes[i].image}.svg`} alt={`${skillTypes[i].label} badge artwork`} width={64} height={56} unoptimized /><h3>{item.title}</h3></div>
+            <div className={styles.detailTitle}><Image src={`/images/btu/vector/${skillTypes[i].image}.svg`} alt={t("showcase.badgeAlt",{name:skillTypes[i].label})} width={64} height={56} unoptimized /><h3>{item.title}</h3></div>
             <p>{item.summary}</p>
           </div>
         ))}

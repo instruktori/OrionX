@@ -78,7 +78,7 @@ export function LandingStory() {
 
       <footer className={styles.footer}>
         <div className={styles.footerBrand}>
-          <Link href="/" aria-label="OrionX home">
+          <Link href="/" aria-label={t("common.orionxHome")}>
             <BrandLogo width={109} height={29} className={styles.logo} />
           </Link>
           <span>{t("shell.aiSkillsPassport")}</span>

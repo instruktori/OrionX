@@ -13,7 +13,7 @@ const formats = [
   { short: "Academic", icon: GraduationCap, title: "Go deeper. Keep the proof.", summary: "Academic courses recognize extended, formally assessed learning alongside your other achievements." },
 ] as const;
 
-export function PassportShowcase() {
+export function PassportShowcase({ showHeading = true }: { showHeading?: boolean }) {
   const [selected, setSelected] = useState<number | null>(null);
   const [paused, setPaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -45,10 +45,10 @@ export function PassportShowcase() {
   return (
     <div className={styles.showcase} data-paused={paused || reducedMotion} data-format={selected ?? "overview"}>
       <div className={styles.stage}>
-        <div className={styles.stageHeader}>
+        {showHeading && <div className={styles.stageHeader}>
           <h2>Your learning, connected</h2>
           <p>A skillset that keeps growing</p>
-        </div>
+        </div>}
         <SkillField format={selected ?? 0} mood={mood} paused={paused || reducedMotion} />
         <div className={styles.stageControls} role="group" aria-label="Skill field controls">
           <button type="button" className={styles.motionButton} disabled={reducedMotion} onClick={() => setPaused(!paused)} aria-label={reducedMotion ? "Animation disabled by reduced motion preference" : paused ? "Play badge animation" : "Pause badge animation"} aria-pressed={paused || reducedMotion}>

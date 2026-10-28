@@ -2145,6 +2145,9 @@ label.field-label,
   line-height: 1.9;
   max-width: 39ch;
 }
+.auth-story .auth-field {
+  margin-top: 28px;
+}
 .auth-story .passport-identity {
   margin-top: 35px;
   max-width: 390px;

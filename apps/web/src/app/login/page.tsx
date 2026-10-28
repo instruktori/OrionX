@@ -11,7 +11,7 @@ import {
   Settings2,
 } from "lucide-react";
 import { Shell } from "@/components/shell";
-import { PassportIdentity } from "@/components/passport-identity";
+import { PassportShowcase } from "@/components/passport-showcase";
 import { BrandLogo } from "@/components/brand-logo";
 import { startGoogleSignIn, useSession } from "@/lib/session";
 
@@ -280,7 +280,9 @@ export default function Login() {
             A permanent home for what you learn, the achievements you earn, and
             the proof behind them.
           </p>
-          <PassportIdentity />
+          <div className="auth-field">
+            <PassportShowcase showHeading={false} />
+          </div>
         </section>
       </div>
     </Shell>

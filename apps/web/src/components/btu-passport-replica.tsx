@@ -52,7 +52,9 @@ export function BtuPassportReplica({passport, awards}: {passport: Passport; awar
       id: "details-" + i, label: i ? "Details " + (i + 1) : "Skill details", art: "passport-details", items, offset: i * PAGE_DETAILS,
     })),
   ];
-  const active = sheets[Math.min(selected, sheets.length - 1)];
+  const referenceSheets = [sheets[0], sheets[1], sheets[2], sheets[2 + split(awards, PAGE_SKILLS).length]];
+  const displaySheets = view === "reference" ? referenceSheets : sheets;
+  const active = displaySheets[Math.min(selected, displaySheets.length - 1)];
   const isReference = view === "reference" || !issued;
   const pdfUrl = latest ? `${API}/api/v1/me/passport/versions/${latest.version}/download` : "";
   const canViewIssued = !!latest;
@@ -142,14 +144,9 @@ export function BtuPassportReplica({passport, awards}: {passport: Passport; awar
             </div>
           </div>
           <div className="btu-page-controls">
-            <span className="btu-page-counter">PAGE {selected + 1} / {isReference ? 4 : sheets.length}</span>
+            <span className="btu-page-counter">PAGE {selected + 1} / {displaySheets.length}</span>
             <div className="btu-page-choices" role="group" aria-label="Select passport page">
-              {(isReference ? [
-                {id:"cover",label:"Cover",art:"passport-cover"},
-                {id:"about",label:"About",art:"passport-about"},
-                {id:"skillset-0",label:"Verified skillset",art:"passport-skillset"},
-                {id:"details-0",label:"Skill details",art:"passport-details"},
-              ] : sheets).map((sheet, i) =>
+              {displaySheets.map((sheet, i) =>
                 <button key={sheet.id} type="button" aria-pressed={i === selected} onClick={() => setSelected(i)}>{String(i + 1).padStart(2, "0")} <span>{sheet.label}</span></button>
               )}
             </div>

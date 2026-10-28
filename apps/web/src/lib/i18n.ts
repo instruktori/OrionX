@@ -1170,6 +1170,15 @@ export function translate(locale: Locale, key: MessageKey, values?: Record<strin
   return template.replace(/\{([a-zA-Z][a-zA-Z0-9]*)\}/g, (match, variable: string) =>
     values && Object.prototype.hasOwnProperty.call(values, variable) ? String(values[variable]) : match);
 }
+/**
+ * Convert Georgian Mkhedruli to the actual Unicode Mtavruli codepoints.
+ * Relying on CSS text-transform/Google Fonts 'case' substitutions is not
+ * consistent across browsers and subset fonts. Never apply to database text.
+ */
+export function toMtavruli(value: string): string {
+  return value.replace(/[\u10D0-\u10FF]/g, (letter) =>
+    String.fromCodePoint(letter.codePointAt(0)! + 0xBC0));
+}
 export function localeDate(locale: Locale, value: string | number | Date, options: Intl.DateTimeFormatOptions = { day:"numeric", month:"short", year:"numeric", timeZone:"UTC" }): string {
   const date = value instanceof Date ? value : new Date(value);
   return Number.isNaN(date.getTime()) ? String(value) : new Intl.DateTimeFormat(locale === "ka" ? "ka-GE" : "en-US", options).format(date);

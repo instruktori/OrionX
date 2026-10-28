@@ -564,7 +564,18 @@ export const en = {
   "skills.fictional": "This is a fictional achievement for exploring the passport design.",
   "skills.all": "All skills",
   "skills.earned": "Sample date earned:",
-  "skills.found": "{count} sample skills found"
+  "skills.found": "{count} sample skills found",
+  "admin.updating": "Updating",
+  "admin.unissued": "Unissued",
+  "admin.activeQueued": "Active / Queued",
+  "admin.failedRetry": "Failed / Retry Wait",
+  "admin.completed": "Completed",
+  "admin.alreadyEarnedFull": " (Already earned)",
+  "admin.skill": "Skill",
+  "verify.integrityDetails": "Scanning retrieves the original and compares its fingerprint with the blockchain. Use PDF comparison to check a separate file, or code lookup to check registration alone.",
+  "verify.historyDetails": "See whether a credential is the latest cumulative version or a historical record. A newer version doesn’t erase the history of an earlier one.",
+  "verify.issuerDetails": "Blockchain registration and university authority are separate checks. A demo issuer is identified explicitly and doesn’t establish official university authorization.",
+  "showcase.lighting": "Lighting: {mood}. Change lighting mood"
 } as const;
 export const ka = {
   "common.skip": "მთავარ შიგთავსზე გადასვლა",
@@ -1131,7 +1142,18 @@ export const ka = {
   "skills.fictional": "ეს გამოგონილი მიღწევაა, რომელიც პასპორტის დიზაინის გასაცნობად გამოიყენება.",
   "skills.all": "ყველა უნარი",
   "skills.earned": "მიღების სანიმუშო თარიღი:",
-  "skills.found": "ნაპოვნია {count} სანიმუშო უნარი"
+  "skills.found": "ნაპოვნია {count} სანიმუშო უნარი",
+  "admin.updating": "ახლდება",
+  "admin.unissued": "გაუცემელი",
+  "admin.activeQueued": "მიმდინარე / რიგში",
+  "admin.failedRetry": "შეცდომა / ხელახალ ცდას ელოდება",
+  "admin.completed": "დასრულებული",
+  "admin.alreadyEarnedFull": " (უკვე მიღებულია)",
+  "admin.skill": "უნარი",
+  "verify.integrityDetails": "სკანირება მოიძიებს ორიგინალს და მის ციფრულ ანაბეჭდს ადარებს ბლოკჩეინს. ცალკე ფაილის შემოწმებისთვის გამოიყენეთ PDF-ის შედარება, ხოლო რეგისტრაციის შესამოწმებლად — კოდი.",
+  "verify.historyDetails": "შეამოწმეთ, დოკუმენტი უახლესი დაგროვებითი ვერსიაა თუ ისტორიული ჩანაწერი. ახალი ვერსია ძველის ისტორიას არ შლის.",
+  "verify.issuerDetails": "ბლოკჩეინში რეგისტრაცია და უნივერსიტეტის უფლებამოსილება ცალ-ცალკე მოწმდება. დემო გამცემი აშკარად აღინიშნება და არ ადასტურებს უნივერსიტეტის ოფიციალურ უფლებამოსილებას.",
+  "showcase.lighting": "განათება: {mood}. განათების შეცვლა"
 } satisfies Record<keyof typeof en, string>;
 export type Locale = "en" | "ka";
 export type MessageKey = keyof typeof en;

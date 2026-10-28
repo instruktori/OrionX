@@ -15,7 +15,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Shell } from "@/components/shell";
-import { PassportIdentity } from "@/components/passport-identity";
+import { BtuPassportReplica } from "@/components/btu-passport-replica";
 import { PassportPreview } from "@/components/passport-preview";
 import { QrShareModal } from "@/components/qr-share-modal";
 import {
@@ -101,21 +101,7 @@ export default function PassportPage() {
       ) : (
         p && (
           <>
-            <div className="passport-layout">
-              <PassportIdentity
-                name={
-                  p.student
-                    ? `${p.student.firstName} ${p.student.lastName}`
-                    : undefined
-                }
-                program={
-                  p.student
-                    ? `${p.student.program} · ${p.student.educationLevel}`
-                    : undefined
-                }
-                id={p.passportId}
-                issued={p.official}
-              />
+            <div className="passport-layout passport-summary-layout">
               <section className="passport-detail">
                 <div className="section-head" style={{ marginTop: 0 }}>
                   <h2>
@@ -214,6 +200,7 @@ export default function PassportPage() {
                 versions remain available below.
               </div>
             )}
+            <BtuPassportReplica passport={p} awards={awards} />
             <section style={{ marginTop: 40 }}>
               <div className="section-head">
                 <div>

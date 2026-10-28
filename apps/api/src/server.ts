@@ -950,16 +950,49 @@ class ApiController {
   @Get("me/passport") async myPassport(@Req() req: Request, @Res() res: Response) {
    const {user, passport} = await this.ownPassport(req);
    res.setHeader("Cache-Control", "no-store");
-   if (!passport) {
-    // Valid application state: no official passport has been issued. Nothing here is signed,
-    // anchored or verifiable, and no passport identifier, issue date or chain reference exists.
-    res.json({official: false, status: "EMPTY_WORKSPACE", passportId: null, workspaceId: user.workspaceId ?? null, verification: user.verification, universityVerified: user.verification === "UNIVERSITY_VERIFIED", account: {email: user.email ?? null}, originalIssueDate: null, student: null, latest: null, pending: false, counts: {skills: 0, badges: 0, versions: 0}});
+
+   // A reserved database passport/ID is NOT an issued credential. Only a
+   // stored, blockchain-finalized PDF version may unlock the student view.
+   const latest = passport && passport.latestFinalizedVersion > 0
+     ? await prisma.version.findUnique({where: {passportId_number: {passportId: passport.id, number: passport.latestFinalizedVersion}}})
+     : null;
+   const issued = !!passport && !!latest?.finalizedSlot && !!latest.storageKey && !!latest.pdfSha256;
+   if (!issued || !passport || !latest) {
+    const pending = !!passport?.activeVersionId;
+    res.json({
+      official: false,
+      status: pending ? "ISSUANCE_PENDING" : passport ? "NOT_ISSUED" : "EMPTY_WORKSPACE",
+      // Never disclose a reserved Passport ID, its issue date or its underlying chain data.
+      passportId: null,
+      workspaceId: user.workspaceId ?? null,
+      verification: user.verification,
+      universityVerified: user.verification === "UNIVERSITY_VERIFIED" || !!passport,
+      account: {email: user.email ?? null},
+      originalIssueDate: null,
+      student: null,
+      latest: null,
+      pending,
+      counts: {skills: 0, badges: 0, versions: 0},
+    });
     return;
    }
-   const latest = await prisma.version.findUnique({where: {passportId_number: {passportId: passport.id, number: passport.latestFinalizedVersion}}});
+
    const finalized = await prisma.version.count({where: {passportId: passport.id, finalizedSlot: {not: null}}});
-   const awardCount = latest ? (latest.snapshot as unknown as Snapshot).awards.length : 0;
-   res.json({official: true, status: "ISSUED", workspaceId: null, verification: user.verification, universityVerified: true, account: {email: user.email ?? null}, counts: {skills: awardCount, badges: awardCount, versions: finalized}, passportId: passport.publicId, originalIssueDate: passport.initialIssueDate.toISOString().slice(0, 10), student: {firstName: passport.student.firstName, lastName: passport.student.lastName, program: passport.student.program, educationLevel: passport.student.educationLevel}, latest: latest ? summary(latest, passport.latestFinalizedVersion) : null, pending: !!passport.activeVersionId});
+   const awardCount = (latest.snapshot as unknown as Snapshot).awards.length;
+   res.json({
+     official: true,
+     status: "ISSUED",
+     workspaceId: null,
+     verification: user.verification,
+     universityVerified: true,
+     account: {email: user.email ?? null},
+     counts: {skills: awardCount, badges: awardCount, versions: finalized},
+     passportId: passport.publicId,
+     originalIssueDate: passport.initialIssueDate.toISOString().slice(0, 10),
+     student: {firstName: passport.student.firstName, lastName: passport.student.lastName, program: passport.student.program, educationLevel: passport.student.educationLevel},
+     latest: summary(latest, passport.latestFinalizedVersion),
+     pending: !!passport.activeVersionId,
+   });
   }
   @Get("me/passport/versions") async myVersions(@Req() req: Request, @Res() res: Response) {
    const {passport} = await this.ownPassport(req);
@@ -968,15 +1001,25 @@ class ApiController {
    const versions = await prisma.version.findMany({where: {passportId: passport.id, finalizedSlot: {not: null}}, take: 100, orderBy: {number: "desc"}});
    res.json(versions.map(v => ({...summary(v, passport.latestFinalizedVersion), awards: (v.snapshot as unknown as Snapshot).awards})));
   }
- @Get("me/passport/versions/:version/download") async download(@Req() req: Request, @Res() res: Response, @Param("version") number: string) {
+ @Get("me/passport/versions/:version/download") async download(
+  @Req() req: Request, @Res() res: Response,
+  @Param("version") number: string,
+  @Query("inline") inline: string | undefined,
+ ) {
   const {passport} = await this.ownPassport(req);
-  if (!passport) throw new DomainError("NOT_FOUND", "Issued version not found", 404);
+  if (!passport || passport.latestFinalizedVersion < 1) throw new DomainError("NOT_FOUND", "Issued version not found", 404);
   if (!/^[1-9]\d{0,8}$/.test(number)) throw new DomainError("INVALID_REQUEST", "Invalid version", 400);
   const version = await prisma.version.findUnique({where: {passportId_number: {passportId: passport.id, number: Number(number)}}});
-  if (!version?.finalizedSlot || !version.storageKey) throw new DomainError("NOT_FOUND", "Issued version not found", 404);
+  if (!version?.finalizedSlot || !version.storageKey || !version.pdfSha256 || version.number > passport.latestFinalizedVersion) {
+    throw new DomainError("NOT_FOUND", "Issued version not found", 404);
+  }
   const bytes = await artifactStore().get(version.storageKey);
   if (sha256(bytes) !== version.pdfSha256) throw new DomainError("ARTIFACT_CORRUPTED", "Stored document failed integrity validation", 503);
-  res.setHeader("Cache-Control", "private, no-store"); res.setHeader("Content-Type", "application/pdf"); res.setHeader("Content-Disposition", 'attachment; filename="passport-v' + version.number + '.pdf"'); res.send(Buffer.from(bytes));
+  res.setHeader("Cache-Control", "private, no-store");
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Content-Disposition", (inline === "1" ? "inline" : "attachment") + '; filename="passport-v' + version.number + '.pdf"');
+  res.send(Buffer.from(bytes));
  }
  @Get("verify/:code/original") async original(@Param("code") code: string, @Res() res: Response) {
   const {result} = await publicPassport(code);

@@ -1084,7 +1084,7 @@ export function translate(locale: Locale, key: MessageKey, values?: Record<strin
   return template.replace(/\{([a-zA-Z][a-zA-Z0-9]*)\}/g, (match, variable: string) =>
     values && Object.prototype.hasOwnProperty.call(values, variable) ? String(values[variable]) : match);
 }
-export function localeDate(locale: Locale, value: string | number | Date, options: Intl.DateTimeFormatOptions = { day:"numeric", month:"short", year:"numeric" }): string {
+export function localeDate(locale: Locale, value: string | number | Date, options: Intl.DateTimeFormatOptions = { day:"numeric", month:"short", year:"numeric", timeZone:"UTC" }): string {
   const date = value instanceof Date ? value : new Date(value);
   return Number.isNaN(date.getTime()) ? String(value) : new Intl.DateTimeFormat(locale === "ka" ? "ka-GE" : "en-US", options).format(date);
 }

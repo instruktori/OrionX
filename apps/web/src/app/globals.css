@@ -3440,3 +3440,82 @@ label.field-label,
 }
 @media (max-width: 767px) { .landing-shell .public-header { height: 72px; } .landing-shell .content { padding-left: 24px; padding-right: 24px; } }
 @media (max-width: 370px) { .landing-shell .content { padding-left: 18px; padding-right: 18px; } }
+
+
+/* BTU-authored four-page landscape passport: artwork is the visual source of truth. */
+.passport-summary-layout { display:block; }
+.passport-summary-layout > .passport-detail { max-width:none; padding:22px 26px; }
+.btu-replica { margin:38px 0 46px; }
+.btu-replica-head { display:flex;justify-content:space-between;align-items:end;gap:16px;margin-bottom:22px; }
+.btu-replica-head h2 { font-size:clamp(22px,2.5vw,32px);margin:4px 0 8px; }
+.btu-replica-head p {color:var(--muted);font-size:13px;max-width:70ch;margin:0;}
+.btu-replica-kicker {font-size:10px;letter-spacing:.13em;font-weight:750;color:var(--subtle);}
+.btu-replica-status {flex-shrink:0;display:flex;align-items:center;gap:8px;color:var(--cyan-ink);font-size:12px;}
+.btu-replica-toolbar {display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px;flex-wrap:wrap;}
+.btu-replica-tabs {display:flex;flex-wrap:wrap;gap:4px;background:var(--surface-sunken);border:1px solid var(--line);border-radius:9px;padding:4px;}
+.btu-replica-tabs button {display:flex;align-items:center;gap:7px;background:none;border:1px solid transparent;border-radius:6px;padding:9px 13px;font-size:12px;color:var(--muted);}
+.btu-replica-tabs button[aria-pressed="true"] {color:var(--ink);background:var(--surface);border-color:var(--line-strong);}
+.btu-replica-download {display:inline-flex;gap:8px;align-items:center;font-size:12px;color:var(--primary);font-weight:650;}
+.btu-sheet-scroller {width:100%;max-width:100%;overflow:auto;background:#262626;padding:clamp(8px,2vw,22px);border:1px solid var(--line);border-radius:11px;}
+.btu-sheet {position:relative;width:100%;aspect-ratio:1812 / 1186;background:#292929;isolation:isolate;overflow:hidden;}
+.btu-sheet-art {object-fit:fill;pointer-events:none;}
+.btu-sheet > span, .btu-dynamic-area {position:absolute;z-index:1;}
+.btu-cover-name,.btu-cover-surname {left:13%;width:45%;padding:0 3px;background:#fff;color:#050505;font-size:clamp(10px,2vw,27px);font-weight:800;letter-spacing:-.03em;line-height:1.17;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.btu-cover-name {top:47.3%;}.btu-cover-surname {top:55%;}
+.btu-cover-issue {left:63.1%;top:47.6%;background:#fff;color:#050505;padding:3px;font-size:clamp(9px,1.22vw,18px);font-weight:750;}
+.btu-cover-id,.btu-about-id,.btu-skill-page-id,.btu-details-page-id {color:#121212;background:#fff;font-family:Arial,sans-serif;font-size:clamp(7px,.78vw,11px);font-weight:700;padding:1px 3px;white-space:nowrap;max-width:34%;overflow:hidden;text-overflow:ellipsis;}
+.btu-cover-id {left:76%;top:85%;}.btu-about-id {left:15%;top:84%;}.btu-skill-page-id,.btu-details-page-id {left:77%;top:86%;}
+.btu-dynamic-area {left:8.65%;right:8%;top:12.3%;bottom:14%;background:#fff;color:#080808;font-family:Arial,Helvetica,sans-serif;}
+.btu-dynamic-area h3 {color:#0a0a0a;font-weight:900;letter-spacing:-.03em;line-height:1.05;margin:0 0 4px;font-size:clamp(12px,2.05vw,27px);}
+.btu-dynamic-area > p {font-size:clamp(7px,.85vw,12px);color:#111;font-weight:700;line-height:1.15;margin:0 0 7px;}
+.btu-skill-area {top:12.5%;left:8.8%;right:8.7%;bottom:14.2%;}
+.btu-skill-grid {display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:8px;height:85.5%;min-height:0;}
+.btu-skill-slot {min-width:0;min-height:0;overflow:hidden;display:flex;flex-direction:column;align-items:center;text-align:center;border:1px solid #bbb;border-radius:8px;position:relative;}
+.btu-slot-date {display:block;width:100%;padding:4px 3px;font-size:clamp(5px,.6vw,9px);border-bottom:1px solid #ccc;line-height:1;}
+.btu-slot-stamp {width:80%;height:38%;object-fit:contain;margin:auto auto 4px;}
+.btu-skill-slot strong {font-size:clamp(6px,.82vw,12px);line-height:1.08;text-transform:uppercase;overflow-wrap:anywhere;padding:0 3px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;max-width:100%;}
+.btu-slot-category {font-size:clamp(5px,.6vw,9px);color:#444;text-transform:uppercase;line-height:1;margin:4px 2px 7px;}
+.btu-skill-empty {background:#fff;}
+.btu-details-area {top:13%;left:8.5%;right:8.5%;bottom:13%;}
+.btu-details-table-wrap {height:83%;overflow:hidden;}
+.btu-details-table {width:100%;height:100%;table-layout:fixed;border-collapse:collapse;text-align:center;}
+.btu-details-table th,.btu-details-table td {border:1px solid #aaa;color:#111;vertical-align:middle;padding:3px;font-size:clamp(5px,.68vw,10px);line-height:1.2;overflow-wrap:anywhere;}
+.btu-details-table th {font-weight:900;height:15%;font-size:clamp(6px,.8vw,12px);}
+.btu-details-table th:nth-child(1),.btu-details-table td:nth-child(1){width:18%;}
+.btu-details-table th:nth-child(2),.btu-details-table td:nth-child(2){width:22%;}
+.btu-details-table th:nth-child(3),.btu-details-table td:nth-child(3){width:26%;}
+.btu-details-table th:nth-child(4),.btu-details-table td:nth-child(4){width:20%;}
+.btu-details-table th:nth-child(5),.btu-details-table td:nth-child(5){width:14%;}
+.btu-details-table td img {object-fit:contain;max-width:100%;max-height:60px;width:auto;height:clamp(16px,4.5vw,65px);}
+.btu-details-table td strong {font-weight:800;text-transform:uppercase;}
+.btu-unavailable {color:#777;}
+.btu-page-controls {display:flex;justify-content:space-between;align-items:flex-start;gap:15px;margin-top:16px;}
+.btu-page-counter {white-space:nowrap;color:var(--subtle);font-size:11px;font-family:monospace;padding-top:11px;}
+.btu-page-choices {display:flex;justify-content:flex-end;gap:5px;flex-wrap:wrap;}
+.btu-page-choices button {background:var(--surface);border:1px solid var(--line);border-radius:6px;color:var(--muted);font-size:11px;padding:8px 10px;text-align:left;}
+.btu-page-choices button[aria-pressed="true"] {border-color:var(--primary);color:var(--ink);background:var(--primary-soft);}
+.btu-page-choices button span {margin-left:4px;}
+.btu-replica-disclaimer {max-width:100%;margin:14px 0 0;font-size:11px;line-height:1.6;color:var(--subtle);}
+.btu-issued-viewer {overflow:hidden;border:1px solid var(--line);border-radius:10px;background:var(--surface);}
+.btu-issued-viewer-bar {display:flex;gap:10px;align-items:center;padding:13px 16px;color:var(--muted);font-size:12px;flex-wrap:wrap;}
+.btu-issued-viewer-bar > a {margin-left:auto;color:var(--primary);display:flex;align-items:center;gap:7px;}
+.btu-issued-viewer object {width:100%;height:min(76vw,720px);min-height:440px;border:0;background:#fff;}
+.btu-pdf-fallback {padding:24px;color:#161616;}
+.btu-pdf-fallback a {color:#365bd7;text-decoration:underline;margin-left:6px;}
+@media(max-width:750px){
+ .btu-replica-head {align-items:flex-start;flex-direction:column;}
+ .btu-replica-status{font-size:11px;}
+ .btu-sheet-scroller{padding:6px;}
+ .btu-page-controls{flex-direction:column;}
+ .btu-page-choices{justify-content:flex-start;}
+ .btu-page-choices button span{display:none;}
+ .btu-cover-name,.btu-cover-surname{font-size:clamp(8px,2.5vw,17px);}
+ .btu-cover-issue {font-size:clamp(6px,1.5vw,12px);}
+ .btu-dynamic-area h3{font-size:clamp(9px,2.1vw,17px);}
+ .btu-skill-grid{gap:3px;}
+ .btu-skill-slot{border-radius:4px;}
+ .btu-slot-date{padding:2px;}
+ .btu-slot-category {margin:2px 1px 3px;}
+ .btu-details-table th,.btu-details-table td{padding:2px;font-size:clamp(4px,1.2vw,7px);}
+ .btu-details-table th{font-size:clamp(4px,1.3vw,8px);}
+}

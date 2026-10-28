@@ -38,6 +38,7 @@ type OverviewStats = {
   versionsFinalized: number;
   awardsTotal: number;
   activeUpdates: number;
+  sourceSpreadsheetUrl: string | null;
   jobs: {
     queued: number;
     running: number;
@@ -820,6 +821,16 @@ export default function Admin() {
           </p>
         </div>
         <div className="page-actions">
+          {session?.role === "admin" && overview?.sourceSpreadsheetUrl && (
+            <a
+              className="button secondary"
+              href={overview.sourceSpreadsheetUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Open Google Sheets <ExternalLink size={16} aria-hidden="true" />
+            </a>
+          )}
           {session?.studentId && (
             <Link className="button secondary" href="/passport">
               <FileBadge2 size={16} /> View My Personal Passport

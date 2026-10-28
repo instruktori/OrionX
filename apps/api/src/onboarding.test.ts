@@ -132,6 +132,7 @@ describe("self-service student onboarding over HTTP", () => {
     mockUnboundUser();
     const t = await token(NEW_SUB, {email: WORKSPACE.email, app_metadata: {role: "admin"}, user_metadata: {role: "admin"}});
     for (const [method, path] of [
+      ["GET", "/admin/overview"],
       ["GET", "/admin/passports"],
       ["GET", "/admin/audit"],
       ["GET", "/admin/workspaces"],
@@ -206,6 +207,27 @@ describe("self-service student onboarding over HTTP", () => {
     expect((await call("/admin/passports", t)).status).toBe(200);
     expect((await call("/me/passport", t)).status).toBe(404);
     expect(ensure).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {mode: "sheets", sheetId: "test-workbook_123", expected: "https://docs.google.com/spreadsheets/d/test-workbook_123/edit"},
+    {mode: "sheets", sheetId: "", expected: null},
+    {mode: "fixture", sheetId: "test-workbook_123", expected: null},
+  ])("returns the configured source spreadsheet link only in sheets mode ($mode, $sheetId)", async ({mode, sheetId, expected}) => {
+    vi.stubEnv("SOURCE_MODE", mode);
+    vi.stubEnv("GOOGLE_SHEET_ID", sheetId);
+    vi.spyOn(prisma.studentIdentity, "findUnique").mockResolvedValue({id: "i", provider: issuer, subject: NEW_SUB, role: "admin", studentId: null, verifiedBy: "seed", verifiedAt: new Date()});
+    vi.spyOn(prisma.passport, "count").mockResolvedValue(0);
+    vi.spyOn(prisma.student, "count").mockResolvedValue(0);
+    vi.spyOn(prisma.version, "count").mockResolvedValue(0);
+    vi.spyOn(prisma.award, "count").mockResolvedValue(0);
+    vi.spyOn(prisma.job, "groupBy").mockResolvedValue([]);
+    vi.spyOn(prisma.studentWorkspace, "count").mockResolvedValue(0);
+    vi.spyOn(prisma.studentIdentity, "count").mockResolvedValue(0);
+    vi.spyOn(prisma.importRun, "findFirst").mockResolvedValue(null);
+    const response = await call("/admin/overview", await token(NEW_SUB));
+    expect(response.status).toBe(200);
+    expect(response.body.sourceSpreadsheetUrl).toBe(expected);
   });
 
   it("allows a dual-role administrator (bound to a studentId) to access both admin routes and their own student passport", async () => {

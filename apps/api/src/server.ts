@@ -414,6 +414,9 @@ class ApiController {
       versionsFinalized,
       awardsTotal,
       activeUpdates,
+      sourceSpreadsheetUrl: process.env.SOURCE_MODE === "sheets" && process.env.GOOGLE_SHEET_ID
+        ? `https://docs.google.com/spreadsheets/d/${encodeURIComponent(process.env.GOOGLE_SHEET_ID)}/edit`
+        : null,
       jobs: {
         queued: (jobsByState.QUEUED || 0) + (jobsByState.DISCOVERED || 0) + (jobsByState.VALIDATED || 0),
         running: (jobsByState.RENDERED || 0) + (jobsByState.STORED || 0) + (jobsByState.CHAIN_PENDING || 0) + (jobsByState.SYNC_WRITEBACK_PENDING || 0),

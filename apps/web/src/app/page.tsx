@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n-provider";
+import { toMtavruli } from "@/lib/i18n";
 import { ArrowDown, ArrowRight, Fingerprint, Layers3, ShieldCheck } from "lucide-react";
 import { Shell } from "@/components/shell";
 import { PassportShowcase } from "@/components/passport-showcase";
@@ -20,7 +21,7 @@ export default function Home() {
             </a>
             <h1 id="hero-title">
               {locale === "ka" ? (
-                <>{t("home.titleLine1")}<br />{t("home.titleLine2")}</>
+                <>{toMtavruli(t("home.titleLine1"))}<br />{toMtavruli(t("home.titleLine2"))}</>
               ) : (
                 <>{t("home.titleLine1")}<br />{t("home.titleLine2")}<br className={styles.desktopBreak} /> {t("home.titleLine3")}</>
               )}

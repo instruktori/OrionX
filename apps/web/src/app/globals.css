@@ -3719,10 +3719,20 @@ html[lang="ka"] .sidebar-account strong {
     padding-inline: 12px;
   }
   .public-header .brand { min-width: 0; flex-shrink: 1; }
+  /* Explicit logo box: width-only + height:auto let the image establish
+     an unexpectedly large intrinsic height in iOS Safari. */
   .public-header .brand-logo {
-    width: clamp(96px, 27vw, 118px);
-    height: auto;
-    max-width: 100%;
+    width: 106px;
+    max-width: 106px;
+    height: 28px;
+    min-height: 28px;
+    flex: 0 0 106px;
+    overflow: hidden;
+  }
+  .public-header .brand-logo > .brand-logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
   }
   .public-header .top-actions .button.secondary {
     padding-inline: 9px;
@@ -3739,4 +3749,37 @@ html[lang="ka"] .sidebar-account strong {
     min-width: 44px;
     height: 44px;
   }
+}
+
+/* Stable logo geometry for all phone sizes, including 461-767px where the
+   public header's 30px height used to depend on the nested PNG intrinsic size. */
+@media (min-width: 461px) and (max-width: 767px) {
+  .public-header .brand-logo {
+    width: 115px;
+    max-width: 115px;
+    height: 30px;
+    min-height: 30px;
+    flex: 0 0 115px;
+    overflow: hidden;
+  }
+  .public-header .brand-logo > .brand-logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+}
+@media (max-width: 360px) {
+  .public-header .brand-logo {
+    width: 96px;
+    max-width: 96px;
+    height: 25px;
+    min-height: 25px;
+    flex-basis: 96px;
+  }
+}
+/* Guard desktop/header logo sizing against theme-specific or inherited
+   responsive image rules. The logo PNG files and branding remain unchanged. */
+.public-header .brand-logo-img {
+  max-width: 100%;
+  max-height: 100%;
 }

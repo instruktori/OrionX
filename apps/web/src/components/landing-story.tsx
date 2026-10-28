@@ -42,8 +42,7 @@ export function LandingStory() {
         <div className={styles.intro}>
           <h2 id="learning-story-title">{t("story.heading")}</h2>
           <p>
-            Learning takes different paths. Your achievements belong together,
-            in a record that grows with you.
+            {t("story.intro")}
           </p>
         </div>
         <ol className={styles.process}>

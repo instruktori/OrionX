@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { Noto_Sans_Georgian } from "next/font/google";
+import { cookies } from "next/headers";
+import { I18nProvider } from "@/lib/i18n-provider";
+import { isLocale, translate } from "@/lib/i18n";
 import "./globals.css";
 import { SessionProvider } from "@/lib/session";
 
@@ -9,17 +13,21 @@ const manrope = localFont({
   display: "swap",
   weight: "200 800",
 });
+const notoGeorgian = Noto_Sans_Georgian({ subsets: ["georgian"], weight: ["400","500","600","700"], display: "swap", variable: "--font-georgian" });
 export const metadata: Metadata = {
   title: "OrionX | AI Skills Digital Passport",
   description: "Digital credentials, verifiable by design.",
 };
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const cookieStore = await cookies();
+  const choice = cookieStore.get("orionx-locale")?.value;
+  const locale = isLocale(choice) ? choice : "en";
   return (
-    <html lang="en" data-theme="light" suppressHydrationWarning>
+    <html lang={locale} data-theme="light" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -27,11 +35,11 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={manrope.variable}>
+      <body className={`${manrope.variable} ${notoGeorgian.variable}`}>
         <a className="skip-link" href="#main-content">
-          Skip to main content
+          {translate(locale, "common.skip")}
         </a>
-        <SessionProvider>{children}</SessionProvider>
+        <I18nProvider initialLocale={locale}><SessionProvider>{children}</SessionProvider></I18nProvider>
       </body>
     </html>
   );

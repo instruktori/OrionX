@@ -190,7 +190,7 @@ export default function Verify() {
         }
       }
     },
-    [code, fileError],
+    [code, fileError, t],
   );
 
   useEffect(() => {

@@ -1218,8 +1218,8 @@ export default function Admin() {
                   {[
                     { id: "ALL", label: t("admin.allRecords") },
                     { id: "ISSUED", label: t("common.finalized") },
-                    { id: "PROCESSING", label: "Updating" },
-                    { id: "UNISSUED", label: "Unissued" },
+                    { id: "PROCESSING", label: t("admin.updating") },
+                    { id: "UNISSUED", label: t("admin.unissued") },
                   ].map((f) => (
                     <button
                       key={f.id}
@@ -1841,7 +1841,7 @@ export default function Admin() {
                           <option key={sk.skillId} value={sk.skillId}>
                             {sk.skillId} — {sk.name} [{sk.category} ·{" "}
                             {sk.badgeCode}]
-                            {alreadyEarned ? " (Already earned)" : ""}
+                            {alreadyEarned ? t("admin.alreadyEarnedFull") : ""}
                           </option>
                         );
                       })}
@@ -1986,9 +1986,9 @@ export default function Admin() {
                   >
                     {[
                       { id: "ALL", label: t("admin.allJobs") },
-                      { id: "ACTIVE", label: "Active / Queued" },
-                      { id: "FAILED", label: "Failed / Retry Wait" },
-                      { id: "COMPLETED", label: "Completed" },
+                      { id: "ACTIVE", label: t("admin.activeQueued") },
+                      { id: "FAILED", label: t("admin.failedRetry") },
+                      { id: "COMPLETED", label: t("admin.completed") },
                     ].map((f) => (
                       <button
                         key={f.id}

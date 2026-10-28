@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n-provider";
+import { localeDate } from "@/lib/i18n";
 import {useEffect, useState} from "react";
 import {Clock3, Download, ExternalLink, FileBadge2, GraduationCap, LockKeyhole, ShieldCheck} from "lucide-react";
 import {Shell} from "@/components/shell";
 import {Badge, EmptyState, ErrorState, PageHeading, Skeleton} from "@/components/ui";
 import {API, useSession} from "@/lib/session";
 import {useResource} from "@/lib/use-resource";
-import {type Passport, type PassportVersion, dateLabel} from "@/lib/passport";
+import {type Passport, type PassportVersion} from "@/lib/passport";
 
 const issuedPdfUrl = (version: number, inline: boolean) =>
   `${API}/api/v1/me/passport/versions/${version}/download${inline ? "?inline=1" : ""}`;
@@ -91,7 +92,7 @@ export default function PassportPage() {
                   <h2 id="issued-document-title">{t("passport.issuedVersion",{version:selected?.version || latest.version})}</h2>
                   <p className="muted">
                     {t("dashboard.passportId")}: <code>{p!.passportId}</code>
-                    {selected?.finalizedAt ? ` · ${t("passport.issuedAt",{date:dateLabel(selected.finalizedAt)})}` : ""}
+                    {selected?.finalizedAt ? ` · ${t("passport.issuedAt",{date:localeDate(locale, selected.finalizedAt)})}` : ""}
                   </p>
                 </div>
                 <Badge tone={selected?.isLatest ? "success" : "neutral"}>
@@ -142,7 +143,7 @@ export default function PassportPage() {
                       onClick={() => setSelectedVersion(version.version)}>
                       <FileBadge2 size={17}/>
                       <span>{t("common.version")} {version.version}</span>
-                      <span className="muted">{version.finalizedAt ? dateLabel(version.finalizedAt) : t("common.finalized")}</span>
+                      <span className="muted">{version.finalizedAt ? localeDate(locale, version.finalizedAt) : t("common.finalized")}</span>
                       {version.isLatest && <Badge tone="success">{t("common.latest")}</Badge>}
                     </button>
                   ))}

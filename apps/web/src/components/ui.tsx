@@ -87,7 +87,7 @@ export function EmptyState({
       <p>{description}</p>
       {href && (
         <Link href={href} className="button secondary">
-          {action || "Continue"}
+          {action || t("common.continue")}
           <ArrowRight size={16} />
         </Link>
       )}
@@ -101,13 +101,13 @@ export function ErrorState({
   message: string;
   retry?: () => void;
 }) {
-  const {t} = useI18n();
+  const {t,locale} = useI18n();
   return (
     <div className="error-state" role="alert">
       <AlertCircle size={20} />
       <div>
         <strong>{t("ui.attention")}</strong>
-        <p>{message}</p>
+        <p>{locale === "ka" ? t("ui.fallbackError") : message}</p>
         {retry && (
           <Button secondary onClick={retry}>
             {t("common.retry")}

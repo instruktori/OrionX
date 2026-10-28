@@ -25,13 +25,18 @@ function media(matches = false) {
   global.window = { matchMedia: () => ({matches, addEventListener:(_,fn)=>{listener=fn;},removeEventListener:()=>{listener=null;}}) };
   return () => listener;
 }
-test('format selection updates the visible panel and supports wrapping arrow keys, Home, and End', async () => {
+test('formats start unselected and reveal details only after user selection, with keyboard navigation', async () => {
   media(); const Showcase = await load();
   await act(async () => { tree=create(React.createElement(Showcase)); });
   const tabs=()=>tree.root.findAll(n=>n.props.role==='tab');
   const active=()=>tabs().findIndex(n=>n.props['aria-selected']);
+  assert.equal(active(), -1, 'no format should be selected on load');
+  assert.equal(tree.root.findAll(n=>n.props.role==='tabpanel' && !n.props.hidden).length, 0);
+  assert.equal(tree.root.findAllByType('p').some(n=>n.children.join('').includes('No credential has been issued')), false);
+  assert.equal(tabs()[0].props.tabIndex, 0, 'formats remain keyboard reachable before selection');
   const key=async (value)=>act(async()=>tabs()[active()].props.onKeyDown({key:value,preventDefault(){}}));
   await act(async()=>tabs()[1].props.onClick()); assert.equal(active(),1);
+  assert.equal(tree.root.findAllByType('p').some(n=>n.children.join('').includes('No credential has been issued')), true);
   assert.equal(tree.root.findAll(n=>n.props.role==='tabpanel' && !n.props.hidden)[0].props.id,'format-panel-1');
   await key('End'); assert.equal(active(),2);
   await key('ArrowRight'); assert.equal(active(),0);

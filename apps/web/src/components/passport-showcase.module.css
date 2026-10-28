@@ -28,5 +28,25 @@
 .detail h3 { font-size: 15px; margin: 0; letter-spacing: -.02em; }
 .detail p { font-size: 13px; line-height: 1.8; color: var(--muted); margin: 0; max-width: 54ch; }
 .disclaimer { font-size: 10px; color: var(--subtle); margin: 9px 0 0; }
+/* Laptop composition stays balanced with the hero copy; mobile retains its spacing. */
+@media (min-width: 768px) {
+  .showcase { align-self: start; width: 100%; max-width: 560px; justify-self: end; }
+  .stageHeader { padding: 12px 12px 8px; }
+  .stageHeader h2 { font-size: 13px; line-height: 28px; font-weight: 650; }
+  .stageHeader p { font-size: 11px; }
+  .field { width: clamp(260px, 24vw, 330px); max-width: 100%; margin-top: 6px; }
+  .stageControls { margin-top: 4px; }
+  .motionButton, .moodButton { min-height: 34px; font-size: 11px; padding: 5px 12px; }
+  .explorer { padding-top: 18px; }
+  .explorerHeading { margin-bottom: 10px; }
+  .tabs { padding-bottom: 10px; }
+  .tabs button { min-height: 36px; }
+  .detail { min-height: 112px; padding-top: 14px; }
+  .detailTitle { min-height: 40px; gap: 12px; margin-bottom: 6px; }
+  .detailTitle img { width: 48px; height: 40px; flex-basis: 48px; }
+  .detail h3 { font-size: 14px; }
+  .detail p { font-size: 12px; line-height: 1.7; }
+  .disclaimer { margin-top: 6px; font-size: 9px; }
+}
 @media (max-width: 767px) { .showcase { width: 100%; max-width: 650px; justify-self: center; } }
 @media (max-width: 420px) { .stageHeader { padding: 24px 0 16px; } .explorer { padding: 22px 0 0; } .stageControls button { min-height: 44px; } .detail { min-height: 175px; } .tabs button { min-height: 44px; font-size: 11px; gap: 5px; } }

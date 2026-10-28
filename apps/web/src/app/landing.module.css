@@ -5,8 +5,8 @@
 .eyebrowMark { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 9px; background: var(--primary-soft); }
 .eyebrow > svg { transition: transform 180ms; }
 .eyebrow:hover > svg { transform: translateX(4px); }
-.copy h1 { margin: 0 0 27px; font-size: clamp(56px, 5.75vw, 80px); line-height: 1.055; letter-spacing: -.065em; font-weight: 650; }
-.copy > p { max-width: 36ch; font-size: 17px; line-height: 1.8; color: var(--muted); margin: 0 0 30px; }
+.copy h1 { margin: 0 0 36px; font-size: clamp(56px, 5.75vw, 80px); line-height: 1.055; letter-spacing: -.065em; font-weight: 650; }
+.copy > p { max-width: 36ch; font-size: 17px; line-height: 1.8; color: var(--muted); margin: 0 0 36px; }
 .actions { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
 .primary { padding: 13px 20px; border-radius: 999px; min-height: 48px; font-size: 13px; box-shadow: 0 5px 12px #635bff22, inset 0 1px 0 #ffffff30; transition: transform 200ms, box-shadow 200ms, background 200ms; }
 .primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px #635bff33; }
@@ -24,10 +24,23 @@
 .principles svg { color: var(--primary); stroke-width: 1.5; }
 .explore { display: grid; place-items: center; flex: 0 0 40px; height: 40px; border: 1px solid var(--line); border-radius: 50%; color: var(--muted); transition: background 180ms, transform 180ms; }
 .explore:hover { background: var(--primary-soft); transform: translateY(2px); }
-@media (min-width: 1440px) { .hero { padding-top: 85px; padding-bottom: 85px; } }
+@media (min-width: 768px) {
+  .hero { align-items: start; grid-template-columns: minmax(0, .98fr) minmax(0, 1.02fr); gap: clamp(32px, 4vw, 64px); padding: 32px 0 44px; }
+  .copy { align-self: start; padding: 12px 0 0; }
+  .copy h1 { font-size: clamp(50px, 5.35vw, 76px); }
+  .copy > p { font-size: 16px; line-height: 1.75; margin-bottom: 36px; }
+  .eyebrow { margin-bottom: 28px; line-height: 28px; }
+  .actions { gap: 14px; }
+}
+@media (min-width: 768px) and (max-width: 1100px) {
+  .copy h1 { font-size: clamp(46px, 5.2vw, 58px); }
+  .actions { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 8px; }
+  .actions .primary, .actions .verify { min-width: 0; padding: 10px 6px; font-size: 11px; gap: 5px; justify-content: center; white-space: nowrap; }
+  .actions svg { width: 14px; height: 14px; }
+}
+@media (min-width: 1440px) { .hero { padding-top: 40px; padding-bottom: 52px; } }
 @media (max-width: 1100px) {
   .hero { gap: 32px; }
-  .copy h1 { font-size: 64px; }
   .actions { gap: 10px 18px; }
   .foundation { gap: 20px; }
   .principles { gap: 12px; }
@@ -36,10 +49,10 @@
 @media (max-width: 767px) {
   .hero { grid-template-columns: minmax(0, 1fr); gap: 36px; padding: 40px 0 34px; }
   .copy { padding: 0; }
-  .copy h1 { font-size: clamp(53px, 10vw, 70px); max-width: 600px; margin-bottom: 22px; }
+  .copy h1 { font-size: clamp(53px, 10vw, 70px); max-width: 600px; margin-bottom: 30px; }
   .desktopBreak { display: none; }
-  .copy > p { max-width: 44ch; font-size: 16px; margin-bottom: 24px; }
-  .eyebrow { margin-bottom: 22px; font-size: 12px; }
+  .copy > p { max-width: 44ch; font-size: 16px; margin-bottom: 32px; }
+  .eyebrow { margin-bottom: 28px; font-size: 12px; }
   .actions { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 8px; width: 100%; max-width: 430px; }
   .actions .primary, .actions .verify { min-width: 0; min-height: 46px; padding: 10px 8px; gap: 6px; justify-content: center; font-size: clamp(10px, 2.9vw, 12px); white-space: nowrap; }
   .actions .verify { border: 1px solid var(--line-strong); border-radius: 999px; }

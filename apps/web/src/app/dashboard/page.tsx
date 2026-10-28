@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n-provider";
+import { localeDate } from "@/lib/i18n";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -24,7 +25,7 @@ import {
 } from "@/components/ui";
 import { useSession } from "@/lib/session";
 import { useResource } from "@/lib/use-resource";
-import { type Passport, type PassportVersion, dateLabel } from "@/lib/passport";
+import { type Passport, type PassportVersion } from "@/lib/passport";
 
 export default function Dashboard() {
   const {t, locale} = useI18n();
@@ -211,7 +212,7 @@ export default function Dashboard() {
                               <span>{a.category}</span>
                             </div>
                             <time dateTime={a.dateEarned}>
-                              {dateLabel(a.dateEarned)}
+                              {localeDate(locale, a.dateEarned)}
                             </time>
                           </div>
                         ))}

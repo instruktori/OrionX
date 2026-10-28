@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useId, useRef } from "react";
 import { useI18n } from "@/lib/i18n-provider";
-import { toMtavruli } from "@/lib/i18n";
 import Link from "next/link";
 import {
   AlertCircle,
@@ -22,12 +21,11 @@ export function PageHeading({
   description?: string;
   children?: React.ReactNode;
 }) {
-  const {locale} = useI18n();
   return (
     <div className="page-heading">
       <div>
         <div className="eyebrow">{eyebrow}</div>
-        <h1>{locale === "ka" ? toMtavruli(title) : title}</h1>
+        <h1>{title}</h1>
         {description && <p className="lead">{description}</p>}
       </div>
       {children && <div className="page-actions">{children}</div>}

@@ -818,8 +818,7 @@ export default function Admin() {
           <div className="eyebrow">{t("admin.eyebrow")}</div>
           <h1>{t("shell.administration")}</h1>
           <p className="lead">
-            Manage student records, recognize achievements, and oversee
-            credential issuance.
+            {t("admin.manageIntro")}
           </p>
         </div>
         <div className="page-actions">
@@ -853,8 +852,7 @@ export default function Admin() {
             </span>
             <h2>{t("admin.signIn")}</h2>
             <p className="muted">
-              Sign in with Google. OrionX automatically verifies your role and
-              opens either the Administrator Console or your Student Passport.
+              {t("admin.signInHelp")}
             </p>
           </div>
           <Link className="button" href="/login?next=/admin">
@@ -982,9 +980,7 @@ export default function Admin() {
                   )}
                 </div>
                 <p className="muted" style={{ margin: "6px 0 0" }}>
-                  Import verified Google Sheets changes and advance PDF
-                  rendering, Solana Devnet finality, and Sheets writeback one
-                  durable stage at a time.
+                  {t("admin.syncIntro")}
                 </p>
               </div>
               <div className="page-actions">
@@ -1172,8 +1168,7 @@ export default function Admin() {
                 <div>
                   <h2>{t("admin.studentsDirectory")}</h2>
                   <p className="muted">
-                    Search across all student records, inspect version history,
-                    download finalized PDFs, or manage account bindings.
+                    {t("admin.studentsIntro")}
                   </p>
                 </div>
                 <span className="pill pill-blue">
@@ -1560,8 +1555,7 @@ export default function Admin() {
                   <div>
                     <h2>{t("admin.workspacesBindings")}</h2>
                     <p className="muted">
-                      Click any workspace or subject below to pre-fill the
-                      linking and role forms above.
+                      {t("admin.prefill")}
                     </p>
                   </div>
                   <div className="search-field" style={{ minWidth: 260 }}>
@@ -1982,8 +1976,7 @@ export default function Admin() {
                   <div>
                     <h2>{t("admin.durable")}</h2>
                     <p className="muted">
-                      Inspect individual job stages, error diagnostics, and
-                      retry eligible jobs.
+                      {t("admin.jobsIntro")}
                     </p>
                   </div>
                   <div
@@ -2118,8 +2111,7 @@ export default function Admin() {
                     <div>
                       <h2>Quarantined Source Conflicts ({conflicts.length})</h2>
                       <p className="muted">
-                        Rows quarantined during import runs because an immutable
-                        field or catalog definition was modified.
+                        {t("admin.quarantineHelp")}
                       </p>
                     </div>
                     <span className="pill pill-crimson">{t("admin.needsFix")}</span>
@@ -2167,8 +2159,7 @@ export default function Admin() {
                   <div>
                     <h2>{t("admin.audit")}</h2>
                     <p className="muted">
-                      Immutable record of role changes, workspace links, source
-                      imports, and version reservations.
+                      {t("admin.auditHelp")}
                     </p>
                   </div>
                   <div className="search-field" style={{ minWidth: 250 }}>
@@ -2306,8 +2297,7 @@ export default function Admin() {
                         </div>
                       ) : (
                         <span className="muted">
-                          No Google account bound yet. Use People, Accounts &
-                          Access to link a workspace.
+                          {t("admin.noGoogleLinked")}
                         </span>
                       )}
                     </div>

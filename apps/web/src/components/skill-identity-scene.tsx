@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type PointerEvent } from "react";
 import { ArrowUpRight, Pause, Play, ShieldCheck } from "lucide-react";
 import styles from "./skill-identity-scene.module.css";
 
@@ -40,9 +40,11 @@ type SkillId = (typeof skills)[number]["id"];
 /** The animation illustrates the product; it never represents an issued credential. */
 export function SkillIdentityScene() {
   const figure = useRef<HTMLElement>(null);
+  const pointerFrame = useRef<number | null>(null);
   const id = useId();
   const [paused, setPaused] = useState(false);
   const [selected, setSelected] = useState<SkillId | null>(null);
+  const [burst, setBurst] = useState(0);
   const [inView, setInView] = useState(false);
   const [pageVisible, setPageVisible] = useState(false);
   // A still composition is also the server-rendered and no-JavaScript fallback.
@@ -68,23 +70,40 @@ export function SkillIdentityScene() {
     else setInView(true);
 
     return () => {
+      if (pointerFrame.current !== null)
+        cancelAnimationFrame(pointerFrame.current);
       observer?.disconnect();
       preference.removeEventListener("change", onPreference);
       document.removeEventListener("visibilitychange", onVisibility);
     };
   }, []);
 
-  const playing =
-    !paused && !selected && !reducedMotion && inView && pageVisible;
+  const playing = !paused && !reducedMotion && inView && pageVisible;
   const detail = skills.find((skill) => skill.id === selected);
 
   function toggleMotion() {
-    if (selected) {
-      setSelected(null);
-      setPaused(false);
-    } else {
-      setPaused((value) => !value);
-    }
+    setPaused((value) => !value);
+  }
+
+  function movePointer(event: PointerEvent<HTMLElement>) {
+    if (!playing || event.pointerType !== "mouse") return;
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
+    const y = ((event.clientY - bounds.top) / bounds.height) * 2 - 1;
+    if (pointerFrame.current !== null)
+      cancelAnimationFrame(pointerFrame.current);
+    pointerFrame.current = requestAnimationFrame(() => {
+      figure.current?.style.setProperty("--pointer-x", String(x));
+      figure.current?.style.setProperty("--pointer-y", String(y));
+      pointerFrame.current = null;
+    });
+  }
+
+  function resetPointer() {
+    if (pointerFrame.current !== null)
+      cancelAnimationFrame(pointerFrame.current);
+    figure.current?.style.setProperty("--pointer-x", "0");
+    figure.current?.style.setProperty("--pointer-y", "0");
   }
 
   return (
@@ -93,6 +112,11 @@ export function SkillIdentityScene() {
       className={styles.scene}
       data-motion={playing ? "running" : "paused"}
       data-focus={selected || "all"}
+      onPointerMove={movePointer}
+      onPointerLeave={resetPointer}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") setSelected(null);
+      }}
       aria-labelledby={`${id}-title`}
       aria-describedby={`${id}-description`}
     >
@@ -103,15 +127,13 @@ export function SkillIdentityScene() {
           className={styles.motionControl}
           onClick={toggleMotion}
           aria-label={
-            paused || selected
-              ? "Resume identity animation"
-              : "Pause identity animation"
+            paused ? "Resume identity animation" : "Pause identity animation"
           }
-          aria-pressed={paused || Boolean(selected)}
+          aria-pressed={paused}
           hidden={reducedMotion}
         >
-          {paused || selected ? <Play size={12} /> : <Pause size={12} />}
-          <span>{paused || selected ? "Resume" : "Pause"}</span>
+          {paused ? <Play size={12} /> : <Pause size={12} />}
+          <span>{paused ? "Resume" : "Pause"}</span>
         </button>
       </div>
 
@@ -220,10 +242,20 @@ export function SkillIdentityScene() {
             aria-label={`Explore ${skill.name}: ${skill.label}`}
             aria-pressed={selected === skill.id}
             aria-controls={`${id}-detail`}
-            onClick={() =>
-              setSelected((current) => (current === skill.id ? null : skill.id))
-            }
+            onClick={() => {
+              setSelected((current) =>
+                current === skill.id ? null : skill.id,
+              );
+              setBurst((value) => value + 1);
+            }}
           >
+            {selected === skill.id && (
+              <span
+                key={burst}
+                className={styles.selectionWave}
+                aria-hidden="true"
+              />
+            )}
             <span className={styles.nodeIndex} aria-hidden="true">
               0{index + 1}
             </span>
@@ -326,7 +358,8 @@ export function SkillIdentityScene() {
         <p id={`${id}-description`} className={styles.disclaimer}>
           Illustrative preview · no credential issued
           <span>
-            Explore a badge above <ArrowUpRight size={10} aria-hidden="true" />
+            Select a badge to explore{" "}
+            <ArrowUpRight size={10} aria-hidden="true" />
           </span>
         </p>
       </figcaption>

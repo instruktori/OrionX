@@ -1,5 +1,5 @@
 .scene {
-  --cycle: 12s;
+  --cycle: 3s;
   --signal: #8aa8ff;
   --scene-line: #8098c132;
   --node-surface: #1b1e25;
@@ -11,6 +11,7 @@
   width: 100%;
   margin: 0;
   isolation: isolate;
+  --interaction-color: var(--primary);
   container-type: inline-size;
 }
 :global([data-theme="light"]) .scene {
@@ -55,6 +56,9 @@
   color: var(--ink);
 }
 .canvas {
+  transform: perspective(900px) rotateX(calc(var(--pointer-y, 0) * -4deg))
+    rotateY(calc(var(--pointer-x, 0) * 6deg));
+  transition: transform 0.35s ease-out;
   position: relative;
   aspect-ratio: 560 / 424;
   width: 100%;
@@ -74,7 +78,12 @@
   position: absolute;
   inset: 7% 0 3%;
   background:
-    radial-gradient(ellipse at 52% 45%, #608dff17, transparent 57%),
+    radial-gradient(
+      ellipse at calc(52% + var(--pointer-x, 0) * 25%)
+        calc(45% + var(--pointer-y, 0) * 25%),
+      #608dff30,
+      transparent 57%
+    ),
     radial-gradient(ellipse at 76% 65%, #5ed5ce08, transparent 42%);
   pointer-events: none;
 }
@@ -93,6 +102,7 @@
 .orbit {
   stroke-dasharray: 2 7;
   opacity: 0.7;
+  animation: orbitTravel 16s linear infinite;
 }
 .orbitInner {
   opacity: 0.3;
@@ -111,18 +121,19 @@
   stroke-width: 1.2;
 }
 .signal {
-  stroke-width: 2;
+  stroke-width: 3;
   stroke-linecap: round;
-  stroke-dasharray: 0.19 0.81;
+  stroke-dasharray: 0.24 0.76;
   stroke-dashoffset: 1.2;
-  opacity: 0;
+  opacity: 1;
+  filter: drop-shadow(0 0 3px #7394ff80);
   animation: transmit var(--cycle) linear infinite;
 }
 .routeApplied .signal {
-  animation-delay: 2.4s;
+  animation-delay: -1s;
 }
 .routeAdvanced .signal {
-  animation-delay: 4.8s;
+  animation-delay: -2s;
 }
 .junction {
   fill: var(--node-surface);
@@ -130,7 +141,8 @@
   stroke-width: 1;
 }
 .outputSignal {
-  animation: recognize var(--cycle) linear infinite;
+  animation: transmit 2.5s linear infinite;
+  animation-delay: -1.2s;
 }
 .skillNode {
   position: absolute;
@@ -152,6 +164,7 @@
   -webkit-user-select: none;
   user-select: none;
   z-index: 2;
+  animation: floatBadge 4.6s ease-in-out infinite alternate;
 }
 .skillNode:hover,
 .skillNode[aria-pressed="true"] {
@@ -163,6 +176,9 @@
 .skillNode:focus-visible {
   outline-offset: 5px;
 }
+.skillNode:is(:hover, :focus-visible) {
+  animation-play-state: paused;
+}
 .skill {
   left: 7%;
   top: 10%;
@@ -171,6 +187,8 @@
   transform: rotate(-7deg);
 }
 .applied {
+  animation-duration: 5.4s;
+  animation-delay: -2.7s;
   left: 67%;
   top: 14%;
   width: 29%;
@@ -178,6 +196,8 @@
   transform: rotate(6deg);
 }
 .advanced {
+  animation-duration: 6s;
+  animation-delay: -4s;
   left: 6%;
   top: 55%;
   width: 23%;
@@ -266,7 +286,7 @@
   border-radius: 31%;
   transform: rotate(12deg);
   background: radial-gradient(ellipse at center, #729dff0c, transparent 75%);
-  animation: resonate var(--cycle) ease-in-out infinite;
+  animation: haloOrbit 16s linear infinite;
 }
 .identityCore {
   position: relative;
@@ -276,7 +296,11 @@
   justify-content: center;
   width: 100%;
   height: 100%;
-  border: 1px solid #8eaaff52;
+  border: 1px solid var(--interaction-color);
+  animation: coreBreathe 3s ease-in-out infinite;
+  transition:
+    border-color 0.25s,
+    background 0.25s;
   border-radius: 23%;
   background:
     linear-gradient(145deg, #7394ff16, transparent 65%), var(--core-surface);
@@ -287,6 +311,7 @@
 }
 .identityMark {
   color: var(--core-mark);
+  animation: markTurn 18s linear infinite;
   width: 66%;
   height: 66%;
 }
@@ -444,80 +469,111 @@
   stroke: var(--primary);
   stroke-width: 1.8;
 }
+/* Continuous signals begin immediately; negative delays keep all routes alive. */
 @keyframes transmit {
-  0%,
-  5% {
-    stroke-dashoffset: 1.2;
-    opacity: 0;
+  from {
+    stroke-dashoffset: 1;
   }
-  7% {
-    opacity: 0.9;
-  }
-  23% {
-    stroke-dashoffset: -0.2;
-    opacity: 0.9;
-  }
-  26%,
-  100% {
-    stroke-dashoffset: -0.2;
-    opacity: 0;
+  to {
+    stroke-dashoffset: 0;
   }
 }
-@keyframes recognize {
-  0%,
-  66% {
-    stroke-dashoffset: 1.2;
-    opacity: 0;
+@keyframes floatBadge {
+  from {
+    translate: 0 5px;
+    rotate: -1deg;
   }
-  68% {
-    opacity: 1;
-  }
-  82% {
-    stroke-dashoffset: -0.2;
-    opacity: 1;
-  }
-  86%,
-  100% {
-    stroke-dashoffset: -0.2;
-    opacity: 0;
+  to {
+    translate: 0 -12px;
+    rotate: 2deg;
   }
 }
-@keyframes resonate {
-  0%,
-  20%,
-  40%,
-  60%,
-  100% {
+@keyframes haloOrbit {
+  from {
     transform: rotate(12deg) scale(1);
-    opacity: 0.55;
   }
-  26%,
-  46%,
-  66% {
-    transform: rotate(12deg) scale(1.07);
-    opacity: 1;
+  50% {
+    transform: rotate(192deg) scale(1.12);
   }
-  82%,
-  91% {
-    transform: rotate(12deg) scale(1.12);
-    opacity: 0.9;
+  to {
+    transform: rotate(372deg) scale(1);
+  }
+}
+@keyframes orbitTravel {
+  to {
+    stroke-dashoffset: -90;
+  }
+}
+@keyframes markTurn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes coreBreathe {
+  0%,
+  100% {
+    box-shadow:
+      0 0 25px #7394ff18,
+      inset 0 1px 0 #ffffff14;
+  }
+  50% {
+    box-shadow:
+      0 0 52px #7394ff38,
+      inset 0 1px 0 #ffffff24;
   }
 }
 @keyframes confirm {
   0%,
-  78% {
-    opacity: 0.25;
-    transform: scale(0.8);
-  }
-  84%,
-  94% {
-    opacity: 1;
-    transform: scale(1.25);
-  }
   100% {
-    opacity: 0.25;
-    transform: scale(0.8);
+    opacity: 0.45;
+    transform: scale(0.85);
   }
+  50% {
+    opacity: 1;
+    transform: scale(1.4);
+  }
+}
+@keyframes selectionRipple {
+  from {
+    scale: 0.9;
+    opacity: 0.9;
+  }
+  to {
+    scale: 1.4;
+    opacity: 0;
+  }
+}
+.selectionWave {
+  position: absolute;
+  inset: -3px;
+  border: 1px solid var(--interaction-color);
+  border-radius: inherit;
+  pointer-events: none;
+  animation: selectionRipple 0.7s ease-out both;
+}
+.scene[data-focus="skill"] {
+  --interaction-color: #ff6267;
+}
+.scene[data-focus="applied"] {
+  --interaction-color: #a57aff;
+}
+.scene[data-focus="advanced"] {
+  --interaction-color: #648bff;
+}
+.skillNode[aria-pressed="true"] {
+  transform: rotate(0) scale(1.08);
+  border-color: var(--interaction-color);
+  z-index: 3;
+}
+.scene[data-focus="skill"] .routeSkill .signal,
+.scene[data-focus="applied"] .routeApplied .signal,
+.scene[data-focus="advanced"] .routeAdvanced .signal {
+  stroke: var(--interaction-color);
+  stroke-width: 4;
+  animation-duration: 1.25s;
+}
+.scene[data-motion="paused"] .canvas {
+  transform: none;
 }
 @media (max-width: 1023px) and (min-width: 768px) {
   .nodeLabel {
@@ -672,6 +728,12 @@
   .scene .canvas *::after {
     animation: none !important;
     transition: none !important;
+  }
+  .canvas {
+    transform: none;
+  }
+  .selectionWave {
+    display: none;
   }
   .signal {
     display: none;

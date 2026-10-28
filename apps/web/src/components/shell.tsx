@@ -160,7 +160,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
               </div>
               <span className="workspace-label">{t("shell.workspace")}</span>
             </div>
-            <div className="nav-caption">{t("shell.workspace").toUpperCase()}</div>
+            <div className="nav-caption">{t("shell.workspace")}</div>
             <nav className="workspace-nav">
               {nav.map((n) => (
                 <Link

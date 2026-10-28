@@ -15,8 +15,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Shell } from "@/components/shell";
-import { PassportIdentity } from "@/components/passport-identity";
-import { PassportPreview } from "@/components/passport-preview";
+import { BtuPassportReplica } from "@/components/btu-passport-replica";
 import { QrShareModal } from "@/components/qr-share-modal";
 import {
   Badge,
@@ -101,21 +100,8 @@ export default function PassportPage() {
       ) : (
         p && (
           <>
-            <div className="passport-layout">
-              <PassportIdentity
-                name={
-                  p.student
-                    ? `${p.student.firstName} ${p.student.lastName}`
-                    : undefined
-                }
-                program={
-                  p.student
-                    ? `${p.student.program} · ${p.student.educationLevel}`
-                    : undefined
-                }
-                id={p.passportId}
-                issued={p.official}
-              />
+            <BtuPassportReplica passport={p} awards={awards} />
+            <div className="passport-layout passport-summary-layout">
               <section className="passport-detail">
                 <div className="section-head" style={{ marginTop: 0 }}>
                   <h2>
@@ -393,14 +379,6 @@ export default function PassportPage() {
           </>
         )
       )}
-      <details className="reference-disclosure">
-        <summary>
-          <FileBadge2 size={15} />
-          Explore the original BTU passport artwork
-          <ChevronRight size={14} />
-        </summary>
-        <PassportPreview />
-      </details>
       {copyStatus && (
         <div className="toast" role="status">
           {copyStatus}

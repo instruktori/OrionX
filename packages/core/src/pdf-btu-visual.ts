@@ -1,6 +1,5 @@
 import {PDFDocument, rgb, type PDFPage, type PDFFont} from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
-import QRCode from "qrcode";
 import {readFileSync} from "node:fs";
 import {repositoryResource} from "./resources";
 import type {Snapshot, Award} from "./index";
@@ -100,13 +99,6 @@ export async function renderBtuVisualPdf(s: Snapshot): Promise<Uint8Array> {
 
   const about=page(1,0);
   fitText(about,s.student.passportId,147,103,150,10);
-  const url=new URL("/verify",s.verificationOrigin||process.env.VERIFICATION_PUBLIC_ORIGIN||"http://localhost:3000");
-  url.searchParams.set("code",s.code);
-  const qr=await doc.embedPng(await QRCode.toBuffer(url.toString(),{width:240,margin:1}));
-  // QR goes on the cover's blank information field, not over BTU artwork.
-  cover.drawRectangle({x:359,y:94,width:87,height:100,color:white});
-  cover.drawImage(qr,{x:369,y:105,width:67,height:67});
-  text(cover,"SCAN TO VERIFY",367,97,7);
   footer(about);
 
   const skillCount=Math.max(1,Math.ceil(s.awards.length/10));
@@ -162,7 +154,7 @@ export async function renderBtuVisualPdf(s: Snapshot): Promise<Uint8Array> {
     footer(p);
   }
 
-  // A verification QR and exact version code appear on the document but do
+  // An exact verification code appears on the document but does
   // NOT claim official BTU issuer authenticity in demo mode.
   text(about,"VERIFICATION ID",365,103,8);
   fitText(about,s.code,365,85,375,10);

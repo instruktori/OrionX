@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { Shell } from "@/components/shell";
 import { BtuPassportReplica } from "@/components/btu-passport-replica";
-import { PassportPreview } from "@/components/passport-preview";
 import { QrShareModal } from "@/components/qr-share-modal";
 import {
   Badge,
@@ -380,14 +379,6 @@ export default function PassportPage() {
           </>
         )
       )}
-      <details className="reference-disclosure">
-        <summary>
-          <FileBadge2 size={15} />
-          Explore the original BTU passport artwork
-          <ChevronRight size={14} />
-        </summary>
-        <PassportPreview />
-      </details>
       {copyStatus && (
         <div className="toast" role="status">
           {copyStatus}

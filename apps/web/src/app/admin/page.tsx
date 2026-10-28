@@ -718,7 +718,7 @@ export default function Admin() {
         { label: t("admin.accountSubject"), value: bindSubject.trim() },
         {
           label: t("admin.role"),
-          value: bindRole === "admin" ? "Administrator" : t("admin.verifiedRole"),
+          value: bindRole === "admin" ? t("shell.adminRole") : t("admin.verifiedRole"),
         },
         {
           label: t("admin.studentRecord"),
@@ -740,7 +740,7 @@ export default function Admin() {
       message:
         "The workspace owner will gain access to this student's private passport. Check both identifiers carefully.",
       details: [
-        { label: "Workspace", value: linkWorkspaceId.trim() },
+        { label: t("shell.workspace"), value: linkWorkspaceId.trim() },
         { label: t("admin.studentRecord"), value: linkStudentRef.trim() },
       ],
       label: t("admin.confirmStudent"),
@@ -766,7 +766,7 @@ export default function Admin() {
         ? t("admin.writesIssue")
         : t("admin.writesSource"),
       details: [
-        { label: "Student", value: awardStudentId },
+        { label: t("admin.studentRole"), value: awardStudentId },
         { label: "Skill", value: awardSkillId },
         { label: t("admin.earned"), value: awardDate },
       ],
@@ -816,7 +816,7 @@ export default function Admin() {
       <div className="page-heading">
         <div>
           <div className="eyebrow">{t("admin.eyebrow")}</div>
-          <h1>Administration</h1>
+          <h1>{t("shell.administration")}</h1>
           <p className="lead">
             Manage student records, recognize achievements, and oversee
             credential issuance.
@@ -830,12 +830,12 @@ export default function Admin() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              Open Google Sheets <ExternalLink size={16} aria-hidden="true" />
+              {t("admin.openSheets")} <ExternalLink size={16} aria-hidden="true" />
             </a>
           )}
           {session?.studentId && (
             <Link className="button secondary" href="/passport">
-              <FileBadge2 size={16} /> View My Personal Passport
+              <FileBadge2 size={16} /> {t("admin.personalPassport")}
             </Link>
           )}
         </div>
@@ -843,13 +843,13 @@ export default function Admin() {
 
       {loading ? (
         <p className="loading-state" role="status">
-          Loading workspace session…
+          {t("admin.loadingSession")}
         </p>
       ) : !session ? (
         <section className="card access-card">
           <div>
             <span className="pill pill-blue" style={{ marginBottom: 10 }}>
-              CENTRALIZED AUTHENTICATION
+              {t("admin.centralAuth")}
             </span>
             <h2>{t("admin.signIn")}</h2>
             <p className="muted">
@@ -858,7 +858,7 @@ export default function Admin() {
             </p>
           </div>
           <Link className="button" href="/login?next=/admin">
-            Continue with Google
+            {t("admin.google")}
           </Link>
         </section>
       ) : session.role !== "admin" ? (
@@ -866,12 +866,12 @@ export default function Admin() {
           <span className="pill pill-pink">{t("admin.studentSession")}</span>
           <h2 style={{ marginTop: 12 }}>{t("admin.redirecting")}</h2>
           <p className="muted">
-            Signed in as <b>{session.email || session.subject}</b>. Student
+            {t("admin.signedAs")} <b>{session.email || session.subject}</b>. Student
             accounts are routed directly to their personal passport workspace.
           </p>
           <div className="page-actions" style={{ marginTop: 16 }}>
             <Link className="button" href="/passport">
-              Open My Passport
+              {t("admin.openMyPassport")}
             </Link>
           </div>
         </section>
@@ -965,7 +965,7 @@ export default function Admin() {
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <h2 style={{ margin: 0 }}>
-                    Synchronize Source & Process Queue
+                    {t("admin.syncQueue")}
                   </h2>
                   {run && (
                     <span
@@ -1038,7 +1038,7 @@ export default function Admin() {
                       );
                     }}
                   >
-                    <Square size={14} /> Stop after current step
+                    <Square size={14} /> {t("admin.stopAfter")}
                   </button>
                 )}
               </div>
@@ -1222,7 +1222,7 @@ export default function Admin() {
                 >
                   {[
                     { id: "ALL", label: t("admin.allRecords") },
-                    { id: "ISSUED", label: "Finalized" },
+                    { id: "ISSUED", label: t("common.finalized") },
                     { id: "PROCESSING", label: "Updating" },
                     { id: "UNISSUED", label: "Unissued" },
                   ].map((f) => (
@@ -1245,13 +1245,13 @@ export default function Admin() {
                 <table className="table">
                   <thead>
                     <tr>
-                      <th>STUDENT</th>
+                      <th>{t("admin.student")}</th>
                       <th>{t("admin.studentId")}</th>
                       <th>{t("admin.passportId")}</th>
                       <th>{t("admin.binding")}</th>
                       <th>{t("admin.issuedVersion")}</th>
-                      <th>UPDATE</th>
-                      <th>ACTIONS</th>
+                      <th>{t("admin.update")}</th>
+                      <th>{t("admin.actions")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1276,14 +1276,14 @@ export default function Admin() {
                           <td>
                             {hasAdmin ? (
                               <span className="pill pill-pink">
-                                ADMIN · DUAL LINKED
+                                {t("admin.adminLinked")}
                               </span>
                             ) : hasStudent ? (
                               <span className="pill pill-cyan">
-                                UNIVERSITY VERIFIED
+                                {t("admin.verified")}
                               </span>
                             ) : (
-                              <span className="pill">UNBOUND</span>
+                              <span className="pill">{t("admin.unbound")}</span>
                             )}
                           </td>
                           <td>
@@ -1298,9 +1298,9 @@ export default function Admin() {
                           </td>
                           <td>
                             {p.activeVersionId ? (
-                              <span className="pill pill-pink">Processing</span>
+                              <span className="pill pill-pink">{t("admin.processingState")}</span>
                             ) : (
-                              <span className="muted">None</span>
+                              <span className="muted">{t("admin.none")}</span>
                             )}
                           </td>
                           <td>
@@ -1310,7 +1310,7 @@ export default function Admin() {
                                 className="button secondary btn-sm"
                                 onClick={() => void inspectPassport(p.publicId)}
                               >
-                                Inspect Record
+                                {t("admin.inspect")}
                               </button>
                               {p.latestFinalizedVersion > 0 && (
                                 <a
@@ -1332,7 +1332,7 @@ export default function Admin() {
 
               {!records.length && (
                 <p role="status" className="muted" style={{ marginTop: 16 }}>
-                  No matching student records.
+                  {t("admin.noMatching")}
                 </p>
               )}
 
@@ -1363,7 +1363,7 @@ export default function Admin() {
                     disabled={page === 0}
                     onClick={() => setPage((p) => Math.max(0, p - 1))}
                   >
-                    <ChevronLeft size={14} /> Previous
+                    <ChevronLeft size={14} /> {t("admin.previous")}
                   </button>
                   <button
                     type="button"
@@ -1373,7 +1373,7 @@ export default function Admin() {
                       setPage((p) => Math.min(totalPages - 1, p + 1))
                     }
                   >
-                    Next <ChevronRight size={14} />
+                    {t("admin.next")} <ChevronRight size={14} />
                   </button>
                 </div>
               </div>
@@ -1413,7 +1413,7 @@ export default function Admin() {
                     </div>
                     <div>
                       <label htmlFor="ws-student-input" className="field-label">
-                        Target Student Record
+                        {t("admin.targetStudent")}
                       </label>
                       <input
                         id="ws-student-input"
@@ -1444,7 +1444,7 @@ export default function Admin() {
                     <div>
                       <h2>{t("admin.manageAccount")}</h2>
                       <p className="muted">
-                        Grant or update <b>Student</b> or <b>Administrator</b>{" "}
+                        {t("admin.grant")} <b>{t("admin.studentRole")}</b> or <b>{t("shell.adminRole")}</b>{" "}
                         permissions for a Google subject ID, including dual-role
                         admin + student links.
                       </p>
@@ -1474,7 +1474,7 @@ export default function Admin() {
                           htmlFor="bind-role-select"
                           className="field-label"
                         >
-                          Application Role
+                          {t("admin.applicationRole")}
                         </label>
                         <select
                           id="bind-role-select"
@@ -1485,7 +1485,7 @@ export default function Admin() {
                           }
                         >
                           <option value="student">{t("admin.verifiedStudent")}</option>
-                          <option value="admin">Administrator</option>
+                          <option value="admin">{t("shell.adminRole")}</option>
                         </select>
                       </div>
                       <div>
@@ -1526,7 +1526,7 @@ export default function Admin() {
                             setBindPreserveStudent(e.target.checked)
                           }
                         />
-                        Preserve existing linked Student Record if already bound
+                        {t("admin.preserve")}
                       </label>
                     )}
                     <button
@@ -1615,7 +1615,7 @@ export default function Admin() {
                               </span>
                             ) : (
                               <span className="pill pill-pink">
-                                UNLINKED SELF-REGISTERED
+                                {t("admin.unlinkedSelf")}
                               </span>
                             )}
                           </td>
@@ -1633,7 +1633,7 @@ export default function Admin() {
                                     });
                                   }}
                                 >
-                                  Select Workspace
+                                  {t("admin.selectWorkspace")}
                                 </button>
                               )}
                               <button
@@ -1652,7 +1652,7 @@ export default function Admin() {
                                   });
                                 }}
                               >
-                                Edit Role / Binding
+                                {t("admin.editRole")}
                               </button>
                             </div>
                           </td>
@@ -1670,12 +1670,12 @@ export default function Admin() {
                   <table className="table">
                     <thead>
                       <tr>
-                        <th>ROLE</th>
+                        <th>{t("admin.roleLabel")}</th>
                         <th>{t("admin.emailWorkspace")}</th>
                         <th>{t("admin.subject")}</th>
                         <th>{t("admin.linkedStudent")}</th>
                         <th>{t("admin.verifiedAt")}</th>
-                        <th>ACTIONS</th>
+                        <th>{t("admin.actions")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1695,7 +1695,7 @@ export default function Admin() {
                                 ? idRow.student
                                   ? t("admin.adminDual")
                                   : "ADMIN"
-                                : "STUDENT"}
+                                : t("admin.student")}
                             </span>
                           </td>
                           <td>
@@ -1765,7 +1765,7 @@ export default function Admin() {
                                   });
                                 }}
                               >
-                                Change Role
+                                {t("admin.changeRole")}
                               </button>
                               {idRow.subject !== session.subject && (
                                 <button
@@ -1775,7 +1775,7 @@ export default function Admin() {
                                     void handleUnlinkSubject(idRow.subject)
                                   }
                                 >
-                                  <Unlink size={13} /> Unbind
+                                  <Unlink size={13} /> {t("admin.unbind")}
                                 </button>
                               )}
                             </div>
@@ -1808,7 +1808,7 @@ export default function Admin() {
                 <div className="form-stack">
                   <div>
                     <label htmlFor="award-student" className="field-label">
-                      1. Select Student Record
+                      {t("admin.selectStudent")}
                     </label>
                     <select
                       id="award-student"
@@ -1831,7 +1831,7 @@ export default function Admin() {
 
                   <div>
                     <label htmlFor="award-skill" className="field-label">
-                      2. Select BTU Catalog Skill
+                      {t("admin.selectSkill")}
                     </label>
                     <select
                       id="award-skill"
@@ -1899,7 +1899,7 @@ export default function Admin() {
                       disabled={submittingAward || processing || syncing}
                       onClick={() => void handleAddAward(false)}
                     >
-                      <PlusCircle size={15} /> Save to Source Sheet Only
+                      <PlusCircle size={15} /> {t("admin.saveSource")}
                     </button>
                   </div>
                 </div>
@@ -2014,11 +2014,11 @@ export default function Admin() {
                     <thead>
                       <tr>
                         <th>{t("admin.jobStage")}</th>
-                        <th>STATE</th>
+                        <th>{t("admin.jobState")}</th>
                         <th>{t("admin.passportVersion")}</th>
-                        <th>ATTEMPTS</th>
+                        <th>{t("admin.attempts")}</th>
                         <th>{t("admin.diagnostic")}</th>
-                        <th>ACTION</th>
+                        <th>{t("admin.action")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -2186,11 +2186,11 @@ export default function Admin() {
                   <table className="table">
                     <thead>
                       <tr>
-                        <th>TIMESTAMP</th>
-                        <th>ACTION</th>
-                        <th>ACTOR</th>
-                        <th>TARGET</th>
-                        <th>DETAILS</th>
+                        <th>{t("admin.timestamp")}</th>
+                        <th>{t("admin.action")}</th>
+                        <th>{t("admin.actor")}</th>
+                        <th>{t("admin.target")}</th>
+                        <th>{t("admin.details")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -2282,7 +2282,7 @@ export default function Admin() {
 
                     <div className="identity-box">
                       <span className="mini-kicker">
-                        ACADEMIC PROFILE & BOUND ACCOUNTS
+                        {t("admin.academicProfile")}
                       </span>
                       <div>
                         <b>{selectedPassport.student.program}</b> ·{" "}
@@ -2376,20 +2376,20 @@ export default function Admin() {
                                   })
                                 }
                               >
-                                <QrCode size={13} /> QR & Share
+                                <QrCode size={13} /> {t("admin.qrShare")}
                               </button>
                               <Link
                                 className="button secondary btn-sm"
                                 href={`/verify?code=${encodeURIComponent(ver.code)}`}
                               >
-                                <ExternalLink size={13} /> Verify
+                                <ExternalLink size={13} /> {t("admin.verify")}
                               </Link>
                               {isFinalized && (
                                 <a
                                   className="button btn-sm"
                                   href={`${API}/api/v1/admin/passports/${encodeURIComponent(selectedPassport.publicId)}/versions/${ver.number}/download`}
                                 >
-                                  <Download size={13} /> Download PDF
+                                  <Download size={13} /> {t("admin.downloadPDF")}
                                 </a>
                               )}
                             </div>

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useId, useRef } from "react";
+import { useI18n } from "@/lib/i18n-provider";
 import Link from "next/link";
 import {
   AlertCircle,
@@ -76,6 +77,7 @@ export function EmptyState({
   href?: string;
   action?: string;
 }) {
+  const { t } = useI18n();
   return (
     <section className="empty-state">
       <span className="empty-icon">
@@ -99,15 +101,16 @@ export function ErrorState({
   message: string;
   retry?: () => void;
 }) {
+  const {t} = useI18n();
   return (
     <div className="error-state" role="alert">
       <AlertCircle size={20} />
       <div>
-        <strong>Something needs your attention</strong>
+        <strong>{t("ui.attention")}</strong>
         <p>{message}</p>
         {retry && (
           <Button secondary onClick={retry}>
-            Try again
+            {t("common.retry")}
           </Button>
         )}
       </div>
@@ -115,13 +118,14 @@ export function ErrorState({
   );
 }
 export function Skeleton({ rows = 3 }: { rows?: number }) {
+  const {t} = useI18n();
   return (
     <div
       role="status"
-      aria-label="Loading workspace"
+      aria-label={t("ui.loadingWorkspace")}
       className="skeleton-group"
     >
-      <span className="sr-only">Loading…</span>
+      <span className="sr-only">{t("common.loading")}</span>
       {Array.from({ length: rows }, (_, i) => (
         <div
           key={i}
@@ -143,6 +147,7 @@ export function Dialog({
   title: string;
   children: React.ReactNode;
 }) {
+  const {t} = useI18n();
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   useEffect(() => {
@@ -176,7 +181,7 @@ export function Dialog({
         <button
           type="button"
           className="icon-button"
-          aria-label="Close dialog"
+          aria-label={t("ui.closeDialog")}
           onClick={onClose}
         >
           <X size={18} />

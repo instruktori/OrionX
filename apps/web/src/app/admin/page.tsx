@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n-provider";
+import { toMtavruli } from "@/lib/i18n";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -287,7 +288,7 @@ type CatalogSkill = {
 };
 
 export default function Admin() {
-  const {t} = useI18n();
+  const {t,locale} = useI18n();
   const router = useRouter();
   const { session, loading } = useSession();
 
@@ -816,7 +817,7 @@ export default function Admin() {
       <div className="page-heading">
         <div>
           <div className="eyebrow">{t("admin.eyebrow")}</div>
-          <h1>{t("shell.administration")}</h1>
+          <h1>{locale === "ka" ? toMtavruli(t("shell.administration")) : t("shell.administration")}</h1>
           <p className="lead">
             {t("admin.manageIntro")}
           </p>

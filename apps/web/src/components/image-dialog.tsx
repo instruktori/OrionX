@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useId, useRef } from "react";
 import { X } from "lucide-react";
+import { useI18n } from "@/lib/i18n-provider";
 
 export function ImageDialog({
   title,
@@ -13,6 +14,7 @@ export function ImageDialog({
   onClose: () => void;
   children: React.ReactNode;
 }) {
+  const {t} = useI18n();
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   useEffect(() => {
@@ -42,7 +44,7 @@ export function ImageDialog({
         <button
           type="button"
           className="icon-button"
-          aria-label="Close preview"
+          aria-label={t("ui.closePreview")}
           onClick={onClose}
         >
           <X size={21} />

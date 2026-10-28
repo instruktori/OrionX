@@ -3519,3 +3519,65 @@ label.field-label,
  .btu-details-table th,.btu-details-table td{padding:2px;font-size:clamp(4px,1.2vw,7px);}
  .btu-details-table th{font-size:clamp(4px,1.3vw,8px);}
 }
+
+
+/* Issued-passport-only workspace: no pre-issuance preview or mock credential. */
+.passport-unissued-state {
+  max-width: 680px;
+  margin: 48px auto;
+  padding: clamp(34px, 5vw, 60px);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  text-align: center;
+}
+.passport-unissued-icon {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 18px;
+  border-radius: 13px;
+  border: 1px solid var(--line-strong);
+  color: var(--subtle);
+  background: var(--surface-raised);
+}
+.passport-unissued-state h2 {
+  margin: 18px auto 12px;
+  max-width: 25ch;
+  font-size: clamp(22px, 3vw, 30px);
+  line-height: 1.22;
+}
+.passport-unissued-state > p {
+  margin: 0 auto;
+  max-width: 56ch;
+  color: var(--muted);
+  line-height: 1.8;
+}
+.passport-unissued-state .passport-unissued-note {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  color: var(--subtle);
+  font-size: 12px;
+}
+.passport-issued-only { margin-top: 6px; }
+.passport-issued-only-header {display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:0 0 20px;}
+.passport-issued-only-header h2 {font-size:clamp(20px,2.6vw,30px);margin:8px 0;}
+.passport-issued-only-header p {margin:0;}
+.passport-issued-only-actions {display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:18px;}
+.passport-issued-only-frame {overflow:hidden;background:#fff;border:1px solid var(--line-strong);border-radius:10px;box-shadow:var(--shadow);}
+.passport-issued-only-frame object {display:block;width:100%;height:clamp(550px,78vh,1080px);border:0;background:#fff;}
+.passport-pdf-fallback {display:grid;justify-items:center;gap:12px;padding:60px 20px;text-align:center;color:#1b1e27;}
+.passport-pdf-fallback a {color:#284bc0;text-decoration:underline;}
+.passport-issued-history {margin-top:44px;}
+.passport-issued-version-list {display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;}
+.passport-issued-version-list button {display:flex;align-items:center;gap:9px;flex-wrap:wrap;text-align:left;padding:14px;border:1px solid var(--line);border-radius:8px;color:var(--ink);background:var(--surface);font-size:12px;}
+.passport-issued-version-list button[aria-pressed="true"] {border-color:var(--primary);background:var(--primary-soft);}
+.passport-issued-version-list button:hover {border-color:var(--line-strong);}
+.passport-issued-version-list button .muted {font-size:11px;}
+@media(max-width:650px) {
+  .passport-issued-only-frame object {height:70vh;min-height:430px;}
+  .passport-issued-only-actions .button {flex:1 1 145px;}
+  .passport-unissued-state {margin:24px auto;}
+}

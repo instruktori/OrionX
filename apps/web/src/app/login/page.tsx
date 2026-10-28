@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useI18n } from "@/lib/i18n-provider";
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -45,6 +46,7 @@ function GoogleMark() {
 }
 
 function LoginContent() {
+  const {t} = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { session, loading: sessionLoading, signOut } = useSession();
@@ -101,7 +103,7 @@ function LoginContent() {
       setError(
         err instanceof Error
           ? err.message
-          : "Unable to connect to Google sign-in",
+          : t("login.connectionError"),
       );
       setConnecting(false);
     }
@@ -115,9 +117,9 @@ function LoginContent() {
         </div>
         <div className="auth-badge">
           <Sparkles size={15} />
-          <span>YOUR PRIVATE WORKSPACE</span>
+          <span>{t("login.badge")}</span>
         </div>
-        <h2>Welcome to OrionX</h2>
+        <h2>{t("login.heading")}</h2>
         <p className="muted" style={{ lineHeight: 1.7, marginBottom: 22 }}>
           Your skills, credentials, and achievements, together in one place.
           Continue with your Google account to get started.
@@ -135,7 +137,7 @@ function LoginContent() {
 
         {sessionLoading ? (
           <p role="status" className="muted" style={{ padding: "14px 0" }}>
-            Checking active session…
+            {t("login.checking")}
           </p>
         ) : session?.authorized && session.role ? (
           <div className="result-panel" style={{ marginTop: 0 }}>
@@ -154,15 +156,15 @@ function LoginContent() {
               >
                 {session.role === "admin"
                   ? session.studentId
-                    ? "ADMINISTRATOR · DUAL ROLE"
-                    : "ADMINISTRATOR"
+                    ? t("login.adminDual")
+                    : t("login.admin")
                   : session.verification === "UNIVERSITY_VERIFIED"
-                    ? "UNIVERSITY VERIFIED STUDENT"
-                    : "STUDENT WORKSPACE"}
+                    ? t("login.verified")
+                    : t("login.student")}
               </span>
             </div>
             <p style={{ marginTop: 8 }}>
-              Redirecting you to your workspace automatically…
+              {t("login.redirecting")}
             </p>
             <div className="page-actions" style={{ marginTop: 14 }}>
               <Link
@@ -170,12 +172,12 @@ function LoginContent() {
                 href={session.role === "admin" ? "/admin" : "/passport"}
               >
                 Open{" "}
-                {session.role === "admin" ? "Admin Console" : "My Passport"}{" "}
+                {session.role === "admin" ? t("login.openAdmin") : t("login.openPassport")}{" "}
                 <ArrowRight size={15} />
               </Link>
               {session.role === "admin" && session.studentId && (
                 <Link className="button secondary" href="/passport">
-                  Open My Student Passport
+                  {t("login.openStudentPassport")}
                 </Link>
               )}
               <button
@@ -185,7 +187,7 @@ function LoginContent() {
                   await signOut();
                 }}
               >
-                <LogOut size={15} /> Sign out
+                <LogOut size={15} /> {t("common.signOut")}
               </button>
             </div>
           </div>
@@ -198,7 +200,7 @@ function LoginContent() {
           >
             <GoogleMark />
             <span>
-              {connecting ? "Connecting to Google…" : "Continue with Google"}
+              {connecting ? t("login.connecting") : t("login.continue")}
             </span>
           </button>
         )}
@@ -213,7 +215,7 @@ function LoginContent() {
               style={{ flexShrink: 0, marginTop: 2 }}
             />
             <div>
-              <strong>A place for your progress</strong>
+              <strong>{t("login.progressTitle")}</strong>
               <p>
                 Open your personal workspace. Your university-issued skills and
                 downloadable passport appear once your student record is linked.
@@ -227,7 +229,7 @@ function LoginContent() {
               style={{ flexShrink: 0, marginTop: 2 }}
             />
             <div>
-              <strong>A workspace for your university</strong>
+              <strong>{t("login.universityTitle")}</strong>
               <p>
                 Authorized staff can manage student records, record skills and
                 badges, and oversee credential issuance with the same sign-in.
@@ -241,7 +243,7 @@ function LoginContent() {
               style={{ flexShrink: 0, marginTop: 2 }}
             />
             <div>
-              <strong>Private from the start</strong>
+              <strong>{t("login.privateTitle")}</strong>
               <p>
                 Your records stay in your private account. Anyone can check a
                 shared credential using the public verifier, without signing in.
@@ -255,6 +257,7 @@ function LoginContent() {
 }
 
 export default function Login() {
+  const {t, locale} = useI18n();
   return (
     <Shell>
       <div className="auth-scene">
@@ -262,7 +265,7 @@ export default function Login() {
           fallback={
             <div className="auth-bento-grid">
               <section className="card auth-card">
-                <p role="status">Loading sign-in…</p>
+                <p role="status">{t("login.loading")}</p>
               </section>
             </div>
           }
@@ -270,11 +273,11 @@ export default function Login() {
           <LoginContent />
         </Suspense>
         <section className="auth-story">
-          <div className="eyebrow">YOUR NEXT CHAPTER</div>
+          <div className="eyebrow">{t("login.storyEyebrow")}</div>
           <h1>
-            Build your skills.
+            {t("login.storyTitle1")}
             <br />
-            Keep your progress.
+            {t("login.storyTitle2")}
           </h1>
           <p>
             A permanent home for what you learn, the achievements you earn, and

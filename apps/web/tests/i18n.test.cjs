@@ -62,3 +62,14 @@ test("Georgian landing has responsive headlines and never forces long labels int
   assert.ok(ka["home.titleLine2"].length < 24);
   assert.ok(ka["home.open"].length < 27);
 });
+
+test("iPhone header logo has bounded width and height (no intrinsic-image expansion)", () => {
+  const css = text("app/globals.css");
+  assert.match(css, /@media \(max-width: 460px\)[\s\S]*?\.public-header \.brand-logo\s*\{\s*width: 106px;[\s\S]*?height: 28px;[\s\S]*?overflow: hidden;/);
+  assert.match(css, /@media \(min-width: 461px\) and \(max-width: 767px\)[\s\S]*?\.public-header \.brand-logo\s*\{\s*width: 115px;[\s\S]*?height: 30px;/);
+  assert.match(css, /@media \(max-width: 360px\)[\s\S]*?\.public-header \.brand-logo\s*\{\s*width: 96px;[\s\S]*?height: 25px;/);
+  assert.match(css, /\.public-header \.brand-logo > \.brand-logo-img\s*\{\s*width: 100%;\s*height: 100%;\s*object-fit: contain;/);
+  const logo = text("components/brand-logo.tsx");
+  assert.match(logo, /\/orionx-logo-dark\.png/);
+  assert.match(logo, /\/orionx-logo-light\.png/);
+});

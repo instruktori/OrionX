@@ -128,8 +128,7 @@ export default function Dashboard() {
                         <Badge tone="warning">{t("dashboard.processing")}</Badge>
                         <h3>{t("dashboard.updating")}</h3>
                         <p>
-                          New achievements will appear after the next version is
-                          finalized.
+                          {t("dashboard.updatingText")}
                         </p>
                         <Link className="action-link" href="/passport">
                           {t("dashboard.history")}
@@ -146,8 +145,7 @@ export default function Dashboard() {
                         <Badge tone="blue">{t("dashboard.getConnected")}</Badge>
                         <h3>{t("dashboard.connect")}</h3>
                         <p>
-                          {t("dashboard.connectBefore")} <strong>{t("dashboard.workspaceId")}</strong> with an authorized
-                          university administrator to link your student record. This is not a Passport ID.
+                          {t("dashboard.connectBefore")} <strong>{t("dashboard.workspaceId")}</strong> {t("dashboard.connectAfter")}
                         </p>
                         {p.workspaceId ? (
                           <div className="identity-box">
@@ -168,8 +166,7 @@ export default function Dashboard() {
                         <Badge tone="blue">{t("dashboard.yourPassport")}</Badge>
                         <h3>{t("dashboard.gather")}</h3>
                         <p>
-                          View your recorded skills, download issued versions,
-                          and share a credential verification link.
+                          {t("dashboard.gatherText")}
                         </p>
                         <Link className="action-link" href="/passport">
                           {t("dashboard.viewPassport")}
@@ -222,8 +219,7 @@ export default function Dashboard() {
                       <Award size={25} strokeWidth={1.4} />
                       <h3>{t("dashboard.empty")}</h3>
                       <p>
-                        Skills appear here when your university issues a
-                        finalized passport version.
+                        {t("dashboard.emptyText")}
                       </p>
                     </div>
                   )}
@@ -287,8 +283,7 @@ export default function Dashboard() {
                 <div className="privacy-note">
                   <ShieldCheck size={17} />
                   <p>
-                    Your records stay private. You choose which verification
-                    links to share.
+                    {t("dashboard.privacy")}
                   </p>
                 </div>
               </aside>

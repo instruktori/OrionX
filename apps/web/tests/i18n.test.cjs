@@ -32,12 +32,33 @@ test("English is the default and a same-site cookie persists changes without URL
   assert.match(provider, /document\.documentElement\.lang = next/);
   assert.match(provider, /router\.refresh\(\)/);
   assert.doesNotMatch(provider, /(?:router\.(?:push|replace)|location\.assign|location\.href)/);
-  assert.match(selector, /<select/);
+  assert.doesNotMatch(selector, /<select/);
+  assert.match(selector, /<Languages size=\{17\}/);
+  assert.match(selector, /className="icon-button theme-toggle language-toggle"/);
   assert.match(selector, /aria-label=\{t\("common.language"\)\}/);
+  assert.match(selector, /role="menuitemradio"/);
+  assert.match(selector, /aria-checked=\{locale === value\}/);
+  assert.match(selector, /\["en", "ka"\] as const/);
 });
 test("Original PDF and API data remain outside locale messages", () => {
   const passport = text("app/passport/page.tsx");
   assert.match(passport, /\/me\/passport\/versions\/\$\{version\}\/download/);
   assert.match(passport, /type="application\/pdf"/);
   assert.doesNotMatch(text("lib/i18n.ts"), /officialBtu=true/);
+});
+
+test("Georgian landing has responsive headlines and never forces long labels into two tiny columns", () => {
+  const home = text("app/page.tsx");
+  const css = fs.readFileSync(path.resolve(root, "app/landing.module.css"), "utf8");
+  const globalCss = text("app/globals.css");
+  assert.match(home, /locale === "ka"/);
+  assert.match(home, /home\.verify/);
+  assert.match(css, /html\[lang="ka"\]/);
+  assert.match(css, /grid-template-columns: minmax\(0, 1fr\)/);
+  assert.match(css, /white-space: normal/);
+  assert.match(css, /text-transform: uppercase/);
+  assert.match(globalCss, /\.language-menu/);
+  assert.match(globalCss, /max-width: 460px/);
+  assert.ok(ka["home.titleLine2"].length < 24);
+  assert.ok(ka["home.open"].length < 27);
 });

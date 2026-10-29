@@ -11,14 +11,14 @@ This is a navigation aid for repository reviewers and coding agents, **not** a r
 
 | Capability | Code to inspect | Dated evidence / tests |
 | --- | --- | --- |
-| Google Sheets source synchronization and writeback | \`packages/core/src/sheets.ts\`, \`packages/core/src/sync.ts\` | \`docs/evidence/live-sheets.json\`, \`packages/core/src/writeback.test.ts\` |
-| Automatic polling and unattended jobs (available, not deployed) | \`apps/worker/src/worker.ts\`, \`packages/core/src/jobs.ts\` | \`docs/WORKER.md\`, \`apps/worker/tests/worker.test.cjs\` |
-| Shared admin-triggered and worker execution | \`packages/core/src/processor.ts\` | \`docs/evidence/hosted-manual.json\` |
-| BTU-style PDF rendering and exact-byte storage | \`packages/core/src/pdf-btu.ts\`, \`packages/core/src/pdf.ts\` | \`docs/evidence/devnet-pipeline.json\`, \`packages/core/src/issuance.test.ts\` |
-| Solana Devnet anchoring and independent verification | \`packages/core/src/solana.ts\`, public verification API | \`docs/evidence/devnet-pipeline.json\`, \`docs/VERIFICATION.md\` |
-| Passport versioning and tamper detection | \`packages/core/src/issuance.test.ts\`, \`apps/api/src/public-passport.test.ts\` | \`docs/evidence/devnet-pipeline.json\` |
-| Authentication and private downloads | \`packages/core/src/auth.test.ts\`, API ownership checks | \`docs/evidence/hosted-browser.json\`, \`docs/evidence/live-sheets.json\` |
-| Automated checks and hosted readiness | \`.github/workflows/ci.yml\`, \`package.json\` | GitHub Actions runs, \`docs/evidence/acceptance-summary.json\` |
+| Google Sheets source synchronization and writeback | `packages/core/src/sheets.ts`, `packages/core/src/sync.ts` | `docs/evidence/live-sheets.json`, `packages/core/src/writeback.test.ts` |
+| Automatic polling and unattended jobs (available, not deployed) | `apps/worker/src/worker.ts`, `packages/core/src/jobs.ts` | `docs/WORKER.md`, `apps/worker/tests/worker.test.cjs` |
+| Shared admin-triggered and worker execution | `packages/core/src/processor.ts` | `docs/evidence/hosted-manual.json` |
+| BTU-style PDF rendering and exact-byte storage | `packages/core/src/pdf-btu.ts`, `packages/core/src/pdf.ts` | `docs/evidence/devnet-pipeline.json`, `packages/core/src/issuance.test.ts` |
+| Solana Devnet anchoring and independent verification | `packages/core/src/solana.ts`, public verification API | `docs/evidence/devnet-pipeline.json`, `docs/VERIFICATION.md` |
+| Passport versioning and tamper detection | `packages/core/src/issuance.test.ts`, `apps/api/src/public-passport.test.ts` | `docs/evidence/devnet-pipeline.json` |
+| Authentication and private downloads | `packages/core/src/auth.test.ts`, API ownership checks | `docs/evidence/hosted-browser.json`, `docs/evidence/live-sheets.json` |
+| Automated checks and hosted readiness | `.github/workflows/ci.yml`, `package.json` | GitHub Actions runs, `docs/evidence/acceptance-summary.json` |
 
 These references identify where a claim can be investigated; the existence of a source file or snapshot alone is not proof that the current deployment behaves correctly.
 
@@ -33,7 +33,7 @@ npm test
 npm run build
 ~~~
 
-The CI workflow is \`.github/workflows/ci.yml\`. Inspect the current GitHub Actions result instead of assuming a historical green run applies to the latest commit.
+The CI workflow is `.github/workflows/ci.yml`. Inspect the current GitHub Actions result instead of assuming a historical green run applies to the latest commit.
 
 Read-only environment readiness for **authorized, provisioned environments**:
 
@@ -41,13 +41,13 @@ Read-only environment readiness for **authorized, provisioned environments**:
 npm run check:readiness -- --worker --sheets --hosted --evidence
 ~~~
 
-The \`npm run test:pipeline:devnet\` command is **not** read-only: it can write to Solana Devnet and external test services. Do not run it without permission and appropriate isolated credentials. Never publish secrets, private PDFs, or sensitive test-account details in review artifacts.
+The `npm run test:pipeline:devnet` command is **not** read-only: it can write to Solana Devnet and external test services. Do not run it without permission and appropriate isolated credentials. Never publish secrets, private PDFs, or sensitive test-account details in review artifacts.
 
 ### Evidence-backed demonstrations
 
-- The dated hosted acceptance snapshot records **18 demo passports, 20 finalized versions, and 62 synchronized award rows**: \`docs/evidence/acceptance-summary.json\` and \`docs/evidence/live-sheets.json\`.
-- Real isolated Devnet V1/V2 issuance, restart recovery, old-version supersession, tamper rejection, and access checks were recorded in \`docs/evidence/devnet-pipeline.json\`.
-- Hosted administrator-triggered V3 issuance, finality, and writeback were recorded in \`docs/evidence/hosted-manual.json\`.
+- The dated hosted acceptance snapshot records **18 demo passports, 20 finalized versions, and 62 synchronized award rows**: `docs/evidence/acceptance-summary.json` and `docs/evidence/live-sheets.json`.
+- Real isolated Devnet V1/V2 issuance, restart recovery, old-version supersession, tamper rejection, and access checks were recorded in `docs/evidence/devnet-pipeline.json`.
+- Hosted administrator-triggered V3 issuance, finality, and writeback were recorded in `docs/evidence/hosted-manual.json`.
 - The README contains a demo/evidence index with public routes and explorer references. Historical evidence does not imply that a page, chain RPC, or worker is currently available.
 
 ### Evaluate three independent states

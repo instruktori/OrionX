@@ -75,8 +75,8 @@ strict workflow_dispatch run. Strict mode fails if the revoked fixture is missin
 Do not revoke the shared current fixture used by ordinary CI.
 
 The isolated workflow uses disposable PostgreSQL 16, an ephemeral local signing key,
-an isolated copy of the program with a local bootstrap key, pinned Agave v4.4.0 and
-platform-tools v1.57. It uses no production/Devnet key. Reproduce on a disposable local
+an isolated copy of the program with a local bootstrap key, pinned Agave v4.4.0 compiler, platform-tools v1.57 (SBPF v0) and Agave v2.3.13
+local validator runtime. It uses no production/Devnet key. Reproduce on a disposable local
 PostgreSQL instance, with Agave tools and Rust on PATH:
 
 ```sh
@@ -104,7 +104,7 @@ revocation is performed by ordinary CI or these code changes.
    database environment. Test backup/restore first. The migration adds tables and
    backend-only RLS; it does not rewrite existing issuance records.
 3. Build the **unmodified** production program with pinned tools:
-   `cargo-build-sbf --tools-version v1.57 --manifest-path programs/passport-registry/Cargo.toml`.
+   `cargo-build-sbf --tools-version v1.57 --arch v0 --manifest-path programs/passport-registry/Cargo.toml`.
    Have the existing upgrade authority upgrade the same pinned Devnet program ID.
    Do not initialize a new issuer, rotate keys, replace the program ID, close accounts,
    or redeploy the isolated test build. Compare representative account bytes afterward.

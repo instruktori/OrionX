@@ -41,6 +41,12 @@ jobs:
           echo "3363f4728fe786ac7036e342a20df928aa2e3e43f807fbdce67814840538c574  $RUNNER_TEMP/agave.tar.bz2" | sha256sum --check
           tar -xjf "$RUNNER_TEMP/agave.tar.bz2" -C "$RUNNER_TEMP"
           echo "$RUNNER_TEMP/solana-release/bin" >> "$GITHUB_PATH"
+          # Existing Devnet-compatible runtime avoids the newer io_uring host requirement.
+          mkdir -p "$RUNNER_TEMP/runtime"
+          curl --fail --location --retry 3 https://github.com/anza-xyz/agave/releases/download/v2.3.13/solana-release-x86_64-unknown-linux-gnu.tar.bz2 -o "$RUNNER_TEMP/runtime.tar.bz2"
+          echo "c43539ebdf6942472e8b87635d6ea55f428a51e3d0219f7b6f720fc6b19fade0  $RUNNER_TEMP/runtime.tar.bz2" | sha256sum --check
+          tar -xjf "$RUNNER_TEMP/runtime.tar.bz2" -C "$RUNNER_TEMP/runtime"
+          echo "SOLANA_TEST_VALIDATOR_BIN=$RUNNER_TEMP/runtime/solana-release/bin/solana-test-validator" >> "$GITHUB_ENV"
       - name: Compile and test Rust account serialization
         run: cargo test --locked
       - name: Exercise real isolated SBF and PostgreSQL lifecycle

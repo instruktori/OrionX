@@ -23,12 +23,12 @@ async function main() {
   // Compile an isolated copy with an ephemeral local bootstrap authority. Production source is untouched.
   await cp("programs",resolve(temp,"programs"),{recursive:true});await cp("Cargo.toml",resolve(temp,"Cargo.toml"));await cp("Cargo.lock",resolve(temp,"Cargo.lock"));
   const rust=resolve(temp,"programs/passport-registry/src/lib.rs");await writeFile(rust,(await readFile(rust,"utf8")).replace('pubkey!("BNcEvP3benzCX7tc1W2U6upZ5HVT4hzneZahVKMpCPiv")',`pubkey!("${admin.publicKey.toBase58()}")`));
-  const build=spawnSync("cargo-build-sbf",["--tools-version","v1.57","--manifest-path",resolve(temp,"programs/passport-registry/Cargo.toml"),"--sbf-out-dir",resolve(temp,"deploy")],{stdio:"inherit",env:process.env});
+  const build=spawnSync("cargo-build-sbf",["--tools-version","v1.57","--arch","v0","--manifest-path",resolve(temp,"programs/passport-registry/Cargo.toml"),"--sbf-out-dir",resolve(temp,"deploy")],{stdio:"inherit",env:process.env});
   if(build.status!==0)throw Error("Isolated SBF build failed");
-  validator=spawn("solana-test-validator",["--reset","--quiet","--ledger",resolve(temp,"ledger"),"--rpc-port","18899","--faucet-port","18900","--gossip-port","18001","--dynamic-port-range","18002-18102","--bpf-program",program.toBase58(),resolve(temp,"deploy/passport_registry.so")],{stdio:["ignore","pipe","pipe"]});
+  validator=spawn(process.env.SOLANA_TEST_VALIDATOR_BIN || "solana-test-validator",["--reset","--quiet","--ledger",resolve(temp,"ledger"),"--rpc-port","18899","--faucet-port","18999","--gossip-port","18001","--dynamic-port-range","18002-18102","--bpf-program",program.toBase58(),resolve(temp,"deploy/passport_registry.so")],{stdio:["ignore","pipe","pipe"]});
   validator.stdout?.on("data",b=>validatorLog+=b);validator.stderr?.on("data",b=>validatorLog+=b);
   const connection=new Connection("http://127.0.0.1:18899","finalized");
-  await wait(async()=>{try{return !!await connection.getGenesisHash();}catch{return false;}},"local validator",60000);
+  await wait(async()=>{if(validator?.exitCode != null)throw Error("Validator exited: "+validatorLog);try{return !!await connection.getGenesisHash();}catch{return false;}},"local validator",60000);
   const database=new URL(configured);database.searchParams.set("schema",schema);
   Object.assign(process.env,{DATABASE_URL:database.toString(),DIRECT_URL:database.toString(),NODE_ENV:"test",APP_ENV:"test",CHAIN_MODE:"local",SOURCE_MODE:"fixture",STORAGE_MODE:"local",ARTIFACT_DIRECTORY:resolve(temp,"pdfs"),SOLANA_RPC_URL:"http://127.0.0.1:18899",SOLANA_EXPECTED_GENESIS_HASH:await connection.getGenesisHash(),SOLANA_PROGRAM_ID:program.toBase58(),SOLANA_ISSUER_KEYPAIR_JSON:JSON.stringify([...issuer.secretKey]),ISSUER_TRUST_MODE:"DEMO",REVOCATION_ENABLED:"true",WORKER_POLL_MS:"200",WORKER_LEASE_MS:"5000",SYNC_ENABLED:"true",SYNC_POLL_MS:"1000",ORIONX_RESOURCE_ROOT:temp});
   delete process.env.SOLANA_EXPECTED_ISSUER;delete process.env.VERCEL;delete process.env.WORKER_HOSTED;

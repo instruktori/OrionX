@@ -10,9 +10,12 @@ were unchanged; new tables have backend-only RLS and browser roles cannot execut
 the immutable trigger function. Production health, protected-route, authentic-PDF
 and tampered-PDF smoke checks passed.
 
-The deployed Devnet program has **not** been upgraded for revocation. Feature
-activation, dedicated live revoked fixture, persistent worker hosting and live
-unattended Sheets acceptance remain pending. Before merge, 158 application/runtime
+The operator reported the same-ID Devnet revocation upgrade and Vercel production
+`REVOCATION_ENABLED=true` redeployment complete on 29 October 2026. The update
+did not include a transaction signature, deployed binary hash or fresh acceptance
+artifact; this checkpoint records operator confirmation, not independent revalidation.
+Dedicated live revoked fixture, persistent worker hosting and live unattended Sheets
+acceptance remain pending. Before merge, 158 application/runtime
 tests, 3 Rust tests, typecheck, build and all three CI workflows passed.
 
 ## What this change does
@@ -110,7 +113,9 @@ It does not establish live Google Sheets or hosted worker operation.
 
 Ordinary CI does not migrate production, upgrade its program, deploy a worker or
 perform live issuance/revocation. The separately authorized database migration and
-main deployment below are complete; subsequent activation steps remain gated.
+main deployment below are complete. The Devnet upgrade and Vercel enablement are
+now operator-reported complete; live synthetic operations and worker activation
+remain separate steps.
 
 1. Obtain deployment/operator approval. Run the isolated lifecycle CI to green and
    review the additive program diff. Record the current program upgrade authority,
@@ -120,14 +125,17 @@ main deployment below are complete; subsequent activation steps remain gated.
    Production tracks Supabase migration history and has no Prisma migration baseline;
    do not run `prisma migrate deploy` against it without a separately reviewed baseline
    plan. These additive changes preserve issuance records.
-3. Build the **unmodified** production program with pinned tools:
+3. **Reported complete by operator (Devnet only).** For reproduction, build the
+   **unmodified** production program with pinned tools:
    `cargo-build-sbf --tools-version v1.57 --arch v0 --manifest-path programs/passport-registry/Cargo.toml`.
    Have the existing upgrade authority upgrade the same pinned Devnet program ID.
    Do not initialize a new issuer, rotate keys, replace the program ID, close accounts,
    or redeploy the isolated test build. Compare representative account bytes afterward.
-4. **API/verifier/UI deployed; hosted worker pending.** Keep
-   `REVOCATION_ENABLED=false`. Verify existing historical/current PDFs independently.
-5. After approval, enable `REVOCATION_ENABLED=true` on the API and worker. Exercise a
+4. **API/verifier/UI deployed; Vercel feature enablement reported complete.**
+   Verify existing historical/current PDFs independently and attach actual deployment
+   and upgrade evidence. Hosted worker activation is still pending.
+5. Set `REVOCATION_ENABLED=true` on the worker when it is activated (API enablement
+   is operator-reported complete). With authorization, exercise a
    dedicated synthetic revocation and correction; confirm finalized PDA state using
    the independent CLI. Populate the dedicated revoked CI fixture and pass strict CI.
 6. For unattended Sheets operation, provision an approved always-on container host
@@ -164,5 +172,5 @@ confirmation. Preflight network availability before recording.
 | D: recovery | 20 s | Use the isolated lifecycle run's persisted signed attempt, interrupt after chain finality before SQL completion, restart and show one attempt + completed reconciliation. |
 
 Map these clips to existing presentation sections. Do not claim C is recorded on
-Devnet until the upgrade and dedicated fixture are approved and exercised. The
+Devnet until the dedicated fixture is approved and exercised against the upgraded program. The
 isolated test output is labeled local and must not be represented as hosted proof.

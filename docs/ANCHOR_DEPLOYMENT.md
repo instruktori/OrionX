@@ -1,5 +1,18 @@
 # Solana Devnet registry deployment
 
+## Revocation upgrade checkpoint — 29 October 2026
+
+The operator reported completion of the revocation upgrade on the existing Devnet
+program ID and Vercel production feature enablement. This is not a mainnet move.
+The report did not include the upgrade signature, deployed binary hash or fresh
+compatibility evidence; attach those actual artifacts when available. Do not
+fabricate them or treat this statement as a live revocation acceptance test.
+A dedicated synthetic revoked fixture, independent MATCH + REVOKED verification
+and strict live CI remain outstanding. Worker hosting is a separate activation.
+See [the activation runbook](REVOCATION_AND_ACTIVATION.md).
+
+## Original issuance deployment
+
 The program is deployed to Devnet and has passed real V1/V2 issuance and recovery checks. It has not received an independent security audit. See `evidence/devnet-deployment.json` and `evidence/devnet-pipeline.json`.
 
 - Program: `9q3EFytGCsR2hk5FnerXxMWomC2yCajpx78durY91JPa`

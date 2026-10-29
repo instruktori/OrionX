@@ -2,8 +2,10 @@
 
 > Current status, 29 October 2026: PR #11 (`b252dcc`) and Supabase migrations 0005/0006
 > are deployed. Revocation is implemented and tested with real local SBF/PostgreSQL;
-> the Devnet program upgrade, feature enablement, dedicated revoked live fixture and
-> persistent worker activation remain pending. See [the current plan](NEXT_IMPLEMENTATION_PLAN.md)
+> the operator reported the same-ID Devnet upgrade and Vercel feature enablement
+> complete on 29 October 2026 (no transaction evidence supplied with that update).
+> Dedicated revoked live-fixture validation and persistent worker activation remain
+> pending. See [the current plan](NEXT_IMPLEMENTATION_PLAN.md)
 > and [activation runbook](REVOCATION_AND_ACTIVATION.md). Older observations and
 > counts below are historical and do not establish current live revocation or polling.
 

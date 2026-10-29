@@ -1,15 +1,17 @@
 # OrionX — current implementation plan
 
-Updated 29 October 2026 after PR [#11](https://github.com/instruktori/OrionX/pull/11), merged as `b252dcc`. This replaces the 25 October admin/QR handoff; that historical plan remains available in Git history.
+Updated 29 October 2026 with operator confirmation of the Devnet upgrade and Vercel feature enablement. Transaction signature, binary hash and fresh acceptance evidence were not supplied; deployment completion below is operator-reported.
+
+Engineering baseline: PR [#11](https://github.com/instruktori/OrionX/pull/11), merged as `b252dcc`. This replaces the 25 October admin/QR handoff; that historical plan remains available in Git history.
 
 ## Delivered and validated
 
 | Work | Implementation / validation | Deployment state |
 | --- | --- | --- |
 | Administrator and verification workflows | Existing account management, paginated directory, version dossier, jobs/retries, source entry, QR/image/PDF discovery and structured verification retained | Existing hosted workflows retained |
-| Revocation | Authorized admin, explicit confirmation/reason, actor/time audit, PENDING/REVOKED/FAILED, immutable signed attempts, idempotency and finalized-chain recovery | API/UI deployed; chain upgrade and feature activation pending |
-| On-chain invalidation | Append-only version-specific PDA, issuer/admin authority enforcement, original issuance evidence retained | Real SBF exercised locally in CI; upgraded Devnet program not deployed |
-| Corrected issuance | Append-only award withdrawals, explicit correction through existing cumulative issuance pipeline; no older-version promotion | Implemented and isolated lifecycle tested; live activation pending |
+| Revocation | Authorized admin, explicit confirmation/reason, actor/time audit, PENDING/REVOKED/FAILED, immutable signed attempts, idempotency and finalized-chain recovery | API/UI deployed; same-ID Devnet upgrade and Vercel feature enablement reported complete by operator |
+| On-chain invalidation | Append-only version-specific PDA, issuer/admin authority enforcement, original issuance evidence retained | Real SBF exercised locally in CI; same-ID Devnet upgrade reported complete; live revoked proof pending |
+| Corrected issuance | Append-only award withdrawals, explicit correction through existing cumulative issuance pipeline; no older-version promotion | Implemented and isolated lifecycle tested; dedicated live correction acceptance pending |
 | Student/public safety | Separate integrity/revocation/currency, revoked download restrictions, private admin reason excluded from student/public responses | Revocation-aware code deployed; live revoked fixture pending |
 | Independent verification | Standalone CLI reads finalized Devnet state without OrionX API, database or signing key | Authentic/historical/tampered/unknown/wrong-context/RPC failure checks exercised live |
 | Durable automation | Reuses existing PostgreSQL jobs, claims, renewable leases, retries and worker; opt-in worker compose/preflight | Fixture-adapter automatic issuance tested; hosted Sheets polling not activated |
@@ -21,14 +23,14 @@ These results are dated. Recheck CI for subsequent changes. Live CI currently al
 
 ## Remaining activation, in order
 
-1. With operator authorization and the existing upgrade authority, build the production Anchor program and upgrade the **same pinned Devnet program ID**. Preserve account layouts and compare existing finalized account bytes. Do not deploy the isolated test program.
-2. After program verification, enable `REVOCATION_ENABLED` on the API and worker. Use only a dedicated approved synthetic version to exercise revocation, reconciliation and corrected issuance. Keep original PDFs and private audit details intact.
+1. **Reported complete by operator:** upgrade the same pinned Devnet program and enable `REVOCATION_ENABLED=true` in Vercel production. Attach the actual upgrade transaction, binary hash, compatibility checks and deployment evidence when available. No mainnet migration was requested or reported.
+2. Independently confirm the upgraded program and existing passport compatibility. Configure the worker feature flag when that worker is activated. With authorization, use a dedicated synthetic version to exercise finalized revocation, reconciliation and corrected issuance. Keep original PDFs and private audit details intact.
 3. Commit that dedicated revoked PDF/proof context in `fixtures/verification/devnet.json`. Pass strict `npm run test:verification:live`, including unchanged revoked bytes reporting MATCH + REVOKED. Do not revoke the ordinary current CI fixture.
 4. Provision an approved persistent host for the existing worker; use `compose.worker.yml`, server-only credentials and Sheets polling. Vercel does not host the daemon. Retain manual processing as fallback.
 5. In an approved synthetic Sheet, demonstrate unattended import → PDF persistence → finalized Devnet proof → writeback → student access. Repeat polling, reorder a row and restart the worker; confirm no duplicate issuance.
 6. Capture the four short demo scenarios using actual proof and labeled elapsed time. The 95-second capture plan is in the activation runbook; capture itself is not complete.
 
-The approved database migrations and main deployment are already complete. Do not rerun migrations blindly or describe the remaining chain/worker work as deployed. The production database uses Supabase migration history, not a Prisma migration baseline.
+The approved database migrations and main deployment are already complete. Do not rerun migrations blindly or describe the remaining worker or live-fixture work as deployed. The production database uses Supabase migration history, not a Prisma migration baseline.
 
 ## Reproduction and boundaries
 

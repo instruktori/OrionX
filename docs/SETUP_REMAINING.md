@@ -4,8 +4,10 @@
 
 PR #11 (`b252dcc`) is on main and Vercel production. Supabase migrations 0005 and
 0006 were applied through MCP, preserving existing records. Revocation-aware
-API/UI and independent verification are deployed, but the on-chain revocation
-program upgrade and feature activation remain pending. See
+API/UI and independent verification are deployed. The operator reported the same-ID
+Devnet revocation upgrade and Vercel feature enablement complete on 29 October 2026.
+No transaction signature or fresh acceptance artifact was supplied with that report;
+independent live revoked-fixture validation remains pending. See
 [NEXT_IMPLEMENTATION_PLAN.md](NEXT_IMPLEMENTATION_PLAN.md) for current status and
 [REVOCATION_AND_ACTIVATION.md](REVOCATION_AND_ACTIVATION.md) for the activation order.
 A dedicated live revoked fixture and hosted unattended Sheets acceptance are still

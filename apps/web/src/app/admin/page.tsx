@@ -262,6 +262,7 @@ type JobItem = {
 };
 
 type ConflictItem = {
+  resolvedAt: string | null;
   id: string;
   runId: string;
   studentId: string | null;
@@ -2063,7 +2064,7 @@ export default function Admin() {
                             </td>
                             <td className="mono">{j.attempts}</td>
                             <td style={{ whiteSpace: "normal", maxWidth: 340 }}>
-                              {j.lastError ? (
+                              {j.lastError && !["COMPLETED", "FINALIZED"].includes(j.state) ? (
                                 <span
                                   style={{
                                     color: "var(--crimson)",
@@ -2110,12 +2111,12 @@ export default function Admin() {
                 <section className="card">
                   <div className="section-head" style={{ marginTop: 0 }}>
                     <div>
-                      <h2>Quarantined Source Conflicts ({conflicts.length})</h2>
+                      <h2>{t("admin.sourceConflicts")} ({conflicts.filter(c => !c.resolvedAt).length} {t("admin.activeConflicts")})</h2>
                       <p className="muted">
                         {t("admin.quarantineHelp")}
                       </p>
                     </div>
-                    <span className="pill pill-crimson">{t("admin.needsFix")}</span>
+                    <span className={`pill ${conflicts.some(c => !c.resolvedAt) ? "pill-crimson" : "pill-cyan"}`}>{t(conflicts.some(c => !c.resolvedAt) ? "admin.needsFix" : "admin.allResolved")}</span>
                   </div>
                   <div className="table-wrap">
                     <table className="table">
@@ -2123,6 +2124,7 @@ export default function Admin() {
                         <tr>
                           <th>{t("admin.studentId")}</th>
                           <th>{t("admin.recordId")}</th>
+                          <th>{t("admin.status")}</th>
                           <th>{t("admin.conflict")}</th>
                           <th>{t("admin.observed")}</th>
                         </tr>
@@ -2132,6 +2134,7 @@ export default function Admin() {
                           <tr key={c.id}>
                             <td className="mono">{c.studentId || "—"}</td>
                             <td className="mono">{c.recordId || "—"}</td>
+                            <td>{t(c.resolvedAt ? "admin.resolvedHistory" : "admin.activeConflicts")}</td>
                             <td
                               style={{
                                 color: "var(--crimson)",

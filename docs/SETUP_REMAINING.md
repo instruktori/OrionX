@@ -29,16 +29,15 @@ Credentials stay in ignored local files and server-only Vercel secrets. The API
 receives the simulated issuer credential for on-demand processing; admin and
 upgrade keys remain operator-only. The user's account remains a student.
 
-## Manual operation
+## Processing modes: hosted administrator controls and optional automatic worker
 
 An administrator opens `/admin` and selects **Run synchronization** to import and
 process changes, or **Process pending jobs** to resume saved work. Keep the page
 open until the queue drains. **Stop after current step** preserves pending work.
 
-The optional local worker is stopped and `SYNC_ENABLED=false`. Separate always-on
-hosting and periodic scheduling remain unactivated pending approved hosting. The
-existing worker now has an opt-in `compose.worker.yml` deployment profile and
-hosted preflight checks; no daemon runs on Vercel.
+The same PostgreSQL jobs and issuance processor also support **automatic unattended polling** in `apps/worker/src/worker.ts` when `SYNC_ENABLED=true`. The automatic worker is already packaged in `Dockerfile.worker` and opt-in `compose.worker.yml`, with restart behavior for persistent Docker hosting; see [WORKER.md](WORKER.md) and the [activation runbook](REVOCATION_AND_ACTIVATION.md).
+
+**Current Vercel demo status:** administrator-triggered processing is active; the local/hosted automatic worker is not active and polling is disabled in the demo configuration. Separate always-on hosting and live unattended Sheets acceptance remain pending approval. Docker deployment configuration alone is not proof of a running worker.
 
 To add a synthetic verified award, insert a complete data row inside the named
 `PassportRecords` range (above an existing data row), copy its native structure,

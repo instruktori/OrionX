@@ -8,6 +8,19 @@
 > counts below are historical and do not establish current live revocation or polling.
 
 
+## Processing-mode status
+
+Both **automatic background processing** and **administrator-triggered processing** are implemented using the same durable queue and pipeline. The worker polls and consumes queued jobs without UI actions when enabled; the admin API can process the same work on demand.
+
+| Mode / deployment evidence | Current status |
+| --- | --- |
+| Background worker, polling, durable jobs, lease recovery | Implemented and covered by isolated integration tests |
+| Worker Docker image and opt-in service (`Dockerfile.worker`, `compose.worker.yml`) | Available for separate persistent hosting; not part of the default Vercel HTTP deployment |
+| Administrator-triggered end-to-end execution | Demonstrated in the hosted Vercel deployment |
+| Hosted uninterrupted worker and unattended live Sheets-to-Devnet acceptance | Not activated / not independently demonstrated |
+
+The absence of a hosted daemon does not imply that the automatic worker is missing. Likewise, deployable Compose configuration does not prove a container is actively running.
+
 The Devnet program and simulated issuer are deployed. A complete isolated V1/V2
 pipeline passed on real Devnet, PostgreSQL, private Supabase Storage and Supabase
 Auth. Demo proofs keep `officialBtu=false`; official university authorization is
@@ -100,11 +113,7 @@ outside this hackathon deployment.
   White, Electric Blue, Cyan, Pink and Reddish/Coral surfaces with a sticky glass
   Top Navigation Bar and Bento Grid layout.
 
-The approved deployment uses **manual administrator processing**. The admin page
-queues source synchronization and processes one durable stage per HTTP request,
-shows progress and can stop after the current stage. Closing the page leaves
-pending work saved for the next manual run. Always-on hosting and automatic
-scheduling remain pending approved activation; no worker daemon is deployed.
+The approved **Vercel demo currently activates administrator-triggered processing**, while retaining the implemented automatic polling worker as a separately deployable mode. The admin page queues source synchronization and processes one durable stage per HTTP request, shows progress and can stop after the current stage. Closing the page leaves pending work saved for the next run. The automatic worker is packaged with `Dockerfile.worker` and `compose.worker.yml`, but persistent hosting and live unattended Sheets acceptance remain pending approved activation.
 
 The isolated Devnet test retains its own immutable artifacts and chain records
 but removes its disposable SQL schema and processes. Original workbook statuses

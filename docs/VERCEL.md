@@ -31,11 +31,18 @@ See [environment configuration](ENVIRONMENT.md) for the connected Supabase proje
 
 Keep existing chain configuration in the project's runtime environment as required by `packages/core/src/solana.ts`: `SOLANA_RPC_URL`, `SOLANA_PROGRAM_ID`, and `SOLANA_EXPECTED_GENESIS_HASH`. The health endpoint can run without these; actual verification fails closed when configuration is missing. `WEB_ORIGIN` is optional for a separate frontend; same-origin deployment does not need CORS. No fixed service hostnames or ports are required in production.
 
-PostgreSQL, Redis, Supabase and Solana RPC are external dependencies, not Vercel HTTP services. Docker Compose remains for local databases only. Do not use localhost database URLs in a deployed environment. Do not use local filesystem artifact storage for durable cloud files.
+PostgreSQL, Redis, Supabase and Solana RPC are external dependencies, not Vercel HTTP services. The root `docker-compose.yml` provisions local PostgreSQL/Redis; the **separate `compose.worker.yml`** deploys the existing automatic worker on an authorized persistent Docker host. Neither Compose file adds a Vercel HTTP service. Do not use localhost database URLs in a deployed environment. Do not use local filesystem artifact storage for durable cloud files.
 
 Vercel Functions have request body limits; the current UI/API's 10 MB PDF allowance is not a guarantee that a 10 MB upload passes the platform gateway. Test within the platform limit; larger files need a separate direct-upload design.
 
-## Administrator-triggered processing
+## Automatic and administrator-triggered processing
+
+OrionX supports **both modes on the same persisted job queue and processing pipeline**:
+
+- **Automatic:** `apps/worker/src/worker.ts` periodically polls the source with `SYNC_ENABLED=true`, enqueues durable synchronization work and processes queued issuance stages. It is packaged in `Dockerfile.worker` and opt-in `compose.worker.yml` (including a restart policy), for deployment **outside** the Vercel HTTP services.
+- **Administrator-triggered:** authorized actions in the hosted `/admin` UI enqueue and process the same jobs through the HTTP API, without a separate issuance implementation.
+
+**Current deployment status:** the automatic daemon is not currently active in the Vercel hackathon deployment. Hosted V3 issuance/writeback was demonstrated with administrator-triggered processing; isolated automatic fixture polling has been tested, but live unattended Sheets end-to-end acceptance is pending. The existing worker Compose configuration demonstrates deployability, not production uptime.
 
 The default `vercel.json` does not declare a worker daemon, and automatic GitHub CI does not build its Docker image. This keeps frontend/API pushes from rebuilding and storing an approximately 951 MB worker container every time. A daemon with zero instances still builds and stores its image; zero instances alone does not prevent registry storage growth.
 
@@ -45,7 +52,7 @@ The API needs `MANUAL_WORKER_ENABLED=true`, the server-only `SOLANA_ISSUER_KEYPA
 
 API builds prepare `apps/api/runtime-resources` with the canonical catalog, fonts and artwork, included explicitly in the function package. `maxDuration=60` bounds each request. The isolated ESM rendering regression test checks the same resource layout. Builds never migrate or reset databases.
 
-The worker source, `Dockerfile.worker`, and local `npm run dev:worker` remain optional for future unattended polling. No daemon or automatic worker image build is added.
+The worker source, `Dockerfile.worker`, local `npm run dev:worker` and `compose.worker.yml` already provide automatic processing and an opt-in deployment route. The default Vercel deployment intentionally includes no always-on worker or automatic worker-image build.
 
 To build locally when Docker is installed:
 
@@ -69,4 +76,4 @@ npm test
 npm run dev:services
 ```
 
-Use the URL printed by Vercel for both UI and API. The HTTP service names are `api`/`web`, the public API is `/api/*`, and web handles the catch-all. There are no current server-to-server HTTP bindings; the worker runs manually outside the default deployment. For future request-time server calls, use caller-side bindings rather than deployment hostnames. Root npm scripts expose API-only, web-only, combined HTTP, worker, schema generation, schema validation, type checks, and tests independently.
+Use the URL printed by Vercel for both UI and API. The HTTP service names are `api`/`web`, the public API is `/api/*`, and web handles the catch-all. There are no current server-to-server HTTP bindings; the current Vercel demo processes jobs through administrator API actions, and a separate worker can process them automatically when independently hosted and enabled. For future request-time server calls, use caller-side bindings rather than deployment hostnames. Root npm scripts expose API-only, web-only, combined HTTP, worker, schema generation, schema validation, type checks, and tests independently.

@@ -4,6 +4,19 @@ BTU AI Skills Digital Passport with a complete, evidence-backed issuance flow: v
 
 The project emphasizes **document integrity, safe retries, cumulative version history, and reproducible proof**, not just a passport preview.
 
+## Processing modes: automatic and administrator-triggered
+
+OrionX **implements both unattended background processing and administrator-triggered processing**. These are two execution modes of the same durable PostgreSQL queue and issuance pipeline, not separate implementations.
+
+| Mode or capability | Implementation | Evidence / current deployment |
+| --- | --- | --- |
+| Automatic Google Sheets polling and queued processing | `apps/worker/src/worker.ts` polls when `SYNC_ENABLED=true`, using `SYNC_POLL_MS` (default 60 seconds); `packages/core/src/jobs.ts` handles durable claims, leases and retries | Automatic fixture-adapter polling and issuance were tested in isolated integration runs; live unattended Sheets acceptance remains pending |
+| Administrator-triggered sync and issuance | Authenticated `/admin` actions use the same `packages/core/src/processor.ts` pipeline | Demonstrated on the hosted Vercel demo with PDF, finalized Devnet proof and Sheets writeback |
+| Independently deployable worker container | `Dockerfile.worker` and **`compose.worker.yml`** define an opt-in worker service with a restart policy; root `docker-compose.yml` provisions local PostgreSQL/Redis | Deployment packaging exists; an always-on production worker has **not** been activated or independently demonstrated |
+| Current hackathon hosting | Vercel deploys the API and web app; on-demand admin actions execute pending jobs | Manual-triggered processing is active; automatic background processing is supported but not currently enabled on the hosted deployment |
+
+**Implementation is not the same as activation.** The current demo's manual controls do not imply that automatic synchronization is missing. Conversely, Docker configuration and isolated tests do not prove that an unattended worker is live. See [worker architecture](docs/WORKER.md), [Vercel deployment](docs/VERCEL.md) and [activation runbook](docs/REVOCATION_AND_ACTIVATION.md).
+
 ## Engineering results at a glance
 
 These are **recorded results**, not estimates or claims of current uptime.
@@ -59,9 +72,9 @@ npm run db:generate
 npm run dev:services
 ```
 
-Open the URL printed by `vercel dev` for the UI, and `/api/v1/health/live` on that same origin for API liveness. This runs both HTTP services with the same routing as deployment. Administrators can run synchronization and issuance on demand from `/admin`; an optional local daemon is available with `npm run dev:worker`. The tenant uses synthetic students and a simulated issuer; demo verification never claims official BTU authorization. The Devnet program is deployed and a real V1/V2 issuance run has passed. Live Sheets writeback, hosted manual issuance and Google sign-in have passed acceptance.
+Open the URL printed by `vercel dev` for the UI, and `/api/v1/health/live` on that same origin for API liveness. This runs both HTTP services with the same routing as deployment. Administrators can run synchronization and issuance on demand from `/admin`; to exercise the implemented automatic polling mode locally, launch `npm run dev:worker` separately with the required database, source and storage configuration (`SYNC_ENABLED=true` and `SOURCE_MODE=sheets` for live Sheets polling). The tenant uses synthetic students and a simulated issuer; demo verification never claims official BTU authorization. The Devnet program is deployed and a real V1/V2 issuance run has passed. Live Sheets writeback, hosted manual issuance and Google sign-in have passed acceptance.
 
-The repository is linked locally to the existing Vercel project. On a new machine, link it before pulling settings. See [environment configuration](docs/ENVIRONMENT.md) for Supabase credentials, local overrides, and safe Vercel updates. To use local development databases instead, copy `.env.example` to `.env.development.local` and run `docker compose up -d`.
+The repository is linked locally to the existing Vercel project. On a new machine, link it before pulling settings. See [environment configuration](docs/ENVIRONMENT.md) for Supabase credentials, local overrides, and safe Vercel updates. To use local development databases instead, copy `.env.example` to `.env.development.local` and run `docker compose up -d`. Separately, an authorized always-on container host can run the existing background worker with `docker compose -f compose.worker.yml --profile automation up -d --build` after securely provisioning `.env.worker`; this is **not** part of the default Vercel deployment.
 
 ## Implemented
 - Google OAuth through Supabase, refresh/logout, self-service empty student workspaces, server-owned student/admin bindings and private ownership-checked downloads ([onboarding](docs/STUDENT_ONBOARDING.md))

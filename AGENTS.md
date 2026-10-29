@@ -7,6 +7,21 @@ OrionX implements a versioned AI Skills Digital Passport pipeline spanning Googl
 **Public demo:** https://orionx-phi.vercel.app  
 **Status updated:** 2026-10-29. The evidence JSON files remain dated historical snapshots, not continuous monitoring.
 
+## Processing architecture at a glance
+
+**Both execution modes are implemented.** An unattended worker polls for source changes and consumes durable jobs; authorized administrators can also trigger synchronization and process those same jobs through the API. Both use `packages/core/src/processor.ts` and the PostgreSQL job queue. The difference in the hackathon demo is **which execution mode is activated**, not which one exists.
+
+| Question | Precise answer | Inspect |
+| --- | --- | --- |
+| Is automatic polling implemented? | **Yes.** `SYNC_ENABLED=true` activates scheduled polling in the worker process | `apps/worker/src/worker.ts` |
+| Is on-demand processing implemented? | **Yes.** Admin-only actions enqueue/process the same durable pipeline | `packages/core/src/processor.ts`, admin routes |
+| Is unattended execution tested? | **Yes, in isolated fixture-adapter integration tests.** Not yet an unattended hosted Sheets end-to-end acceptance | `scripts/test-revocation-integration.ts`, worker tests |
+| Is a deployable worker container provided? | **Yes.** Separate Dockerfile and opt-in Compose service with restart policy | `Dockerfile.worker`, `compose.worker.yml` |
+| Is a worker continuously running in the current Vercel demo? | **No evidence of that, and it is not activated there.** The hosted demo currently uses admin-triggered processing | `docs/VERCEL.md`, `docs/SETUP_REMAINING.md` |
+| Is live unattended Sheets-to-Devnet completion established? | **Not yet.** Requires an authorized always-on host and recorded end-to-end acceptance | `docs/REVOCATION_AND_ACTIVATION.md` |
+
+A container definition proves deployability, **not** actual runtime uptime; an administrator-triggered demo proves the shared pipeline works, **not** continuous background operation. Neither limitation should be misread as absence of automatic synchronization code.
+
 ## Current engineering handoff
 
 PR #11 was merged to `main` as `b252dcc` with operator approval. The revocation-aware API, verifier and UI were deployed to Vercel; Supabase migrations `0005_revocation` and `0006_revocation_function_privileges` were applied through MCP. Existing 18 passports, 20 versions and 62 awards were preserved.
@@ -23,7 +38,7 @@ Use [the current plan](docs/NEXT_IMPLEMENTATION_PLAN.md) and [activation runbook
 | Capability | Code to inspect | Dated evidence / tests |
 | --- | --- | --- |
 | Google Sheets source synchronization and writeback | `packages/core/src/sheets.ts`, `packages/core/src/sync.ts` | `docs/evidence/live-sheets.json`, `packages/core/src/writeback.test.ts` |
-| Automatic polling and unattended jobs (available, not deployed) | `apps/worker/src/worker.ts`, `packages/core/src/jobs.ts` | `docs/WORKER.md`, `apps/worker/tests/worker.test.cjs` |
+| Automatic polling and unattended jobs (implemented, separately deployable; not active in Vercel) | `apps/worker/src/worker.ts`, `packages/core/src/jobs.ts`, `compose.worker.yml`, `Dockerfile.worker` | `docs/WORKER.md`, `apps/worker/tests/worker.test.cjs`, isolated lifecycle CI |
 | Shared admin-triggered and worker execution | `packages/core/src/processor.ts` | `docs/evidence/hosted-manual.json` |
 | BTU-style PDF rendering and exact-byte storage | `packages/core/src/pdf-btu.ts`, `packages/core/src/pdf.ts` | `docs/evidence/devnet-pipeline.json`, `packages/core/src/issuance.test.ts` |
 | Solana Devnet anchoring and independent verification | `packages/core/src/solana.ts`, public verification API | `docs/evidence/devnet-pipeline.json`, `docs/VERIFICATION.md` |
@@ -88,14 +103,15 @@ Check modified-PDF rejection, historical-version reporting, idempotent imports, 
 
 The demonstrator uses a **simulated BTU issuer on Solana Devnet**, not university-approved credentials or mainnet. It does not establish an authenticated university trust manifest or permanent Devnet archival guarantees. Capacity evidence is not proof that 5,000 on-chain issuances were completed.
 
-## Durable automation architecture and deployment scope
+## Shared job processing: unattended worker and administrator controls
 
-**The worker is implemented; the always-on worker is not hosted in the Vercel hackathon deployment.** The deployed demo runs administrator-triggered processing against the same persisted job pipeline.
+**Both modes exist and use the same durable pipeline.** The worker can be run as an independent daemon; the current Vercel demo instead runs administrator-triggered processing. The always-on worker is not currently hosted in that deployment.
 
 - `apps/worker/src/worker.ts`: optional unattended loop and periodic source polling, configured with `SYNC_ENABLED=true` and `SYNC_POLL_MS` (default 60,000 ms).
 - `packages/core/src/sync.ts`: source validation, transactional import and idempotent sync dispatch.
 - `packages/core/src/jobs.ts`: PostgreSQL `FOR UPDATE SKIP LOCKED` claims, expiring and renewable leases, ownership fencing, retry backoff.
 - `packages/core/src/processor.ts`: shared PDF → CHAIN → WRITEBACK stages for both the worker and authenticated admin-triggered HTTP processing. Signed chain attempts are persisted for finality recovery.
+- `Dockerfile.worker`, `compose.worker.yml`: opt-in Docker deployment of the implemented daemon with automatic restarts; existence does not establish a running production instance.
 - `docs/WORKER.md`, `docs/ADR-QUEUE.md`, `docs/VERCEL.md`: operational design and current deployment constraints.
 
 The Vercel deployment does not host a persistent daemon; the demo has `SYNC_ENABLED=false`. Unattended hosted operation requires separately deploying the worker and enabling polling. The five-stage hosted processing record in `docs/evidence/hosted-manual.json` establishes that the admin-triggered execution path completed a real demo issuance and writeback.

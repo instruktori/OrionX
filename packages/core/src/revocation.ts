@@ -52,7 +52,7 @@ export async function processRevocation(versionId: string, checkLease: () => Pro
   await prisma.$transaction(async tx => {
    await fence(tx, false);
    await tx.revocation.update({where: {id: request.id}, data: {state: "REVOKED", finalizedSlot: BigInt(proof.revocationEvidence!.revokedSlot), finalizedAt: new Date(Number(proof.revocationEvidence!.revokedUnix) * 1000), revocationPda: proof.revocationEvidence!.pda, lastError: null}});
-   await tx.auditEvent.create({data: {actorId: request.actorId, action: "REVOCATION_FINALIZED", targetId: versionId, detail: proof.revocationEvidence!}});
+   await tx.auditEvent.create({data: {actorId: request.actorId, action: proof.revocationEvidence!.reasonDigest === request.reasonDigest && proof.revocationEvidence!.actorDigest === request.actorDigest ? "REVOCATION_FINALIZED" : "REVOCATION_FINALIZED_EXTERNAL", targetId: versionId, detail: proof.revocationEvidence!}});
   });
   return;
  }

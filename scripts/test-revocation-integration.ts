@@ -33,9 +33,9 @@ async function main() {
   Object.assign(process.env,{DATABASE_URL:database.toString(),DIRECT_URL:database.toString(),NODE_ENV:"test",APP_ENV:"test",CHAIN_MODE:"local",SOURCE_MODE:"fixture",STORAGE_MODE:"local",ARTIFACT_DIRECTORY:resolve(temp,"pdfs"),SOLANA_RPC_URL:"http://127.0.0.1:18899",SOLANA_EXPECTED_GENESIS_HASH:await connection.getGenesisHash(),SOLANA_PROGRAM_ID:program.toBase58(),SOLANA_ISSUER_KEYPAIR_JSON:JSON.stringify([...issuer.secretKey]),ISSUER_TRUST_MODE:"DEMO",REVOCATION_ENABLED:"true",WORKER_POLL_MS:"200",WORKER_LEASE_MS:"5000",SYNC_ENABLED:"true",SYNC_POLL_MS:"1000",ORIONX_RESOURCE_ROOT:temp});
   delete process.env.SOLANA_EXPECTED_ISSUER;delete process.env.VERCEL;delete process.env.WORKER_HOSTED;
   const migrations=["0001_architecture","0002_proof_context","0003_student_workspace","0004_assessments","0005_revocation"];
-  const sql=await Promise.all(migrations.map(async m=>(await readFile(`packages/db/prisma/migrations/${m}/migration.sql`,"utf8")).replaceAll("public.",`"${schema}".`)));
+  const sql=await Promise.all(migrations.map(async m=>(await readFile(`packages/db/prisma/migrations/${m}/migration.sql`,"utf8")).replace("REVOKE EXECUTE ON FUNCTION public.rls_auto_enable() FROM PUBLIC, anon, authenticated;", "-- Supabase-only optional helper grant; routine is absent in disposable PostgreSQL.").replaceAll("public.",`"${schema}".`)));
   const roles="DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='anon') THEN CREATE ROLE anon; END IF; IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='authenticated') THEN CREATE ROLE authenticated; END IF; END $$;";
-  await writeFile(resolve(temp,"setup.sql"),roles+`CREATE SCHEMA "${schema}"; SET search_path TO "${schema}";\n`+sql.join("\n"));
+  await writeFile(resolve(temp,"setup.sql"),roles+`CREATE SCHEMA IF NOT EXISTS "${schema}"; SET search_path TO "${schema}";\n`+sql.join("\n"));
   const setup=spawnSync(process.execPath,["node_modules/prisma/build/index.js","db","execute","--schema","packages/db/prisma/schema.prisma","--file",resolve(temp,"setup.sql")],{env:process.env,stdio:"inherit"});if(setup.status!==0)throw Error("Isolated migrations failed");
   const {prisma}=await import("../packages/db/src");appDb=prisma;
   const {fixtureRows}=await import("../packages/core/src/fixtures");

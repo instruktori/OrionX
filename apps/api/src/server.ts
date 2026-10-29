@@ -996,6 +996,9 @@ class ApiController {
     return;
    }
 
+   const liveProof = await verifyDevnet(latest.code);
+   const latestSummary = summary(latest, passport.latestFinalizedVersion);
+   const studentLatest = liveProof.revocation === "REVOKED" ? {...latestSummary, isLatest: false, credentialStatus: "REVOKED", revocation: {state: "REVOKED", finalizedAt: liveProof.revocationEvidence ? new Date(Number(liveProof.revocationEvidence.revokedUnix) * 1000) : null, message: "This version was revoked. Contact the university for assistance."}} : liveProof.revocation === "VALID" ? latestSummary : {...latestSummary, isLatest: false, credentialStatus: latest.revocation?.state || "UNKNOWN"};
    const finalized = await prisma.version.count({where: {passportId: passport.id, finalizedSlot: {not: null}}});
    const awardCount = (latest.snapshot as unknown as Snapshot).awards.length;
    res.json({
@@ -1009,7 +1012,7 @@ class ApiController {
      passportId: passport.publicId,
      originalIssueDate: passport.initialIssueDate.toISOString().slice(0, 10),
      student: {firstName: passport.student.firstName, lastName: passport.student.lastName, program: passport.student.program, educationLevel: passport.student.educationLevel},
-     latest: summary(latest, passport.latestFinalizedVersion),
+     latest: studentLatest,
      pending: !!passport.activeVersionId,
    });
   }

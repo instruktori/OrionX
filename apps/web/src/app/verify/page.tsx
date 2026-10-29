@@ -165,6 +165,7 @@ export default function Verify() {
               ? t("verify.noProof")
               : t("verify.failed")),
           registration: data.registration,
+          revocation: data.revocation,
           integrity: data.integrity,
           issuerTrust: data.issuerTrust,
           currency: data.currency,

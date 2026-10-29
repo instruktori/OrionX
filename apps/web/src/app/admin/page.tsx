@@ -135,6 +135,7 @@ type PassportDetail = {
     storageKey: string | null;
     txSignature: string | null;
     versionPda: string | null;
+    revocation: {state: string; reason: string; actorId: string; requestedAt: string; finalizedAt: string | null; lastError: string | null; withdrawnRecords: string[]} | null;
     finalizedSlot: string | null;
     chainCluster: string | null;
     createdAt: string;
@@ -328,6 +329,10 @@ export default function Admin() {
   const [pageSize, setPageSize] = useState(25);
   const [selectedPassport, setSelectedPassport] =
     useState<PassportDetail | null>(null);
+  const [revokeTarget, setRevokeTarget] = useState<PassportDetail["versions"][number] | null>(null);
+  const [revokeReason, setRevokeReason] = useState("");
+  const [withdrawRecords, setWithdrawRecords] = useState<string[]>([]);
+  const [revoking, setRevoking] = useState(false);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [shareModal, setShareModal] = useState<{
     passportId: string;
@@ -521,6 +526,27 @@ export default function Admin() {
     }
   };
 
+  const submitRevocation = async () => {
+    if (!selectedPassport || !revokeTarget || !revokeReason.trim()) return;
+    setRevoking(true); setError("");
+    try {
+      const response = await fetch(`${API}/api/v1/admin/passports/${encodeURIComponent(selectedPassport.publicId)}/versions/${revokeTarget.number}/revoke`, {method: "POST", credentials: "include", headers: {"Content-Type": "application/json"}, body: JSON.stringify({reason: revokeReason, confirm: true, withdrawRecordIds: withdrawRecords})});
+      const result = await response.json();
+      if (!response.ok) throw Error(result.error?.message || "Revocation request failed");
+      setRevokeTarget(null); setRevokeReason(""); setWithdrawRecords([]);
+      setBannerSuccess("Revocation queued. Completion requires finalized on-chain confirmation.");
+      await inspectPassport(selectedPassport.publicId); await refreshAll();
+    } catch (e) { setError(e instanceof Error ? e.message : "Revocation failed"); }
+    finally { setRevoking(false); }
+  };
+  const correctPassport = async () => {
+    if (!selectedPassport) return;
+    const response = await fetch(`${API}/api/v1/admin/passports/${encodeURIComponent(selectedPassport.publicId)}/correct`, {method: "POST", credentials: "include", headers: {"Content-Type": "application/json"}, body: JSON.stringify({confirm: true})});
+    const result = await response.json();
+    if (!response.ok) throw Error(result.error?.message || "Correction failed");
+    setBannerSuccess(`Corrected version ${result.version} queued; withdrawn awards are excluded.`);
+    await inspectPassport(selectedPassport.publicId); await refreshAll();
+  };
   const processJobs = async () => {
     stopProcessing.current = false;
     setProcessing(true);
@@ -2311,7 +2337,7 @@ export default function Admin() {
                     </h3>
                     {selectedPassport.versions.map((ver) => {
                       const isLatest =
-                        ver.number === selectedPassport.latestFinalizedVersion;
+                        ver.number === selectedPassport.latestFinalizedVersion && !ver.revocation;
                       const isFinalized = Boolean(
                         ver.finalizedSlot && ver.storageKey,
                       );
@@ -2349,7 +2375,7 @@ export default function Admin() {
                                       : "pill-blue"
                                 }`}
                               >
-                                {isLatest
+                                {ver.revocation ? ver.revocation.state : isLatest
                                   ? t("admin.latestFinalized")
                                   : isFinalized
                                     ? "SUPERSEDED"
@@ -2357,7 +2383,9 @@ export default function Admin() {
                               </span>
                             </div>
                             <div className="page-actions">
-                              <button
+                              {isFinalized && (!ver.revocation || ver.revocation.state === "FAILED") && <button className="button secondary btn-sm" type="button" onClick={() => {setRevokeTarget(ver); setRevokeReason(ver.revocation?.reason || ""); setWithdrawRecords(ver.revocation?.withdrawnRecords || []);}}>{ver.revocation ? "Retry revocation" : "Revoke version"}</button>}
+                              {ver.revocation?.state === "REVOKED" && ver.number === selectedPassport.latestFinalizedVersion && <button className="button secondary btn-sm" type="button" onClick={() => setConfirmation({title: "Issue corrected passport", message: "Reserve a new version excluding withdrawn records. Original versions remain unchanged.", details: [{label: "Passport", value: selectedPassport.publicId}], label: "Queue corrected version", action: correctPassport})}>Issue correction</button>}
+                              {!ver.revocation && <button
                                 type="button"
                                 className="button secondary btn-sm"
                                 onClick={() =>
@@ -2371,7 +2399,7 @@ export default function Admin() {
                                 }
                               >
                                 <QrCode size={13} /> {t("admin.qrShare")}
-                              </button>
+                              </button>}
                               <Link
                                 className="button secondary btn-sm"
                                 href={`/verify?code=${encodeURIComponent(ver.code)}`}
@@ -2396,6 +2424,7 @@ export default function Admin() {
                             Code: {ver.code} · Pages: {ver.pageCount ?? "—"} ·
                             Awards: {ver.snapshot?.awards?.length ?? 0}
                           </div>
+                          {ver.revocation && <div className="notice" role="status"><strong>{ver.revocation.state}</strong> · Requested by {ver.revocation.actorId} at {ver.revocation.requestedAt}<p>{ver.revocation.reason}</p>{ver.revocation.finalizedAt && <p>Finalized: {ver.revocation.finalizedAt}</p>}{ver.revocation.lastError && <p>{ver.revocation.lastError}</p>}</div>}
                           {ver.pdfSha256 && (
                             <div
                               className="muted mono"
@@ -2468,6 +2497,14 @@ export default function Admin() {
           </>
         )}
       </Dialog>
+      {revokeTarget && <div className="modal-backdrop"><section className="card" role="dialog" aria-modal="true" aria-labelledby="revoke-title" style={{maxWidth: 560, padding: 24}}>
+        <h2 id="revoke-title">Revoke version {revokeTarget.number}</h2><p><code>{selectedPassport?.publicId}</code></p>
+        <p>This permanently invalidates this version on Solana. Its PDF and issuance history remain preserved. Revoking the latest version leaves no current valid credential until a new version is issued.</p>
+        <label>Reason (administrators only)<textarea autoFocus required maxLength={1000} value={revokeReason} disabled={!!revokeTarget.revocation} onChange={e => setRevokeReason(e.target.value)} /></label>
+        <p>For an incorrectly awarded skill, select the records to exclude from all future cumulative versions:</p>
+        {revokeTarget.snapshot.awards?.map(a => <label key={a.recordId} style={{display: "block"}}><input type="checkbox" checked={withdrawRecords.includes(a.recordId)} disabled={!!revokeTarget.revocation} onChange={e => setWithdrawRecords(old => e.target.checked ? [...old, a.recordId] : old.filter(id => id !== a.recordId))} /> {a.name} ({a.recordId})</label>)}
+        <div className="page-actions" style={{marginTop: 16}}><button type="button" className="button secondary" disabled={revoking} onClick={() => setRevokeTarget(null)}>Cancel</button><button type="button" className="button" disabled={revoking || !revokeReason.trim()} onClick={submitRevocation}>{revoking ? "Queuing…" : "Confirm revocation"}</button></div>
+      </section></div>}
     </Shell>
   );
 }

@@ -38,7 +38,7 @@ export default function PassportPage() {
         title={locale === "ka" ? toMtavruli(t("passport.heading")) : t("passport.heading")}
         description={issued ? t("passport.descriptionIssued") : t("passport.descriptionPending")}
       >
-        {issued && latest && (
+        {issued && latest && !selected?.revocation && (
           <a className="button secondary" href={issuedPdfUrl(selected?.version || latest.version, false)}>
             <Download size={15}/> {t("passport.downloadIssued")}
           </a>
@@ -80,6 +80,7 @@ export default function PassportPage() {
           </section>
         ) : (
           <>
+            {selected?.revocation && <div className="notice" role="alert"><strong>{selected.revocation.state === "REVOKED" ? "This passport version was revoked." : "This passport version is awaiting revocation."}</strong><p>{selected.revocation.message}</p>{!selected.revocation.finalizedAt ? null : <p>Finalized: {localeDate(locale, selected.revocation.finalizedAt)}</p>}<p>No older version is automatically promoted to current.</p></div>}
             {p?.pending && (
               <div className="notice" role="status">
                 {t("passport.pendingNewer")}
@@ -96,10 +97,10 @@ export default function PassportPage() {
                   </p>
                 </div>
                 <Badge tone={selected?.isLatest ? "success" : "neutral"}>
-                  {selected?.isLatest ? t("passport.latestFinalized") : t("passport.historical")}
+                  {selected?.revocation ? selected.revocation.state : selected?.isLatest ? t("passport.latestFinalized") : t("passport.historical")}
                 </Badge>
               </div>
-              <div className="passport-issued-only-actions">
+              {!selected?.revocation && <><div className="passport-issued-only-actions">
                 <a className="button secondary" href={issuedPdfUrl(selected?.version || latest.version, false)}>
                   <Download size={15}/> {t("passport.downloadExact")}
                 </a>
@@ -126,7 +127,7 @@ export default function PassportPage() {
                   </div>
                 </object>
               </div>
-              <p className="field-help">{t("passport.trustIntro")} <strong>{selected?.issuerTrust === "BTU_CONFIRMED" ? t("passport.btuConfirmed") : t("passport.demoIssuer")}</strong>.</p>
+              </>}<p className="field-help">{t("passport.trustIntro")} <strong>{selected?.issuerTrust === "BTU_CONFIRMED" ? t("passport.btuConfirmed") : t("passport.demoIssuer")}</strong>.</p>
             </section>
             {!!history.data?.length && history.data.length > 1 && (
               <section className="passport-issued-history" aria-labelledby="passport-versions-title">
@@ -144,6 +145,7 @@ export default function PassportPage() {
                       <FileBadge2 size={17}/>
                       <span>{t("common.version")} {version.version}</span>
                       <span className="muted">{version.finalizedAt ? localeDate(locale, version.finalizedAt) : t("common.finalized")}</span>
+                      {version.revocation && <Badge tone="warning">{version.revocation.state}</Badge>}
                       {version.isLatest && <Badge tone="success">{t("common.latest")}</Badge>}
                     </button>
                   ))}

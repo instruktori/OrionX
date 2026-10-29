@@ -46,6 +46,23 @@ pub mod passport_registry {
         emit!(VersionRegistered { registry: r.key(), record: v.key(), version: expected_version, code, hash, issuer: v.issuer, epoch: v.issuer_epoch, slot: clock.slot });
         Ok(())
     }
+    /// Append-only invalidation. Issuance records and registry pointers are never rewritten.
+    pub fn revoke_version(ctx: Context<RevokeVersion>, reason_digest: [u8; 32], actor_digest: [u8; 32]) -> Result<()> {
+        require!(reason_digest != [0; 32] && actor_digest != [0; 32], RegistryError::InvalidHash);
+        let clock = Clock::get()?;
+        let revocation = &mut ctx.accounts.revocation;
+        revocation.schema = SCHEMA;
+        revocation.record = ctx.accounts.record.key();
+        revocation.authority = ctx.accounts.authority.key();
+        revocation.authority_epoch = ctx.accounts.config.current_epoch;
+        revocation.reason_digest = reason_digest;
+        revocation.actor_digest = actor_digest;
+        revocation.revoked_unix = clock.unix_timestamp;
+        revocation.revoked_slot = clock.slot;
+        revocation.bump = ctx.bumps.revocation;
+        emit!(VersionRevoked { record: revocation.record, authority: revocation.authority, slot: clock.slot });
+        Ok(())
+    }
     pub fn rotate_issuer(ctx: Context<RotateIssuer>, attestation: [u8; 32]) -> Result<()> {
         let c = &mut ctx.accounts.config;
         let number = c.current_epoch.checked_add(1).ok_or(RegistryError::Overflow)?;
@@ -92,6 +109,28 @@ pub struct RegisterNextVersion<'info> {
     #[account(init, payer = issuer, space = 8 + VersionRecord::INIT_SPACE, seeds = [b"version", code.as_ref()], bump)] pub record: Account<'info, VersionRecord>,
     pub system_program: Program<'info, System>,
 }
+#[derive(Accounts)]
+pub struct RevokeVersion<'info> {
+    #[account(mut, constraint = authority.key() == config.current_authority || authority.key() == config.admin @ RegistryError::Unauthorized)]
+    pub authority: Signer<'info>,
+    #[account(seeds = [b"issuer"], bump = config.bump, constraint = config.schema == SCHEMA @ RegistryError::InvalidSchema)]
+    pub config: Account<'info, IssuerConfig>,
+    #[account(seeds = [b"passport", config.key().as_ref(), &registry.opaque_ref], bump = registry.bump, constraint = registry.config == config.key())]
+    pub registry: Account<'info, PassportRegistry>,
+    #[account(seeds = [b"version", record.code.as_ref()], bump = record.bump, constraint = record.registry == registry.key(), constraint = record.schema == SCHEMA @ RegistryError::InvalidSchema)]
+    pub record: Account<'info, VersionRecord>,
+    #[account(init, payer = authority, space = 8 + RevocationRecord::INIT_SPACE, seeds = [b"revocation", record.key().as_ref()], bump)]
+    pub revocation: Account<'info, RevocationRecord>,
+    pub system_program: Program<'info, System>,
+}
+#[account]
+#[derive(InitSpace)]
+pub struct RevocationRecord {
+    pub schema: u8, pub record: Pubkey, pub authority: Pubkey, pub authority_epoch: u32,
+    pub reason_digest: [u8;32], pub actor_digest: [u8;32],
+    pub revoked_unix: i64, pub revoked_slot: u64, pub bump: u8,
+}
+#[event] pub struct VersionRevoked { pub record: Pubkey, pub authority: Pubkey, pub slot: u64 }
 #[derive(Accounts)]
 pub struct RotateIssuer<'info> {
     #[account(mut, address = config.admin @ RegistryError::Unauthorized)] pub admin: Signer<'info>,
@@ -142,6 +181,7 @@ mod tests {
         assert_eq!(8 + IssuerEpoch::INIT_SPACE, 126);
         assert_eq!(8 + PassportRegistry::INIT_SPACE, 110);
         assert_eq!(8 + VersionRecord::INIT_SPACE, 182);
+        assert_eq!(8 + RevocationRecord::INIT_SPACE, 158);
     }
     #[test] fn version_bytes_round_trip_with_discriminator() {
         let v = VersionRecord {schema: SCHEMA, registry: Pubkey::new_unique(), version: 1, code: [7;20], pdf_sha256: [9;32], issuer: Pubkey::new_unique(), issuer_epoch: 1, previous_record: Pubkey::default(), registered_unix: 1000, registered_slot: 50, bump: 255};

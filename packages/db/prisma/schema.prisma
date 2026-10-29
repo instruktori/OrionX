@@ -72,6 +72,7 @@ model Award {
   firstIncludedVersion Int?
   versions             VersionAward[]
   createdAt            DateTime       @default(now())
+  withdrawal           AwardWithdrawal?
 }
 
 model Version {
@@ -102,6 +103,7 @@ model Version {
   writebacks       SheetWriteback[]
   createdAt        DateTime         @default(now())
   jobs             Job[]
+  revocation       Revocation?
 
   @@unique([passportId, number])
   @@unique([passportId, intentDigest])
@@ -266,4 +268,44 @@ model SheetWriteback {
 
   @@unique([recordId, versionId])
   @@index([state])
+}
+
+/// Private reason and actor never appear in public/student DTOs.
+model Revocation {
+  id               String   @id @default(cuid())
+  versionId        String   @unique
+  version          Version  @relation(fields: [versionId], references: [id])
+  state            String   @default("PENDING")
+  reason           String
+  actorId          String
+  withdrawnRecords String[] @default([])
+  nonce            String
+  reasonDigest     String
+  actorDigest      String
+  requestedAt      DateTime @default(now())
+  finalizedAt      DateTime?
+  finalizedSlot    BigInt?
+  revocationPda    String?
+  lastError        String?
+  attempts         RevocationAttempt[]
+}
+model RevocationAttempt {
+  id                   String   @id @default(cuid())
+  revocationId         String
+  revocation           Revocation @relation(fields: [revocationId], references: [id])
+  signature            String   @unique
+  transactionBytes     String
+  blockhash            String
+  lastValidBlockHeight BigInt
+  state                String   @default("SIGNED")
+  createdAt            DateTime @default(now())
+  @@index([revocationId, createdAt])
+}
+/// Explicit withdrawal affects future snapshots only; original Award is immutable.
+model AwardWithdrawal {
+  awardId      String   @id
+  award        Award    @relation(fields: [awardId], references: [id])
+  actorId      String
+  reason       String
+  createdAt    DateTime @default(now())
 }

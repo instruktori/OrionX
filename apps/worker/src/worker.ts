@@ -10,6 +10,11 @@ async function sleep(ms: number) { try { await delay(ms, undefined, {signal: shu
 async function run() {
  if (!process.env.DATABASE_URL) throw Error("DATABASE_URL is required to run the PDF worker");
  if (process.env.VERCEL_REGION && process.env.STORAGE_MODE !== "supabase") throw Error("Vercel workers require durable storage: set STORAGE_MODE=supabase");
+ if (process.env.WORKER_HOSTED === "true") {
+  if (process.env.STORAGE_MODE !== "supabase") throw Error("Hosted automation requires existing durable Supabase storage");
+  if (process.env.SYNC_ENABLED !== "true" || process.env.SOURCE_MODE !== "sheets") throw Error("Hosted automation requires explicit Sheets polling activation");
+  if (process.env.CHAIN_MODE !== "devnet") throw Error("Hosted automation requires pinned Devnet issuance configuration");
+ }
  artifactStore();
  const processor = createJobProcessor(), syncPollMs = positiveInteger("SYNC_POLL_MS", 60000);
  console.log("OrionX PDF worker started", processor.workerId);

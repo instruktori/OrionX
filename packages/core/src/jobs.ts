@@ -48,7 +48,7 @@ export async function claimJob(db:PrismaClient,schema:string,owner:string,leaseM
  const table=Prisma.raw('"'+schema+'"."Job"');
  const rows=await db.$queryRaw<Array<{id:string}>>(Prisma.sql`
  WITH candidate AS (
- SELECT id FROM ${table} WHERE ((state IN ('QUEUED','RETRY_WAIT') AND "availableAt"<=NOW()) OR (state='RENDERED' AND "leaseUntil"<NOW())) AND type IN ('ISSUE','SYNC')
+ SELECT id FROM ${table} WHERE ((state IN ('QUEUED','RETRY_WAIT') AND "availableAt"<=NOW()) OR (state='RENDERED' AND "leaseUntil"<NOW())) AND type IN ('ISSUE','SYNC','REVOKE')
  ORDER BY "createdAt" FOR UPDATE SKIP LOCKED LIMIT 1)
  UPDATE ${table} AS job SET state='RENDERED', "leaseOwner"=${owner}, "leaseUntil"=NOW()+${leaseMs}*INTERVAL '1 millisecond', "updatedAt"=NOW()
  FROM candidate WHERE job.id=candidate.id RETURNING job.id`);

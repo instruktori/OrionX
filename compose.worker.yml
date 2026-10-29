@@ -1,0 +1,18 @@
+# Explicit operator opt-in. Connects to the existing database and storage; creates neither.
+services:
+  worker:
+    profiles: [automation]
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    env_file: .env.worker
+    environment:
+      WORKER_HOSTED: 'true'
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 150s
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true

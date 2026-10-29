@@ -1,0 +1,10 @@
+{
+  "network": "devnet",
+  "programId": "9q3EFytGCsR2hk5FnerXxMWomC2yCajpx78durY91JPa",
+  "issuer": "DoBPRwB5HkE6Hu3J6khzwdZhH6nSrrHmiuwx68wrdJWt",
+  "source": "Existing approved synthetic BTU hackathon demo; byte artifacts fetched read-only on 2026-10-29",
+  "current": {"code": "D1-BA4V45SHOBSRMOBTFYDFU7M4LUFOELZR", "pdf": "current.pdf", "sha256": "05600d807e05027040b607fde5b59aff13db3887387e973720d22ef274885371", "version": 3},
+  "historical": {"code": "D1-X5POOCLB2IIGHTO6MZKMFCTVDOGDJWP4", "pdf": "historical.pdf", "sha256": "c5887c4c56416ddb4bcdf14df0154cac5fdacefd52efd19121118c97464a1280", "version": 2},
+  "revoked": null,
+  "revokedFixtureBlocker": "Requires approval for the additive Devnet program upgrade and issuance/revocation of an isolated synthetic fixture. Never revoke an existing shared demo fixture just to satisfy CI."
+}

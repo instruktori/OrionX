@@ -1,0 +1,50 @@
+name: Isolated revocation lifecycle
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  local-chain-postgres:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: orionx
+          POSTGRES_PASSWORD: isolated_ci_only
+          POSTGRES_DB: orionx
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U orionx"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://orionx:isolated_ci_only@127.0.0.1:5432/orionx
+      DIRECT_URL: postgresql://orionx:isolated_ci_only@127.0.0.1:5432/orionx
+      ORIONX_ISOLATED_TEST: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run db:generate
+      - name: Install pinned Agave tools for loopback validator only
+        run: |
+          curl --fail --location --retry 3 https://github.com/anza-xyz/agave/releases/download/v4.4.0/solana-release-x86_64-unknown-linux-gnu.tar.bz2 -o "$RUNNER_TEMP/agave.tar.bz2"
+          echo "3363f4728fe786ac7036e342a20df928aa2e3e43f807fbdce67814840538c574  $RUNNER_TEMP/agave.tar.bz2" | sha256sum --check
+          tar -xjf "$RUNNER_TEMP/agave.tar.bz2" -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/solana-release/bin" >> "$GITHUB_PATH"
+      - name: Compile and test Rust account serialization
+        run: cargo test --locked
+      - name: Exercise real isolated SBF and PostgreSQL lifecycle
+        run: npm run test:revocation:integration
+      - name: State trust boundary
+        if: always()
+        run: echo 'This suite generates disposable local signing keys and uses a loopback validator and disposable PostgreSQL schema. It cannot write to Devnet. Hosted Google Sheets activation is a separate authorized check.' >> "$GITHUB_STEP_SUMMARY"

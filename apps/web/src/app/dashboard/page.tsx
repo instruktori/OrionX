@@ -38,10 +38,11 @@ export default function Dashboard() {
     eligible,
   );
   const p = passport.data;
-  const awards = versions.data?.[0]?.awards || [];
+  const awards = p?.latest?.revocation ? [] : versions.data?.[0]?.awards || [];
   const name = p?.student?.firstName || session?.email?.split("@")[0];
   return (
     <Shell>
+      {p?.latest?.revocation && <div className="notice" role="alert">Passport version {p.latest.version}: {p.latest.revocation.state}. Contact the university for a corrected credential.</div>}
       <PageHeading
         eyebrow={t("dashboard.eyebrow")}
         title={name ? t("dashboard.welcome", {name}) : t("dashboard.title")}

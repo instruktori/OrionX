@@ -290,7 +290,7 @@ export async function synchronize(key: string = randomUUID(), actorId = "worker"
       const current = await tx.importRun.findUniqueOrThrow({where: {id: run.id}});
       if (!["QUEUED", "RUNNING"].includes(current.state)) return current;
       const totals = {students: 0, awards: rows.length, newAwards: 0, queued: 0, writebacksQueued: 0, conflicts: 0, pendingSource: rows.filter(r => r.syncStatus === "NOT SYNCED").length, simulatedSource: rows.filter(r => r.syncStatus === "SYNCED").length};
-      const savedStudents = await tx.student.findMany({where: {externalId: {in: rows.map(r => r.student.studentId)}}, include: {passport: true, awards: true}});
+      const savedStudents = await tx.student.findMany({where: {externalId: {in: rows.map(r => r.student.studentId)}}, include: {passport: true, awards: {include: {withdrawal: true}}}});
       const studentMap = new Map(savedStudents.map(s => [s.externalId, s]));
       const awardOwners = new Map((await tx.award.findMany({where: {sourceRecordId: {in: rows.map(r => r.award.recordId)}}, select: {sourceRecordId: true, studentId: true}})).map(a => [a.sourceRecordId, a.studentId]));
       const savedSyncs = new Map((await tx.sourceSync.findMany({where: {sourceRecordId: {in: rows.map(r => r.award.recordId)}}})).map(r => [r.sourceRecordId, r]));
@@ -314,6 +314,7 @@ export async function synchronize(key: string = randomUUID(), actorId = "worker"
         if (existing) {
           if (existing.firstName !== input.firstName || existing.lastName !== input.lastName || (input.passportId && existing.passport?.publicId !== input.passportId) || (input.initialIssueDate && existing.passport?.initialIssueDate.toISOString().slice(0, 10) !== input.initialIssueDate)) problem = "Immutable passport identity changed";
           for (const prior of existing.awards) {
+            if (prior.withdrawal) continue;
             const row = group.find(r => r.award.recordId === prior.sourceRecordId);
             if (!row) problem = "Historical award removed: " + prior.sourceRecordId;
             else if (awardFingerprint(row.award) !== prior.sourceFingerprint) problem = "Historical award changed: " + prior.sourceRecordId;
@@ -344,8 +345,12 @@ export async function synchronize(key: string = randomUUID(), actorId = "worker"
         }
         totals.students++;
         if (passport.activeVersionId) continue;
+        if (await tx.revocation.count({where: {version: {passportId: passport.id}, state: {not: "REVOKED"}}})) continue;
+        const withdrawn = new Set((existing?.awards || []).filter(a => a.withdrawal).map(a => a.sourceRecordId));
+        const eligible = group.filter(row => !withdrawn.has(row.award.recordId));
+        if (!eligible.length) continue;
         const identity: Student = {...input, passportId: passport.publicId, initialIssueDate: passport.initialIssueDate.toISOString().slice(0, 10)};
-        const code = newCode(), frozen = snapshot(identity, group.map(r => r.award), passport.nextVersion, code);
+        const code = newCode(), frozen = snapshot(identity, eligible.map(r => r.award), passport.nextVersion, code);
         frozen.sourceFingerprints = Object.fromEntries(group.map(row => [row.award.recordId, inputFingerprint(row)]));
         const intentDigest = sha256(Buffer.from(JSON.stringify(frozen.awards)));
         if (await tx.version.findUnique({where: {passportId_intentDigest: {passportId: passport.id, intentDigest}}})) continue;

@@ -7,6 +7,8 @@ export type Award = {
   badgeCode: string;
 };
 export type PassportVersion = {
+  revocation?: {state: string; finalizedAt: string | null; message: string} | null;
+  credentialStatus?: string;
   version: number;
   state: string;
   verificationCode: string;

@@ -30,6 +30,7 @@ import {supabaseAuthServiceConfig} from "@orionx/core/src/config";
 import {createJobProcessor} from "@orionx/core/src/processor";
 import {z} from "zod";
 import multer from "multer";
+import {requestRevocation, requestCorrection} from "@orionx/core/src/revocation";
 import {publicPassport} from "./public-passport";
 
 const cookie = (req: Request, key: string) =>
@@ -89,7 +90,7 @@ function isOriginAllowed(req: Request, origin: string): boolean {
 }
 
 const summary = (
-  v: {number: number; state: string; code: string; pageCount: number | null; createdAt: Date; finalizedAt: Date | null; snapshot: unknown; chainCluster?: string | null},
+  v: {number: number; state: string; code: string; pageCount: number | null; createdAt: Date; finalizedAt: Date | null; snapshot: unknown; chainCluster?: string | null; revocation?: {state: string; finalizedAt: Date | null} | null},
   latest: number,
 ) => ({
   version: v.number,
@@ -98,7 +99,9 @@ const summary = (
   pageCount: v.pageCount,
   createdAt: v.createdAt,
   finalizedAt: v.finalizedAt,
-  isLatest: v.number === latest,
+  isLatest: v.number === latest && !v.revocation,
+  credentialStatus: v.revocation?.state || (v.number === latest ? "VALID" : "SUPERSEDED"),
+  revocation: v.revocation ? {state: v.revocation.state, finalizedAt: v.revocation.finalizedAt, message: "This version is not available as a valid credential. Contact the university for assistance."} : null,
   originalIssueDate: (v.snapshot as Snapshot).student.initialIssueDate,
   skillAwardCount: (v.snapshot as Snapshot).awards.length,
   issuerTrust: "DEMO",
@@ -789,6 +792,7 @@ class ApiController {
           include: {
             jobs: {orderBy: {createdAt: "desc"}},
             writebacks: true,
+            revocation: true,
           },
         },
       },
@@ -816,6 +820,20 @@ class ApiController {
     });
   }
 
+  @Post("admin/passports/:id/versions/:version/revoke")
+  async revokeVersion(@Req() req: Request, @Param("id") id: string, @Param("version") number: string, @Body() input: unknown) {
+    const user = await admin(req);
+    const parsed = z.object({reason: z.string().trim().min(1).max(1000), confirm: z.literal(true), withdrawRecordIds: z.array(z.string().min(1)).max(100).default([])}).safeParse(input);
+    if (!parsed.success || !/^[1-9]\d{0,8}$/.test(number)) throw new DomainError("INVALID_REQUEST", "Explicit confirmation, version and reason are required", 400);
+    return safeJSON(await requestRevocation(user, id, Number(number), parsed.data.reason, parsed.data.withdrawRecordIds));
+  }
+  @Post("admin/passports/:id/correct")
+  async correctPassport(@Req() req: Request, @Param("id") id: string, @Body() input: unknown) {
+    const user = await admin(req);
+    if (!z.object({confirm: z.literal(true)}).safeParse(input).success) throw new DomainError("INVALID_REQUEST", "Explicit confirmation required", 400);
+    const version = await requestCorrection(user, id);
+    return {version: version.number, state: version.state};
+  }
   @Get("admin/passports/:id/versions")
   async versions(@Req() req: Request, @Param("id") id: string) {
     await admin(req);
@@ -824,7 +842,7 @@ class ApiController {
         where: {passport: {OR: [{publicId: id}, {id}]}},
         take: 200,
         orderBy: {number: "desc"},
-        include: {jobs: true, writebacks: true},
+        include: {jobs: true, writebacks: true, revocation: true},
       }),
     );
   }
@@ -937,6 +955,7 @@ class ApiController {
    const changed = await tx.job.updateMany({where: {id, state: {in: ["FAILED_PERMANENT", "RETRY_WAIT", "STORED"]}}, data: {state: "QUEUED", attempts: 0, availableAt: new Date(), leaseOwner: null, leaseUntil: null, lastError: null}});
    if (changed.count !== 1) throw new DomainError("NOT_RETRYABLE", "Job requires conflict resolution or is already active", 409);
    const job = await tx.job.findUniqueOrThrow({where: {id}});
+   if (job.type === "REVOKE" && job.versionId) await tx.revocation.updateMany({where: {versionId: job.versionId, state: "FAILED"}, data: {state: "PENDING", lastError: null}});
    await tx.auditEvent.create({data: {actorId: user.subject, action: "JOB_RETRIED", targetId: id, detail: {stage: job.stage}}});
   }); return {ok: true};
  }
@@ -954,7 +973,7 @@ class ApiController {
    // A reserved database passport/ID is NOT an issued credential. Only a
    // stored, blockchain-finalized PDF version may unlock the student view.
    const latest = passport && passport.latestFinalizedVersion > 0
-     ? await prisma.version.findUnique({where: {passportId_number: {passportId: passport.id, number: passport.latestFinalizedVersion}}})
+     ? await prisma.version.findUnique({where: {passportId_number: {passportId: passport.id, number: passport.latestFinalizedVersion}}, include: {revocation: true}})
      : null;
    const issued = !!passport && !!latest?.finalizedSlot && !!latest.storageKey && !!latest.pdfSha256;
    if (!issued || !passport || !latest) {
@@ -981,7 +1000,7 @@ class ApiController {
    const awardCount = (latest.snapshot as unknown as Snapshot).awards.length;
    res.json({
      official: true,
-     status: "ISSUED",
+     status: latest.revocation ? latest.revocation.state === "REVOKED" ? "REVOKED" : "REVOCATION_PENDING" : "ISSUED",
      workspaceId: null,
      verification: user.verification,
      universityVerified: true,
@@ -998,7 +1017,7 @@ class ApiController {
    const {passport} = await this.ownPassport(req);
    res.setHeader("Cache-Control", "no-store");
    if (!passport) { res.json([]); return; }
-   const versions = await prisma.version.findMany({where: {passportId: passport.id, finalizedSlot: {not: null}}, take: 100, orderBy: {number: "desc"}});
+   const versions = await prisma.version.findMany({where: {passportId: passport.id, finalizedSlot: {not: null}}, take: 100, orderBy: {number: "desc"}, include: {revocation: true}});
    res.json(versions.map(v => ({...summary(v, passport.latestFinalizedVersion), awards: (v.snapshot as unknown as Snapshot).awards})));
   }
  @Get("me/passport/versions/:version/download") async download(
@@ -1009,10 +1028,13 @@ class ApiController {
   const {passport} = await this.ownPassport(req);
   if (!passport || passport.latestFinalizedVersion < 1) throw new DomainError("NOT_FOUND", "Issued version not found", 404);
   if (!/^[1-9]\d{0,8}$/.test(number)) throw new DomainError("INVALID_REQUEST", "Invalid version", 400);
-  const version = await prisma.version.findUnique({where: {passportId_number: {passportId: passport.id, number: Number(number)}}});
+  const version = await prisma.version.findUnique({where: {passportId_number: {passportId: passport.id, number: Number(number)}}, include: {revocation: true}});
   if (!version?.finalizedSlot || !version.storageKey || !version.pdfSha256 || version.number > passport.latestFinalizedVersion) {
     throw new DomainError("NOT_FOUND", "Issued version not found", 404);
   }
+  if (version.revocation) throw new DomainError("CREDENTIAL_REVOKED", "This version is revoked or awaiting revocation; contact the university", 409);
+  const proof = await verifyDevnet(version.code);
+  if (proof.revocation !== "VALID" || proof.registration !== "REGISTERED") throw new DomainError(proof.errorCode || "PROOF_UNAVAILABLE", proof.message, proof.revocation === "REVOKED" ? 409 : 503);
   const bytes = await artifactStore().get(version.storageKey);
   if (sha256(bytes) !== version.pdfSha256) throw new DomainError("ARTIFACT_CORRUPTED", "Stored document failed integrity validation", 503);
   res.setHeader("Cache-Control", "private, no-store");
@@ -1024,14 +1046,14 @@ class ApiController {
  @Get("verify/:code/original") async original(@Param("code") code: string, @Res() res: Response) {
   const {result} = await publicPassport(code);
   res.setHeader("Cache-Control", "no-store");
-  const status = result.integrity === "MISMATCH" ? 422 : result.registration === "REGISTERED" ? 200 : result.errorCode === "UNKNOWN_CODE" ? 404 : 503;
+  const status = result.revocation === "REVOKED" ? 409 : result.integrity === "MISMATCH" ? 422 : result.registration === "REGISTERED" ? 200 : result.errorCode === "UNKNOWN_CODE" ? 404 : 503;
   res.status(status).json(result);
  }
  @Get("verify/:code/document") async publicDocument(@Param("code") code: string, @Query("download") download: string | undefined, @Res() res: Response) {
   const {bytes, result} = await publicPassport(code);
   res.setHeader("Cache-Control", "no-store");
   if (!bytes) {
-   const status = result.integrity === "MISMATCH" ? 422 : result.errorCode === "UNKNOWN_CODE" || result.original.errorCode === "ORIGINAL_NOT_FOUND" ? 404 : 503;
+   const status = result.revocation === "REVOKED" ? 409 : result.integrity === "MISMATCH" ? 422 : result.errorCode === "UNKNOWN_CODE" || result.original.errorCode === "ORIGINAL_NOT_FOUND" ? 404 : 503;
    res.status(status).json(result); return;
   }
   res.setHeader("Content-Type", "application/pdf");

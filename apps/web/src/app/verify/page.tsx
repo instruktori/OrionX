@@ -36,6 +36,7 @@ type Result = {
   message: string;
   errorCode?: string;
   unavailable?: boolean;
+  revocation?: string;
   registration?: string;
   integrity?: string;
   issuerTrust?: string;
@@ -427,9 +428,10 @@ export default function Verify() {
     }
   };
 
+  const isRevoked = result?.revocation === "REVOKED";
   const isTampered = result?.integrity === "MISMATCH";
   const isRegistered = result?.registration === "REGISTERED";
-  const isMatched = isRegistered && result?.integrity === "MATCH";
+  const isMatched = !isRevoked && isRegistered && result?.integrity === "MATCH";
   const isUnavailable =
     result?.unavailable || result?.registration === "UNAVAILABLE";
 
@@ -786,7 +788,7 @@ export default function Verify() {
           <section
             ref={resultRef}
             className={`result-panel ${
-              isTampered
+              isRevoked || isTampered
                 ? "result-panel-crimson"
                 : isUnavailable
                   ? "result-panel-blue"
@@ -802,7 +804,7 @@ export default function Verify() {
               style={{ justifyContent: "space-between", marginBottom: 10 }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                {isTampered || !isRegistered ? (
+                {isRevoked || isTampered || !isRegistered ? (
                   <AlertTriangle size={22} color="var(--crimson)" />
                 ) : isMatched ? (
                   <CheckCircle2 size={22} color="var(--cyan)" />
@@ -810,7 +812,7 @@ export default function Verify() {
                   <AlertCircle size={22} color="var(--primary)" />
                 )}
                 <strong style={{ fontSize: 16 }}>
-                  {isUnavailable
+                  {isRevoked ? "REVOKED — no longer a valid credential" : isUnavailable
                     ? t("verify.temporarily")
                     : isTampered
                       ? result.documentSource === "stored-original" ? t("verify.storedMismatch") : t("verify.uploadMismatch")
@@ -893,7 +895,7 @@ export default function Verify() {
                     result.currency === "LATEST" ? "pill-blue" : "pill-pink"
                   }`}
                 >
-                  Version: {result.currency}
+                  Version: {isRevoked ? "REVOKED" : result.currency}
                 </span>
               )}
               {result.issuerTrust && (
@@ -943,9 +945,9 @@ export default function Verify() {
 
                 <div className="proof-pillar-card">
                   <span className="mini-kicker">{t("verify.currency")}</span>
-                  <strong>{result.currency || "UNKNOWN"}</strong>
+                  <strong>{isRevoked ? "REVOKED" : result.currency || "UNKNOWN"}</strong>
                   <p className="muted">
-                    {result.currency === "LATEST"
+                    {isRevoked ? "This version is invalidated. The original PDF bytes may still match. An older version is not promoted to current." : result.currency === "LATEST"
                       ? t("verify.current")
                       : result.currency === "SUPERSEDED"
                         ? t("verify.historical")

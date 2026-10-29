@@ -29,6 +29,9 @@ async function main() {
   validator.stdout?.on("data",b=>validatorLog+=b);validator.stderr?.on("data",b=>validatorLog+=b);
   const connection=new Connection("http://127.0.0.1:18899","finalized");
   await wait(async()=>{if(validator?.exitCode != null)throw Error("Validator exited: "+validatorLog);try{return !!await connection.getGenesisHash();}catch{return false;}},"local validator",60000);
+  console.log("Local validator ready");
+  const confirm = async (signature:string) => wait(async()=>{const status=(await connection.getSignatureStatuses([signature],{searchTransactionHistory:true})).value[0];if(status?.err)throw Error("Transaction failed: "+JSON.stringify(status.err));return status?.confirmationStatus === "finalized";},"transaction finality",60000);
+  const send = async (transaction:Transaction,keys:Keypair[]) => {const block=await connection.getLatestBlockhash("finalized");transaction.recentBlockhash=block.blockhash;transaction.feePayer=keys[0].publicKey;transaction.sign(...keys);const signature=await connection.sendRawTransaction(transaction.serialize());await confirm(signature);return signature;};
   const database=new URL(configured);database.searchParams.set("schema",schema);
   Object.assign(process.env,{DATABASE_URL:database.toString(),DIRECT_URL:database.toString(),NODE_ENV:"test",APP_ENV:"test",CHAIN_MODE:"local",SOURCE_MODE:"fixture",STORAGE_MODE:"local",ARTIFACT_DIRECTORY:resolve(temp,"pdfs"),SOLANA_RPC_URL:"http://127.0.0.1:18899",SOLANA_EXPECTED_GENESIS_HASH:await connection.getGenesisHash(),SOLANA_PROGRAM_ID:program.toBase58(),SOLANA_ISSUER_KEYPAIR_JSON:JSON.stringify([...issuer.secretKey]),ISSUER_TRUST_MODE:"DEMO",REVOCATION_ENABLED:"true",WORKER_POLL_MS:"200",WORKER_LEASE_MS:"5000",SYNC_ENABLED:"true",SYNC_POLL_MS:"1000",ORIONX_RESOURCE_ROOT:temp});
   delete process.env.SOLANA_EXPECTED_ISSUER;delete process.env.VERCEL;delete process.env.WORKER_HOSTED;
@@ -49,16 +52,20 @@ async function main() {
   const all=(await readFile("fixtures/awards.csv","utf8")).trim().split("\n"),header=all[0];
   const initial=all.slice(1).filter(l=>l.split(",")[2]==="BTU-T-0001").slice(0,2);
   await writeFile(resolve(temp,"fixtures/awards.csv"),[header,...initial].join("\n")+"\n");
-  for(const who of [admin,issuer,attacker]) {const sig=await connection.requestAirdrop(who.publicKey,5e9);await connection.confirmTransaction(sig,"finalized");}
+  for(const who of [admin,issuer,attacker]) {const sig=await connection.requestAirdrop(who.publicKey,5e9);await confirm(sig);}
   const ro=(pubkey:PublicKey)=>({pubkey,isSigner:false,isWritable:false}),rw=(pubkey:PublicKey)=>({...ro(pubkey),isWritable:true});
   const init=new TransactionInstruction({programId:program,keys:[{pubkey:admin.publicKey,isSigner:true,isWritable:true},rw(configAddress(program)[0]),rw(epochAddress(program,configAddress(program)[0],1)[0]),ro(SystemProgram.programId)],data:Buffer.concat([discriminator("global","initialize_issuer"),issuer.publicKey.toBuffer(),Buffer.alloc(32)])});
-  await sendAndConfirmTransaction(connection,new Transaction().add(init),[admin],{commitment:"finalized"});
+  await send(new Transaction().add(init),[admin]);
+  console.log("Isolated issuer initialized");
   const startWorker=()=>{const p=spawn(process.execPath,["--import","tsx","apps/worker/src/worker.ts"],{env:process.env,stdio:["ignore","pipe","pipe"]});p.stderr?.on("data",b=>validatorLog+=b);return p;};
+  console.log("Starting unattended worker on the synthetic fixture source");
   worker=startWorker();
   await wait(async()=>await prisma.version.count({where:{number:1,state:"COMPLETED"}})===1,"automatic initial issuance");
+  console.log("Automatic V1 finalized");
   const added=initial[0].split(",");added[0]="100";added[1]="ISOLATED-NEW-AWARD";added[5]="NOT SYNCED";added[6]="";added[7]="";
   await writeFile(resolve(temp,"fixtures/awards.csv"),[header,...initial,added.join(",")].join("\n")+"\n");
   await wait(async()=>await prisma.version.count({where:{number:2,state:"COMPLETED"}})===1,"automatic source change issuance");
+  console.log("Automatic V2 finalized");
   worker.kill("SIGTERM");await new Promise(r=>worker!.once("exit",r));worker=undefined;
   assert.equal(await prisma.version.count(),2);
   const v1=await prisma.version.findFirstOrThrow({where:{number:1}}),v2=await prisma.version.findFirstOrThrow({where:{number:2}});
@@ -67,7 +74,7 @@ async function main() {
   const user={subject:"isolated-admin",provider:"test",role:"admin" as const,verification:"ADMIN" as const};
   await assert.rejects(()=>requestRevocation({...user,role:"student"},v2.passportId,2,"wrong award"));
   const unauthorized=new TransactionInstruction({programId:program,keys:[{pubkey:attacker.publicKey,isSigner:true,isWritable:true},ro(configAddress(program)[0]),ro(new PublicKey((await verifyDevnet(v2.code)).chainEvidence!.registryPda)),ro(new PublicKey(v2.versionPda!)),rw(revocationAddress(program,new PublicKey(v2.versionPda!))[0]),ro(SystemProgram.programId)],data:Buffer.concat([discriminator("global","revoke_version"),Buffer.alloc(32,1),Buffer.alloc(32,2)])});
-  await assert.rejects(()=>sendAndConfirmTransaction(connection,new Transaction().add(unauthorized),[attacker],{commitment:"finalized"}));
+  await assert.rejects(()=>send(new Transaction().add(unauthorized),[attacker]));
   const requests=await Promise.all([1,2].map(()=>requestRevocation(user,v2.passportId,2,"incorrect award",["ISOLATED-NEW-AWARD"])));assert.equal(requests[0].id,requests[1].id);assert.equal(await prisma.revocation.count(),1);
   await assert.rejects(()=>requestRevocation(user,v2.passportId,2,"conflicting reason"));
   const processor=createJobProcessor();

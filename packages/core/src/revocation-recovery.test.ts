@@ -15,6 +15,7 @@ beforeEach(()=>{
  vi.mocked(verifyDevnet).mockResolvedValue(valid as never);vi.mocked(signRevocation).mockResolvedValue(attempt);vi.mocked(broadcast).mockResolvedValue(undefined);vi.mocked(attemptStatus).mockResolvedValue("PENDING");
  vi.spyOn(prisma.revocation,"findUniqueOrThrow").mockResolvedValue(request as never);vi.spyOn(prisma.revocationAttempt,"findFirst").mockResolvedValue(null);
  tx={revocation:{update:vi.fn()},revocationAttempt:{create:vi.fn().mockResolvedValue(attempt),update:vi.fn()},auditEvent:{create:vi.fn()}};
+ vi.spyOn(prisma.revocationAttempt,"update").mockImplementation(tx.revocationAttempt.update as never);
  vi.spyOn(prisma,"$transaction").mockImplementation((async (fn: (db: unknown)=>unknown)=>fn(tx)) as never);
  fence.mockResolvedValue(undefined);check.mockResolvedValue(undefined);
 });
@@ -51,5 +52,22 @@ describe("durable revocation recovery",()=>{
  });
  it("rejects reconciliation against a different issuance hash",async()=>{
   vi.mocked(verifyDevnet).mockResolvedValue({...valid,pdfSha256:"different"} as never);await expect(processRevocation("v",check,fence)).rejects.toMatchObject({code:"PROOF_CONFLICT"});expect(signRevocation).not.toHaveBeenCalled();
+ });
+});
+
+describe("revocation retry boundaries",()=>{
+ it("reconciles absence and expiry before reserving a replacement attempt",async()=>{
+  vi.mocked(prisma.revocationAttempt.findFirst).mockResolvedValue(attempt as never);vi.mocked(attemptStatus).mockResolvedValue("EXPIRED");
+  await processRevocation("v",check,fence);
+  expect(tx.revocationAttempt.update).toHaveBeenCalledWith({where:{id:"attempt"},data:{state:"EXPIRED"}});
+  expect(tx.revocationAttempt.create).toHaveBeenCalled();expect(broadcast).not.toHaveBeenCalled();
+ });
+ it("does not silently replace an explicitly rejected transaction",async()=>{
+  vi.mocked(prisma.revocationAttempt.findFirst).mockResolvedValue(attempt as never);vi.mocked(attemptStatus).mockResolvedValue("FAILED");
+  await expect(processRevocation("v",check,fence)).rejects.toMatchObject({code:"CHAIN_REJECTED"});expect(signRevocation).not.toHaveBeenCalled();expect(broadcast).not.toHaveBeenCalled();
+ });
+ it("retains the persisted attempt across a submission outage",async()=>{
+  vi.mocked(prisma.revocationAttempt.findFirst).mockResolvedValue(attempt as never);vi.mocked(broadcast).mockRejectedValue(Error("transport failed"));
+  await expect(processRevocation("v",check,fence)).rejects.toThrow("transport failed");expect(signRevocation).not.toHaveBeenCalled();expect(tx.revocation.update).not.toHaveBeenCalled();expect(tx.revocationAttempt.create).not.toHaveBeenCalled();
  });
 });

@@ -526,6 +526,13 @@ export default function Admin() {
     }
   };
 
+  const revocationPending = selectedPassport?.versions.some(v => v.revocation?.state === "PENDING");
+  useEffect(() => {
+    const id = selectedPassport?.publicId;
+    if (!id || !revocationPending) return;
+    const timer = window.setInterval(() => {void inspectPassport(id);}, 3000);
+    return () => window.clearInterval(timer);
+  }, [selectedPassport?.publicId, revocationPending]);
   const submitRevocation = async () => {
     if (!selectedPassport || !revokeTarget || !revokeReason.trim()) return;
     setRevoking(true); setError("");
@@ -2383,7 +2390,7 @@ export default function Admin() {
                               </span>
                             </div>
                             <div className="page-actions">
-                              {isFinalized && (!ver.revocation || ver.revocation.state === "FAILED") && <button className="button secondary btn-sm" type="button" onClick={() => {setRevokeTarget(ver); setRevokeReason(ver.revocation?.reason || ""); setWithdrawRecords(ver.revocation?.withdrawnRecords || []);}}>{ver.revocation ? "Retry revocation" : "Revoke version"}</button>}
+                              {isFinalized && (!ver.revocation || ver.revocation.state === "FAILED") && <button className="button secondary btn-sm" type="button" onClick={() => {setError(""); setRevokeTarget(ver); setRevokeReason(ver.revocation?.reason || ""); setWithdrawRecords(ver.revocation?.withdrawnRecords || []);}}>{ver.revocation ? "Retry revocation" : "Revoke version"}</button>}
                               {ver.revocation?.state === "REVOKED" && ver.number === selectedPassport.latestFinalizedVersion && <button className="button secondary btn-sm" type="button" onClick={() => setConfirmation({title: "Issue corrected passport", message: "Reserve a new version excluding withdrawn records. Original versions remain unchanged.", details: [{label: "Passport", value: selectedPassport.publicId}], label: "Queue corrected version", action: correctPassport})}>Issue correction</button>}
                               {!ver.revocation && <button
                                 type="button"
@@ -2497,14 +2504,17 @@ export default function Admin() {
           </>
         )}
       </Dialog>
-      {revokeTarget && <div className="modal-backdrop"><section className="card" role="dialog" aria-modal="true" aria-labelledby="revoke-title" style={{maxWidth: 560, padding: 24}}>
-        <h2 id="revoke-title">Revoke version {revokeTarget.number}</h2><p><code>{selectedPassport?.publicId}</code></p>
+      <Dialog open={!!revokeTarget} title={`Revoke version ${revokeTarget?.number || ""}`} onClose={() => {if (!revoking) setRevokeTarget(null);}}>
+      {revokeTarget && <>
+        <p><code>{selectedPassport?.publicId}</code></p>
         <p>This permanently invalidates this version on Solana. Its PDF and issuance history remain preserved. Revoking the latest version leaves no current valid credential until a new version is issued.</p>
-        <label>Reason (administrators only)<textarea autoFocus required maxLength={1000} value={revokeReason} disabled={!!revokeTarget.revocation} onChange={e => setRevokeReason(e.target.value)} /></label>
+        <label>Reason (administrators only)<textarea className="input" autoFocus required maxLength={1000} value={revokeReason} disabled={!!revokeTarget.revocation} onChange={e => setRevokeReason(e.target.value)} /></label>
         <p>For an incorrectly awarded skill, select the records to exclude from all future cumulative versions:</p>
         {revokeTarget.snapshot.awards?.map(a => <label key={a.recordId} style={{display: "block"}}><input type="checkbox" checked={withdrawRecords.includes(a.recordId)} disabled={!!revokeTarget.revocation} onChange={e => setWithdrawRecords(old => e.target.checked ? [...old, a.recordId] : old.filter(id => id !== a.recordId))} /> {a.name} ({a.recordId})</label>)}
+        {error && <p className="notice" role="alert">{error}</p>}
         <div className="page-actions" style={{marginTop: 16}}><button type="button" className="button secondary" disabled={revoking} onClick={() => setRevokeTarget(null)}>Cancel</button><button type="button" className="button" disabled={revoking || !revokeReason.trim()} onClick={submitRevocation}>{revoking ? "Queuing…" : "Confirm revocation"}</button></div>
-      </section></div>}
+      </>}
+      </Dialog>
     </Shell>
   );
 }

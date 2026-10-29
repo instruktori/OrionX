@@ -2,9 +2,27 @@
 
 BTU AI Skills Digital Passport implementation with authenticated student/admin portals, cumulative PDFs, durable issuance and a **Solana Devnet-only** registry.
 
+## Demo and verification evidence
+
+**Recorded acceptance snapshot: 25 October 2026.** The URLs below are for inspecting public routes and published proof; they are not guarantees of current service availability. The evidence artifacts refer to synthetic students and a simulated issuer, **not officially authorized BTU credentials**.
+
+| Review scenario | Demo / where to inspect | Recorded result |
+| --- | --- | --- |
+| Public code verification | [Verify UI](https://orionx-phi.vercel.app/verify) and [hosted V3 example](https://orionx-phi.vercel.app/api/v1/verify/D1-BA4V45SHOBSRMOBTFYDFU7M4LUFOELZR) | [Hosted V3 issuance and finality](docs/evidence/hosted-manual.json) |
+| Public on-chain proof for that V3 sample | [Solana Devnet transaction](https://explorer.solana.com/tx/K6HKc2iZ4MxZZgf6wTnjfy3bkBXmTERZQ4FwQjd7detGs1bSAayzTYVBxqvwYyd3MS8eGLHHsY6JBgo4XjNh5xp?cluster=devnet) and [version account](https://explorer.solana.com/address/63eb4WVt2wfD61LnYazkR6DHDQizDD5hyDzfDDT1zYcw?cluster=devnet) | [Hosted manual processing evidence](docs/evidence/hosted-manual.json) |
+| Original versus modified PDF | Upload an authorized issued PDF at [Verify](https://orionx-phi.vercel.app/verify), then test an altered copy | [Recorded one-bit tamper rejection](docs/evidence/devnet-pipeline.json), [hosted checks](docs/evidence/live-sheets.json) |
+| Cumulative V1/V2 and superseded history | [Isolated real-Devnet V1/V2 evidence](docs/evidence/devnet-pipeline.json) | Same permanent ID, new version and immutable proof; the isolated test database is not a live demo account |
+| Google Sheets sync and durable processing | [Admin workspace](https://orionx-phi.vercel.app/admin) (requires authorized admin role) | [Live source/writeback checks](docs/evidence/live-sheets.json), [hosted V3 pipeline](docs/evidence/hosted-manual.json) |
+| Authentication and private document access | [Student workspace](https://orionx-phi.vercel.app/passport) (requires account/record binding) | [Browser OAuth evidence](docs/evidence/hosted-browser.json), [access isolation checks](docs/evidence/live-sheets.json) |
+| Automated verification | [GitHub Actions](https://github.com/instruktori/OrionX/actions) | Review the latest run and commit, not only the historical [acceptance summary](docs/evidence/acceptance-summary.json) |
+
+**Reproduce checks locally** (Node.js 22/npm 10; required local dependencies/configuration may apply): `npm ci`, `npm run typecheck`, `npm test`, `npm run build`. In an authorized provisioned environment, `npm run check:readiness -- --worker --sheets --hosted --evidence` performs readiness checks. **Do not** run `npm run test:pipeline:devnet` without permission: it writes to the test network and may use external test services.
+
+See [AGENTS.md](AGENTS.md) for the implementation/evidence/deployment distinction and [independent verification](docs/VERIFICATION.md) for the verifier's remaining limitations. Unattended worker polling is implemented but **not active** in this Vercel deployment; the admin-triggered hosted pipeline is what has been accepted.
+
 ## Run locally
 
-Use Node.js 22 and its bundled npm 10 to match CI/Vercel (`nvm use` reads `.nvmrc`). Install Docker for local PostgreSQL/Redis. Regenerate the lockfile with this toolchain in a clean workspace when changing dependencies.
+For authorized collaborators with access to the linked Vercel project, use Node.js 22 and its bundled npm 10 to match CI/Vercel (`nvm use` reads `.nvmrc`). Install Docker for local PostgreSQL/Redis. Regenerate the lockfile with this toolchain in a clean workspace when changing dependencies.
 
 ```sh
 npm ci

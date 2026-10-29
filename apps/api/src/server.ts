@@ -1003,7 +1003,7 @@ class ApiController {
    const awardCount = (latest.snapshot as unknown as Snapshot).awards.length;
    res.json({
      official: true,
-     status: latest.revocation ? latest.revocation.state === "REVOKED" ? "REVOKED" : "REVOCATION_PENDING" : "ISSUED",
+     status: studentLatest.revocation ? studentLatest.revocation.state === "REVOKED" ? "REVOKED" : "REVOCATION_PENDING" : studentLatest.credentialStatus === "UNKNOWN" ? "VERIFICATION_UNAVAILABLE" : "ISSUED",
      workspaceId: null,
      verification: user.verification,
      universityVerified: true,

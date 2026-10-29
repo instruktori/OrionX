@@ -1,4 +1,5 @@
 import {createServer, request as httpRequest, type Server} from "node:http";
+import * as core from "@orionx/core";
 import type {AddressInfo} from "node:net";
 import {afterAll, afterEach, beforeAll, describe, expect, it, vi} from "vitest";
 import {exportJWK, generateKeyPair, SignJWT, type JWK, type KeyLike} from "jose";
@@ -433,4 +434,15 @@ describe("revocation HTTP authorization and student privacy", () => {
     vi.spyOn(prisma.version,"findUnique").mockResolvedValue({...v,finalizedSlot:100n,storageKey:"private.pdf",pdfSha256:"hash"} as never);
     expect((await call("/me/passport/versions/2/download",await token(NEW_SUB))).status).toBe(409);
   });
+  it("reports authoritative chain revocation before a database reconciliation completes", async () => {
+    vi.spyOn(prisma.studentIdentity, "findUnique").mockResolvedValue({id:"i",provider:issuer,subject:NEW_SUB,role:"student",studentId:"s",verifiedBy:"admin",verifiedAt:new Date()});
+    vi.spyOn(prisma.passport, "findUnique").mockResolvedValue({id:"p",studentId:"s",publicId:"BTU-SYNTHETIC",initialIssueDate:new Date("2026-01-01"),latestFinalizedVersion:2,activeVersionId:null,student:{firstName:"Synthetic",lastName:"Test",program:"AI",educationLevel:"BSc"}} as never);
+    vi.spyOn(prisma.version,"findUnique").mockResolvedValue({number:2,state:"COMPLETED",code:"D1-SYNTHETIC",pageCount:2,createdAt:new Date(),finalizedAt:new Date(),finalizedSlot:100n,storageKey:"private.pdf",pdfSha256:"hash",snapshot:{student:{initialIssueDate:"2026-01-01"},awards:[]},revocation:null} as never);
+    vi.spyOn(prisma.version,"count").mockResolvedValue(2);
+    vi.spyOn(core,"verifyDevnet").mockResolvedValue({registration:"REGISTERED",revocation:"REVOKED",integrity:"NOT_CHECKED",officialBtu:false} as never);
+    const result=await call("/me/passport",await token(NEW_SUB));
+    expect(result.status).toBe(200);
+    expect(result.body).toMatchObject({status:"REVOKED",latest:{isLatest:false,credentialStatus:"REVOKED",revocation:{state:"REVOKED"}}});
+  });
+
 });

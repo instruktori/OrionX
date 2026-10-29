@@ -1,6 +1,33 @@
 # OrionX — AI Skills Digital Passport
 
-BTU AI Skills Digital Passport implementation with authenticated student/admin portals, cumulative PDFs, durable issuance and a **Solana Devnet-only** registry.
+BTU AI Skills Digital Passport with a complete, evidence-backed issuance flow: verified skill records → durable job queue → immutable multi-page PDF → finalized Solana Devnet proof → Google Sheets writeback. Student, administrator, and public-verifier workflows are implemented with separate authorization boundaries.
+
+The project emphasizes **document integrity, safe retries, cumulative version history, and reproducible proof**, not just a passport preview.
+
+## Engineering results at a glance
+
+These are **recorded results**, not estimates or claims of current uptime.
+
+| Demonstration | Measured or recorded outcome | Evidence |
+| --- | --- | --- |
+| Complete hosted acceptance (Oct 25) | **18 passports, 20 finalized versions, 62 synchronized awards** with Devnet-backed records and Google Sheets writeback | [Acceptance snapshot](docs/evidence/acceptance-summary.json), [live-sheet checks](docs/evidence/live-sheets.json) |
+| Hosted cumulative issuance | Real, administrator-triggered **V3** completed PDF rendering, Solana finality, and source writeback in five persisted stages | [Hosted V3 trace](docs/evidence/hosted-manual.json) |
+| Document and version integrity | Real Devnet V1/V2 acceptance, superseded-version detection, original-PDF acceptance and one-bit modification rejection | [Devnet pipeline record](docs/evidence/devnet-pipeline.json) |
+| Row-position safety | **61-row** reordering test preserved input fingerprints and metadata associations with **0 unintended versions** and **0 conflicts** | [Row-reorder check](docs/evidence/live-reorder.json) |
+| Queue and persistence scale | **5,000 synthetic** passports/awards/versions/jobs persisted in ~18.01 s; **50 claims, 2 concurrent claimers, 0 duplicates** | [Isolated capacity exercise](docs/evidence/capacity.json) |
+
+The capacity exercise measured database persistence, queue claiming, and PDF samples — **not** 5,000 end-to-end on-chain issuances or production throughput.
+
+### What makes the implementation robust
+
+- **Recoverable issuance.** Atomic job claims, renewable leases, signed-attempt persistence and finalized-account reconciliation support retry and crash recovery without intentionally duplicating completed issuance.
+- **Integrity tied to immutable bytes.** An issued PDF is stored privately; its exact SHA-256 is checked against finalized Devnet registration. A modified document receives a mismatch rather than a positive authenticity result.
+- **Cumulative identity and versions.** Skills accumulate under the same permanent passport identity, while old versions remain distinguishable from the latest issuance.
+- **Permission-separated experiences.** Supabase Google OAuth/PKCE, server-side role and student bindings, private downloads, public verification without login, and denial of unrelated-student/admin access are covered by dated evidence.
+- **Source-of-truth protections.** Record ID-based imports, Google Sheets developer metadata, fresh input validation, and post-write readback protect data mapping even when sheet rows move.
+- **Low-friction checking.** The verification interface implements QR scanning and extraction of a verification code from the uploaded PDF, reducing manual transcription.
+
+[Implementation map and reproducibility](AGENTS.md) · [Verification trust model](docs/VERIFICATION.md) · [Worker architecture](docs/WORKER.md)
 
 ## Demo and verification evidence
 

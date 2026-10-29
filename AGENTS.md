@@ -1,5 +1,22 @@
 # OrionX — Engineering and Operations Guide
 
+## Latest operator update — 29 October 2026
+
+The operator subsequently confirmed completion of both hosted automatic worker
+activation and live revoked Devnet fixture validation, in addition to the earlier
+same-ID Devnet program upgrade and Vercel feature enablement. Earlier pending labels
+in this document describe the prior independently evidenced checkpoint; they are
+superseded by this operator-reported completion status.
+
+No worker host identifier/logs, revoked verification code/PDF/hash, finality
+signature or strict CI run reference accompanied this confirmation. These outcomes
+have not been independently rerun in this documentation update. Attach the actual
+artifacts and reconcile the committed fixture manifest before claiming reproducible
+live CI coverage. Do not infer that the manifest or CI configuration changed solely
+from this status update. Demo capture remains unconfirmed. Devnet/test-issuer scope
+and preservation of historical issuance evidence remain unchanged.
+
+
 ## Engineering evidence map
 
 OrionX implements a versioned AI Skills Digital Passport pipeline spanning Google Sheets, immutable PDFs, PostgreSQL job processing, and finalized Solana Devnet records. This document identifies the relevant code and dated checks. Source files demonstrate implementation; recorded acceptance artifacts describe tested executions; deployment configuration determines what is running now.

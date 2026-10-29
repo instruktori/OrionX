@@ -16,7 +16,7 @@ BTU AI Skills Digital Passport implementation with authenticated student/admin p
 | Authentication and private document access | [Student workspace](https://orionx-phi.vercel.app/passport) (requires account/record binding) | [Browser OAuth evidence](docs/evidence/hosted-browser.json), [access isolation checks](docs/evidence/live-sheets.json) |
 | Automated verification | [GitHub Actions](https://github.com/instruktori/OrionX/actions) | Review the latest run and commit, not only the historical [acceptance summary](docs/evidence/acceptance-summary.json) |
 
-**Reproduce checks locally** (Node.js 22/npm 10; required local dependencies/configuration may apply): \`npm ci\`, \`npm run typecheck\`, \`npm test\`, \`npm run build\`. In an authorized provisioned environment, \`npm run check:readiness -- --worker --sheets --hosted --evidence\` performs readiness checks. **Do not** run \`npm run test:pipeline:devnet\` without permission: it writes to the test network and may use external test services.
+**Reproduce checks locally** (Node.js 22/npm 10; required local dependencies/configuration may apply): `npm ci`, `npm run typecheck`, `npm test`, `npm run build`. In an authorized provisioned environment, `npm run check:readiness -- --worker --sheets --hosted --evidence` performs readiness checks. **Do not** run `npm run test:pipeline:devnet` without permission: it writes to the test network and may use external test services.
 
 See [AGENTS.md](AGENTS.md) for the implementation/evidence/deployment distinction and [independent verification](docs/VERIFICATION.md) for the verifier's remaining limitations. Unattended worker polling is implemented but **not active** in this Vercel deployment; the admin-triggered hosted pipeline is what has been accepted.
 

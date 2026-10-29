@@ -1,4 +1,5 @@
 import {createServer, request as httpRequest, type Server} from "node:http";
+import * as core from "@orionx/core";
 import type {AddressInfo} from "node:net";
 import {afterAll, afterEach, beforeAll, describe, expect, it, vi} from "vitest";
 import {exportJWK, generateKeyPair, SignJWT, type JWK, type KeyLike} from "jose";
@@ -403,4 +404,45 @@ describe("retired module routes", () => {
       await app.close();
     }
   });
+});
+
+
+describe("revocation HTTP authorization and student privacy", () => {
+  it("rejects anonymous and student revocation/correction requests", async () => {
+    mockUnboundUser();
+    for (const path of ["/admin/passports/p/versions/1/revoke", "/admin/passports/p/correct"]) {
+      expect((await call(path, undefined, {method: "POST", body: JSON.stringify({confirm: true, reason: "test"})})).status).toBe(401);
+      expect((await call(path, await token(NEW_SUB), {method: "POST", body: JSON.stringify({confirm: true, reason: "test"})})).status).toBe(403);
+    }
+  });
+  it("requires explicit confirmation and a nonempty reason before database mutation", async () => {
+    vi.spyOn(prisma.studentIdentity, "findUnique").mockResolvedValue({id: "i", provider: issuer, subject: NEW_SUB, role: "admin", studentId: null, verifiedBy: "seed", verifiedAt: new Date()});
+    const transaction = vi.spyOn(prisma, "$transaction");
+    for (const body of [{reason: "reason"}, {confirm: true, reason: " "}]) {
+      expect((await call("/admin/passports/p/versions/1/revoke", await token(NEW_SUB), {method: "POST", body: JSON.stringify(body)})).status).toBe(400);
+    }
+    expect(transaction).not.toHaveBeenCalled();
+  });
+  it("shows revoked status without exposing the administrative reason or actor", async () => {
+    vi.spyOn(prisma.studentIdentity, "findUnique").mockResolvedValue({id: "i", provider: issuer, subject: NEW_SUB, role: "student", studentId: "s", verifiedBy: "admin", verifiedAt: new Date()});
+    vi.spyOn(prisma.passport, "findUnique").mockResolvedValue({id:"p",studentId:"s",latestFinalizedVersion:2} as never);
+    const v={number:2,state:"COMPLETED",code:"D1-TEST",pageCount:2,createdAt:new Date(),finalizedAt:new Date(),snapshot:{student:{initialIssueDate:"2026-01-01"},awards:[]},revocation:{state:"REVOKED",reason:"private investigation",actorId:"sensitive-admin",finalizedAt:new Date()}};
+    vi.spyOn(prisma.version,"findMany").mockResolvedValue([v] as never);
+    const result=await call("/me/passport/versions",await token(NEW_SUB));
+    expect(result.body).toMatchObject([{isLatest:false,credentialStatus:"REVOKED",revocation:{state:"REVOKED"}}]);
+    expect(JSON.stringify(result.body)).not.toMatch(/private investigation|sensitive-admin/);
+    vi.spyOn(prisma.version,"findUnique").mockResolvedValue({...v,finalizedSlot:100n,storageKey:"private.pdf",pdfSha256:"hash"} as never);
+    expect((await call("/me/passport/versions/2/download",await token(NEW_SUB))).status).toBe(409);
+  });
+  it("reports authoritative chain revocation before a database reconciliation completes", async () => {
+    vi.spyOn(prisma.studentIdentity, "findUnique").mockResolvedValue({id:"i",provider:issuer,subject:NEW_SUB,role:"student",studentId:"s",verifiedBy:"admin",verifiedAt:new Date()});
+    vi.spyOn(prisma.passport, "findUnique").mockResolvedValue({id:"p",studentId:"s",publicId:"BTU-SYNTHETIC",initialIssueDate:new Date("2026-01-01"),latestFinalizedVersion:2,activeVersionId:null,student:{firstName:"Synthetic",lastName:"Test",program:"AI",educationLevel:"BSc"}} as never);
+    vi.spyOn(prisma.version,"findUnique").mockResolvedValue({number:2,state:"COMPLETED",code:"D1-SYNTHETIC",pageCount:2,createdAt:new Date(),finalizedAt:new Date(),finalizedSlot:100n,storageKey:"private.pdf",pdfSha256:"hash",snapshot:{student:{initialIssueDate:"2026-01-01"},awards:[]},revocation:null} as never);
+    vi.spyOn(prisma.version,"count").mockResolvedValue(2);
+    vi.spyOn(core,"verifyDevnet").mockResolvedValue({registration:"REGISTERED",revocation:"REVOKED",integrity:"NOT_CHECKED",officialBtu:false} as never);
+    const result=await call("/me/passport",await token(NEW_SUB));
+    expect(result.status).toBe(200);
+    expect(result.body).toMatchObject({status:"REVOKED",latest:{isLatest:false,credentialStatus:"REVOKED",revocation:{state:"REVOKED"}}});
+  });
+
 });

@@ -28,7 +28,7 @@ export async function publicPassport(input: string) {
 
   // The live chain hash, rather than database metadata, is the source of truth.
   const proof = await verifyDevnet(code, bytes);
-  const available = !!bytes && proof.registration === "REGISTERED" && proof.integrity === "MATCH";
+  const available = !!bytes && proof.registration === "REGISTERED" && proof.integrity === "MATCH" && proof.revocation === "VALID";
   const documentPath = `/api/v1/verify/${encodeURIComponent(code)}/document`;
   return {
     bytes: available ? bytes : undefined,

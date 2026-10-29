@@ -28,3 +28,9 @@ export function parseRecord(data: Buffer) {
   account(data, "VersionRecord", 182);
   return {registry: new PublicKey(data.subarray(9, 41)), version: data.readUInt32LE(41), code: data.subarray(45, 65), hash: data.subarray(65, 97), issuer: new PublicKey(data.subarray(97, 129)), epoch: data.readUInt32LE(129), previous: new PublicKey(data.subarray(133, 165)), registeredUnix: data.readBigInt64LE(165), registeredSlot: data.readBigUInt64LE(173), bump: data[181]};
 }
+
+export const revocationAddress = (program: PublicKey, record: PublicKey) => PublicKey.findProgramAddressSync([Buffer.from("revocation"), record.toBuffer()], program);
+export function parseRevocation(data: Buffer) {
+  account(data, "RevocationRecord", 158);
+  return {record: new PublicKey(data.subarray(9, 41)), authority: new PublicKey(data.subarray(41, 73)), epoch: data.readUInt32LE(73), reasonDigest: data.subarray(77, 109), actorDigest: data.subarray(109, 141), revokedUnix: data.readBigInt64LE(141), revokedSlot: data.readBigUInt64LE(149), bump: data[157]};
+}

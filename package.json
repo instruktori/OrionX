@@ -36,7 +36,10 @@
     "test:pipeline:devnet": "node scripts/with-env.mjs tsx scripts/test-pipeline.ts --devnet",
     "deploy:devnet": "node scripts/with-env.mjs tsx scripts/deploy-devnet.ts",
     "issuer:admin": "node scripts/with-env.mjs tsx scripts/issuer-admin.ts",
-    "preview:pdf": "tsx scripts/preview-pdf.ts"
+    "preview:pdf": "tsx scripts/preview-pdf.ts",
+    "verify:independent": "node --import tsx scripts/verify-independent.ts",
+    "test:verification:live": "node --import tsx scripts/test-verification-live.ts",
+    "test:revocation:integration": "node --import tsx scripts/test-revocation-integration.ts"
   },
   "devDependencies": {
     "esbuild": "0.27.0",

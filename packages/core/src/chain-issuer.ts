@@ -3,7 +3,7 @@ import bs58 from "bs58";
 import {clusterPolicy} from "./cluster";
 import {readFile} from "node:fs/promises";
 import {decodeCode} from "./index";
-import {DEVNET_GENESIS, configAddress, epochAddress, registryAddress, versionAddress, parseConfig, parseRegistry, discriminator, u32} from "./protocol";
+import {DEVNET_GENESIS, configAddress, epochAddress, registryAddress, versionAddress, parseConfig, parseRegistry, discriminator, u32, revocationAddress, parseRecord} from "./protocol";
 import {DomainError} from "./errors";
 
 export async function issuerEnvironment() {
@@ -69,4 +69,23 @@ export async function finalizedAttempt<T extends {signature:string}>(attempts:T[
  if(!attempts.length)return undefined;
  const statuses=await connection.getSignatureStatuses(attempts.map(a=>a.signature),{searchTransactionHistory:true});
  return attempts.find((_,i)=>statuses.value[i]?.confirmationStatus==="finalized"&&!statuses.value[i]?.err);
+}
+
+/** Signing only. The caller MUST durably persist this attempt before broadcasting. */
+export async function signRevocation(input: {code: string; reasonDigest: string; actorDigest: string}): Promise<SignedAttempt> {
+ if (process.env.REVOCATION_ENABLED !== "true") throw new DomainError("REVOCATION_DISABLED", "Revocation requires an approved program upgrade and activation", 503);
+ const {connection, keypair, programId} = await issuerEnvironment();
+ const config = configPda(programId), record = versionPda(input.code, programId);
+ const [configuration, issuance] = await Promise.all([connection.getAccountInfo(config, "finalized"), connection.getAccountInfo(record, "finalized")]);
+ if (!configuration?.owner.equals(programId) || !issuance?.owner.equals(programId)) throw new DomainError("INVALID_PROOF", "Issuance or issuer account unavailable");
+ const authority = parseConfig(configuration.data), version = parseRecord(issuance.data);
+ if (!authority.issuer.equals(keypair.publicKey) && !authority.admin.equals(keypair.publicKey)) throw new DomainError("UNAUTHORIZED_ISSUER", "Signer cannot revoke", 403);
+ const readonly = (pubkey: PublicKey) => ({pubkey, isSigner: false, isWritable: false});
+ const tx = new Transaction().add(new TransactionInstruction({programId, keys: [
+  {pubkey: keypair.publicKey, isSigner: true, isWritable: true}, readonly(config), readonly(version.registry), readonly(record),
+  {pubkey: revocationAddress(programId, record)[0], isSigner: false, isWritable: true}, readonly(SystemProgram.programId),
+ ], data: Buffer.concat([discriminator("global", "revoke_version"), Buffer.from(input.reasonDigest, "hex"), Buffer.from(input.actorDigest, "hex")])}));
+ const latest = await connection.getLatestBlockhash("finalized");
+ tx.feePayer = keypair.publicKey; tx.recentBlockhash = latest.blockhash; tx.sign(keypair);
+ return {signature: bs58.encode(tx.signature!), transactionBytes: tx.serialize().toString("base64"), blockhash: latest.blockhash, lastValidBlockHeight: BigInt(latest.lastValidBlockHeight)};
 }

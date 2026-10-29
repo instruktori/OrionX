@@ -126,3 +126,12 @@ test('a QR image also retrieves the original, without uploading the PDF',async()
   await act(async()=>input.props.onChange({target:{files:[new File(['image'],'qr.png')],value:'qr.png'}}));
   assert.equal(requests[0].url,`/api/v1/verify/${code}/original`);
 });
+
+
+test('a byte-identical revoked passport never renders a valid-document viewer',async()=>{
+  global.fetch=async()=>({ok:false,status:409,json:async()=>({registration:'REGISTERED',revocation:'REVOKED',integrity:'MATCH',currency:'LATEST',original:{available:false},message:'This version was revoked on Solana.'})});
+  await mount('?code='+code);
+  assert.match(text(),/REVOKED/);
+  assert.equal(tree.root.findAllByType('object').length,0);
+  assert.doesNotMatch(text(),/Original passport verified/);
+});

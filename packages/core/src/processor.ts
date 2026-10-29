@@ -10,6 +10,7 @@ import {DomainError} from "./errors";
 import {PDFDocument} from "pdf-lib";
 import {PublicKey} from "@solana/web3.js";
 import {claimJob, renewJobLease, withJobLease, jobRetryDelay} from "./jobs";
+import {processRevocation} from "./revocation";
 import {randomUUID} from "node:crypto";
 
 export function positiveInteger(name: string, fallback: number) { const value = Number(process.env[name] ?? fallback); if (!Number.isSafeInteger(value) || value < 1) throw Error(name + " must be a positive integer"); return value; }
@@ -31,6 +32,10 @@ async function processClaim(id: string, checkLease: () => Promise<void>) {
   const run = await synchronize(job.idempotencyKey.slice(5));
   if (run.state === "FAILED") throw new DomainError("IMPORT_FAILED", "Source import has not completed", 503, true);
   await prisma.$transaction(tx => fenced(tx, id, {state: "COMPLETED"}));
+  return;
+ }
+ if (job.type === "REVOKE" && job.versionId) {
+  await processRevocation(job.versionId, checkLease, (tx, pending) => fenced(tx, id, {state: pending ? "QUEUED" : "COMPLETED", availableAt: new Date(Date.now() + POLL_MS)}));
   return;
  }
  if (!job.version || job.leaseOwner !== workerId) throw Error("Missing reserved version or lease");
@@ -74,7 +79,7 @@ async function processClaim(id: string, checkLease: () => Promise<void>) {
   const proof = await verifyDevnet(version.code, bytes);
   if (proof.registration === "REGISTERED") {
    const expectedRegistry = registryPda(Buffer.from(version.passport.opaqueChainRef, "hex"), new PublicKey(process.env.SOLANA_PROGRAM_ID!)).toBase58();
-   if (proof.integrity !== "MATCH" || proof.version !== version.number || proof.chainEvidence?.registryPda !== expectedRegistry) throw new DomainError("PROOF_CONFLICT", "Existing chain record conflicts with reserved version");
+   if (proof.revocation === "REVOKED" || proof.integrity !== "MATCH" || proof.version !== version.number || proof.chainEvidence?.registryPda !== expectedRegistry) throw new DomainError("PROOF_CONFLICT", "Existing chain record conflicts with reserved version");
    const lastAttempt = await finalizedAttempt(await prisma.chainAttempt.findMany({where: {versionId: version.id}, orderBy: {createdAt: "desc"}, take: 100}));
    await prisma.$transaction(async tx => {
     await fenced(tx, id, {state: "QUEUED", stage: "WRITEBACK", attempts: 0});
@@ -145,7 +150,10 @@ async function fail(id: string, error: unknown) {
  const job = await prisma.job.findUnique({where: {id}});
  if (!job || job.leaseOwner !== workerId) return;
  const attempts = job.attempts + 1, permanent = error instanceof DomainError && !error.retryable;
- await prisma.job.updateMany({where: {id, leaseOwner: workerId, state: "RENDERED", leaseUntil: {gt: new Date()}}, data: {attempts, lastError: error instanceof Error ? error.message.slice(0, 500) : "Processing failed", state: permanent ? "BLOCKED_CONFLICT" : attempts >= MAX_ATTEMPTS ? "FAILED_PERMANENT" : "RETRY_WAIT", availableAt: new Date(Date.now() + jobRetryDelay(error, attempts)), leaseOwner: null, leaseUntil: null}});
+ await prisma.$transaction(async tx => {
+ const changed = await tx.job.updateMany({where: {id, leaseOwner: workerId, state: "RENDERED", leaseUntil: {gt: new Date()}}, data: {attempts, lastError: error instanceof Error ? error.message.slice(0, 500) : "Processing failed", state: permanent ? "BLOCKED_CONFLICT" : attempts >= MAX_ATTEMPTS ? "FAILED_PERMANENT" : "RETRY_WAIT", availableAt: new Date(Date.now() + jobRetryDelay(error, attempts)), leaseOwner: null, leaseUntil: null}});
+ if (changed.count && job.type === "REVOKE" && job.versionId) await tx.revocation.update({where: {versionId: job.versionId}, data: {state: permanent || attempts >= MAX_ATTEMPTS ? "FAILED" : "PENDING", lastError: error instanceof Error ? error.message.slice(0, 500) : "Processing failed"}});
+ });
 }
  return {
   workerId, pollMs: POLL_MS,

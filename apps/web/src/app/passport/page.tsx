@@ -25,7 +25,12 @@ export default function PassportPage() {
   const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
   const p = passport.data;
   const latest = p?.latest;
-  const selected = history.data?.find(v => v.version === selectedVersion && (v.isLatest || v.finalizedAt)) || latest;
+  const historicalSelection = history.data?.find(v => v.version === selectedVersion && (v.isLatest || v.finalizedAt)) || latest;
+  const selectedRecord = historicalSelection?.version === latest?.version ? latest : historicalSelection;
+  const chainCheck = useResource<{version: number; registration: string; revocation: string}>(`/verify/${selectedRecord?.verificationCode || ""}`, enabled && issued && !!selectedRecord && !selectedRecord.revocation);
+  const chainMatchesSelection = chainCheck.data?.version === selectedRecord?.version;
+  const selected = chainMatchesSelection && chainCheck.data?.revocation === "REVOKED" && selectedRecord ? {...selectedRecord, isLatest: false, revocation: {state: "REVOKED", finalizedAt: null, message: "This version was revoked on Solana. Contact the university for assistance."}} : selectedRecord;
+  const validSelection = !!selected && !selected.revocation && chainMatchesSelection && chainCheck.data?.registration === "REGISTERED" && chainCheck.data?.revocation === "VALID";
 
   useEffect(() => {
     setSelectedVersion(null);
@@ -38,7 +43,7 @@ export default function PassportPage() {
         title={locale === "ka" ? toMtavruli(t("passport.heading")) : t("passport.heading")}
         description={issued ? t("passport.descriptionIssued") : t("passport.descriptionPending")}
       >
-        {issued && latest && (
+        {issued && latest && validSelection && (
           <a className="button secondary" href={issuedPdfUrl(selected?.version || latest.version, false)}>
             <Download size={15}/> {t("passport.downloadIssued")}
           </a>
@@ -80,6 +85,8 @@ export default function PassportPage() {
           </section>
         ) : (
           <>
+            {!selected?.revocation && !validSelection && <div className="notice" role="status">{chainCheck.loading ? "Checking finalized blockchain status…" : "Blockchain verification is temporarily unavailable. Try again before using this credential."}<button type="button" className="button secondary" onClick={chainCheck.reload}>Check again</button></div>}
+            {selected?.revocation && <div className="notice" role="alert"><strong>{selected.revocation.state === "REVOKED" ? "This passport version was revoked." : "This passport version is awaiting revocation."}</strong><p>{selected.revocation.message}</p>{!selected.revocation.finalizedAt ? null : <p>Finalized: {localeDate(locale, selected.revocation.finalizedAt)}</p>}<p>No older version is automatically promoted to current.</p></div>}
             {p?.pending && (
               <div className="notice" role="status">
                 {t("passport.pendingNewer")}
@@ -96,10 +103,10 @@ export default function PassportPage() {
                   </p>
                 </div>
                 <Badge tone={selected?.isLatest ? "success" : "neutral"}>
-                  {selected?.isLatest ? t("passport.latestFinalized") : t("passport.historical")}
+                  {selected?.revocation ? selected.revocation.state : selected?.isLatest ? t("passport.latestFinalized") : t("passport.historical")}
                 </Badge>
               </div>
-              <div className="passport-issued-only-actions">
+              {validSelection && <><div className="passport-issued-only-actions">
                 <a className="button secondary" href={issuedPdfUrl(selected?.version || latest.version, false)}>
                   <Download size={15}/> {t("passport.downloadExact")}
                 </a>
@@ -126,7 +133,7 @@ export default function PassportPage() {
                   </div>
                 </object>
               </div>
-              <p className="field-help">{t("passport.trustIntro")} <strong>{selected?.issuerTrust === "BTU_CONFIRMED" ? t("passport.btuConfirmed") : t("passport.demoIssuer")}</strong>.</p>
+              </>}<p className="field-help">{t("passport.trustIntro")} <strong>{selected?.issuerTrust === "BTU_CONFIRMED" ? t("passport.btuConfirmed") : t("passport.demoIssuer")}</strong>.</p>
             </section>
             {!!history.data?.length && history.data.length > 1 && (
               <section className="passport-issued-history" aria-labelledby="passport-versions-title">
@@ -144,6 +151,7 @@ export default function PassportPage() {
                       <FileBadge2 size={17}/>
                       <span>{t("common.version")} {version.version}</span>
                       <span className="muted">{version.finalizedAt ? localeDate(locale, version.finalizedAt) : t("common.finalized")}</span>
+                      {version.revocation && <Badge tone="warning">{version.revocation.state}</Badge>}
                       {version.isLatest && <Badge tone="success">{t("common.latest")}</Badge>}
                     </button>
                   ))}

@@ -1,0 +1,37 @@
+name: Read-only Devnet verification
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      require_revoked_fixture:
+        type: boolean
+        default: true
+        description: 'Require all live cases, including an approved revoked fixture'
+permissions:
+  contents: read
+jobs:
+  public-devnet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run db:generate
+      - name: Independently check public finalized accounts and committed synthetic PDFs
+        run: |
+          if [ "${{ github.event_name }}" = workflow_dispatch ] && [ "${{ inputs.require_revoked_fixture }}" = true ]; then
+            npm run test:verification:live
+          else
+            npm run test:verification:live -- --allow-pending-revoked-fixture
+          fi
+      - name: Explain coverage
+        if: always()
+        run: |
+          echo 'These checks are read-only. No issuer secrets or OrionX API are used.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'An absent approved revoked fixture is reported explicitly and is not proof of live revocation. Use the strict manual run after approved activation.' >> "$GITHUB_STEP_SUMMARY"

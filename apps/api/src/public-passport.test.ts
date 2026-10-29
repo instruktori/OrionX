@@ -11,7 +11,7 @@ vi.mock("@orionx/core", async importOriginal => ({
 const code = encodeCode(new Uint8Array(20).fill(7));
 const pdf = Buffer.from("%PDF-1.7\noriginal passport fixture");
 const get = vi.fn();
-const registered = {registration: "REGISTERED", integrity: "MATCH", currency: "LATEST", issuerTrust: "UNCONFIRMED", officialBtu: false, version: 2, pdfSha256: sha256(pdf), message: "Verified", checkedAt: new Date().toISOString()} as const;
+const registered = {revocation: "VALID", registration: "REGISTERED", integrity: "MATCH", currency: "LATEST", issuerTrust: "UNCONFIRMED", officialBtu: false, version: 2, pdfSha256: sha256(pdf), message: "Verified", checkedAt: new Date().toISOString()} as const;
 let app: Awaited<ReturnType<typeof import("./server").createApp>>;
 let origin: string;
 
@@ -124,4 +124,17 @@ describe("public original passport retrieval over HTTP", () => {
     expect(await res.json()).toMatchObject({registration: "REGISTERED", integrity: "MATCH", verifiedCode: code});
     expect(get).not.toHaveBeenCalled();
   });
+  it("withholds revoked byte-identical originals and preserves MATCH integrity", async () => {
+    vi.mocked(verifyDevnet).mockResolvedValue({...registered, revocation: "REVOKED", errorCode: "CREDENTIAL_REVOKED", message: "This version was revoked"});
+    const res = await request("/original");
+    expect(await res.json()).toMatchObject({revocation: "REVOKED", integrity: "MATCH", original: {available: false}});
+    const document = await request("/document");
+    expect(document.status).toBe(409);
+    expect(document.headers.get("content-type")).toContain("application/json");
+  });
+  it("withholds bytes when revocation status cannot be established", async () => {
+    vi.mocked(verifyDevnet).mockResolvedValue({...registered, revocation: "UNKNOWN"});
+    expect((await (await request("/original")).json()).original.available).toBe(false);
+  });
+
 });

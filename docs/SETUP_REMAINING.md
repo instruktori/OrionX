@@ -1,6 +1,17 @@
 # Remaining external setup
 
-## Devnet is deployed
+## Current checkpoint — 29 October 2026
+
+PR #11 (`b252dcc`) is on main and Vercel production. Supabase migrations 0005 and
+0006 were applied through MCP, preserving existing records. Revocation-aware
+API/UI and independent verification are deployed, but the on-chain revocation
+program upgrade and feature activation remain pending. See
+[NEXT_IMPLEMENTATION_PLAN.md](NEXT_IMPLEMENTATION_PLAN.md) for current status and
+[REVOCATION_AND_ACTIVATION.md](REVOCATION_AND_ACTIVATION.md) for the activation order.
+A dedicated live revoked fixture and hosted unattended Sheets acceptance are still
+required; passing isolated lifecycle CI does not establish either.
+
+## Original issuance program is deployed
 
 The program and simulated issuer are deployed. Real V1/V2 issuance, crash
 recovery, private downloads and tamper rejection passed. See
@@ -25,8 +36,9 @@ process changes, or **Process pending jobs** to resume saved work. Keep the page
 open until the queue drains. **Stop after current step** preserves pending work.
 
 The optional local worker is stopped and `SYNC_ENABLED=false`. Separate always-on
-hosting and periodic scheduling are deferred by explicit user choice. No default
-worker daemon or container build was added.
+hosting and periodic scheduling remain unactivated pending approved hosting. The
+existing worker now has an opt-in `compose.worker.yml` deployment profile and
+hosted preflight checks; no daemon runs on Vercel.
 
 To add a synthetic verified award, insert a complete data row inside the named
 `PassportRecords` range (above an existing data row), copy its native structure,

@@ -5,7 +5,18 @@
 OrionX implements a versioned AI Skills Digital Passport pipeline spanning Google Sheets, immutable PDFs, PostgreSQL job processing, and finalized Solana Devnet records. This document identifies the relevant code and dated checks. Source files demonstrate implementation; recorded acceptance artifacts describe tested executions; deployment configuration determines what is running now.
 
 **Public demo:** https://orionx-phi.vercel.app  
-**Snapshot date:** 2026-10-25 (the evidence files are historical snapshots, not continuous monitoring).
+**Status updated:** 2026-10-29. The evidence JSON files remain dated historical snapshots, not continuous monitoring.
+
+## Current engineering handoff
+
+PR #11 was merged to `main` as `b252dcc` with operator approval. The revocation-aware API, verifier and UI were deployed to Vercel; Supabase migrations `0005_revocation` and `0006_revocation_function_privileges` were applied through MCP. Existing 18 passports, 20 versions and 62 awards were preserved.
+
+- Implemented: append-only on-chain revocation PDA, administrator authorization and mandatory reason, durable signed attempts, finalized-state reconciliation, idempotent retries, award withdrawal and explicit corrected issuance. Revoking the latest version does not promote an older version.
+- Validated before merge: 158 application/runtime tests, 3 Rust tests, typecheck, Prisma validation, production build, isolated real-SBF/PostgreSQL lifecycle CI and read-only Devnet CI. Production smoke checks confirmed health, private-route denials, authentic PDF acceptance and modified PDF rejection. These are dated results, not guarantees for later commits.
+- Not activated: same-ID Devnet program upgrade, `REVOCATION_ENABLED`, and hosted always-on worker. The existing manual processing fallback remains available. Automatic polling passed isolated fixture-adapter tests; live unattended Google Sheets acceptance remains pending.
+- Live revoked fixture is absent. Ordinary live CI explicitly marks revoked cases NOT EXERCISED; strict live verification fails until a dedicated approved fixture is committed. Local-chain revocation success is not deployed Devnet proof.
+
+Use [the current plan](docs/NEXT_IMPLEMENTATION_PLAN.md) and [activation runbook](docs/REVOCATION_AND_ACTIVATION.md) for remaining steps. Do not replace the existing queue/worker, treat code as evidence of activation, or run live issuance, revocation or a program upgrade without authorization. Preserve historical PDFs and finalized hashes. Verification must distinguish integrity, revocation, currency and test-issuer trust.
 
 ### Requirement-to-evidence map
 

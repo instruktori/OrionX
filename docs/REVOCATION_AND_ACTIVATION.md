@@ -1,5 +1,20 @@
 # Revocation, automation activation and proof
 
+## Deployment checkpoint — 29 October 2026
+
+PR #11 merged as `b252dcc`; Vercel production deployed the revocation-aware API,
+verifier and UI. Supabase MCP applied `20261029160749
+orionx_passport_version_revocation_0005` and `20261029160924
+orionx_revocation_function_privileges_0006`. Existing passport/version/award records
+were unchanged; new tables have backend-only RLS and browser roles cannot execute
+the immutable trigger function. Production health, protected-route, authentic-PDF
+and tampered-PDF smoke checks passed.
+
+The deployed Devnet program has **not** been upgraded for revocation. Feature
+activation, dedicated live revoked fixture, persistent worker hosting and live
+unattended Sheets acceptance remain pending. Before merge, 158 application/runtime
+tests, 3 Rust tests, typecheck, build and all three CI workflows passed.
+
 ## What this change does
 
 A finalized `VersionRecord` remains immutable. A separate Anchor `RevocationRecord`
@@ -93,22 +108,24 @@ It does not establish live Google Sheets or hosted worker operation.
 
 ## Approval-gated activation sequence
 
-No migration, program upgrade, hosted worker deployment, live issuance or live
-revocation is performed by ordinary CI or these code changes.
+Ordinary CI does not migrate production, upgrade its program, deploy a worker or
+perform live issuance/revocation. The separately authorized database migration and
+main deployment below are complete; subsequent activation steps remain gated.
 
 1. Obtain deployment/operator approval. Run the isolated lifecycle CI to green and
    review the additive program diff. Record the current program upgrade authority,
    program binary, issuer configuration, and representative finalized account bytes.
-2. Apply `0005_revocation` through the existing Prisma migration deployment process:
-   `npx prisma migrate deploy --schema packages/db/prisma/schema.prisma` in the approved
-   database environment. Test backup/restore first. The migration adds tables and
-   backend-only RLS; it does not rewrite existing issuance records.
+2. **Complete:** apply migrations `0005_revocation` and
+   `0006_revocation_function_privileges` through Supabase MCP (identifiers above).
+   Production tracks Supabase migration history and has no Prisma migration baseline;
+   do not run `prisma migrate deploy` against it without a separately reviewed baseline
+   plan. These additive changes preserve issuance records.
 3. Build the **unmodified** production program with pinned tools:
    `cargo-build-sbf --tools-version v1.57 --arch v0 --manifest-path programs/passport-registry/Cargo.toml`.
    Have the existing upgrade authority upgrade the same pinned Devnet program ID.
    Do not initialize a new issuer, rotate keys, replace the program ID, close accounts,
    or redeploy the isolated test build. Compare representative account bytes afterward.
-4. Deploy the revocation-aware API/verifier/UI and worker code while keeping
+4. **API/verifier/UI deployed; hosted worker pending.** Keep
    `REVOCATION_ENABLED=false`. Verify existing historical/current PDFs independently.
 5. After approval, enable `REVOCATION_ENABLED=true` on the API and worker. Exercise a
    dedicated synthetic revocation and correction; confirm finalized PDA state using

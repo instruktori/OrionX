@@ -1,5 +1,13 @@
 # Architecture implementation checkpoint — 25 October 2026
 
+> Current status, 29 October 2026: PR #11 (`b252dcc`) and Supabase migrations 0005/0006
+> are deployed. Revocation is implemented and tested with real local SBF/PostgreSQL;
+> the Devnet program upgrade, feature enablement, dedicated revoked live fixture and
+> persistent worker activation remain pending. See [the current plan](NEXT_IMPLEMENTATION_PLAN.md)
+> and [activation runbook](REVOCATION_AND_ACTIVATION.md). Older observations and
+> counts below are historical and do not establish current live revocation or polling.
+
+
 The Devnet program and simulated issuer are deployed. A complete isolated V1/V2
 pipeline passed on real Devnet, PostgreSQL, private Supabase Storage and Supabase
 Auth. Demo proofs keep `officialBtu=false`; official university authorization is
@@ -96,7 +104,7 @@ The approved deployment uses **manual administrator processing**. The admin page
 queues source synchronization and processes one durable stage per HTTP request,
 shows progress and can stop after the current stage. Closing the page leaves
 pending work saved for the next manual run. Always-on hosting and automatic
-scheduling are deferred by explicit user choice; no worker daemon is deployed.
+scheduling remain pending approved activation; no worker daemon is deployed.
 
 The isolated Devnet test retains its own immutable artifacts and chain records
 but removes its disposable SQL schema and processes. Original workbook statuses
